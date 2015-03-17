@@ -61,7 +61,12 @@ func TestCreateSubTasks(t *testing.T) {
 
 func TestNewTask(t *testing.T) {
 	line := "    add music to player"
-	task := NewTask(line)
+	task, err := NewTask(line)
+
+	if err != nil{
+		t.Errorf("NewTask return error %v", err)
+		t.FailNow()
+	}
 
 	if task == nil{
 		t.Errorf("task is nil")
@@ -82,7 +87,12 @@ func TestNewTask(t *testing.T) {
 
 func TestNewTaskWithAttributes(t *testing.T) {
 	line := "    create a set list :due 2015-01-31 :repeat daily"
-	task := NewTask(line)
+	task, err := NewTask(line)
+
+	if err != nil{
+		t.Errorf("NewTask return error %v", err)
+		t.FailNow()
+	}
 
 	if task == nil{
 		t.Errorf("task is nil")
@@ -96,6 +106,27 @@ func TestNewTaskWithAttributes(t *testing.T) {
 
 	correctName := "create a set list"
 	if task.Name != correctName{
+		t.Errorf("task.Name shuold be '%s' but '%s'", correctName, task.Name)
+		t.FailNow()
+	}
+}
+
+func TentNewTaskError(t *testing.T) {
+	line := "    "
+	task, err := NewTask(line)
+
+	if err == nil{
+		t.Errorf("blank line return err, but err is nil")
+		t.FailNow()
+	}
+
+	if task != nil{
+		t.Errorf("when error return, task shuld be nil, but %v", task)
+		t.FailNow()
+	}
+
+	correctName := "blank line"
+	if err.Error() != correctName{
 		t.Errorf("task.Name shuold be '%s' but '%s'", correctName, task.Name)
 		t.FailNow()
 	}
