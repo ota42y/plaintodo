@@ -4,6 +4,7 @@ import(
 	"bufio"
 	"os"
 	"regexp"
+	"errors"
 )
 
 // I don't know how to math by one regexp...
@@ -20,14 +21,18 @@ type Task struct {
 	SubTasks []*Task
 }
 
-func NewTask(line string) *Task{
+func NewTask(line string) (*Task, error){
 	b := []byte(line)
 
 	match := baseRegExpWithAttributes.FindSubmatch(b)
 	if len(match) != 4 {
 		match = baseRegExpNoAttributes.FindSubmatch(b)
 		if len(match) != 3{
-			return nil
+			if len(match) != 0{
+				return nil, errors.New("blank line")
+			}else{
+				return nil, errors.New("parse error")
+			}
 		}
 	}
 
@@ -40,7 +45,7 @@ func NewTask(line string) *Task{
 	return &Task{
 		Name: name,
 		Level: level,
-	}
+	}, nil
 }
 
 // create subtask under the level.
@@ -52,7 +57,7 @@ func createSubTasks(level int, s *bufio.Scanner) (subTasks []*Task , nextTask *T
 
 	if s.Scan() {
 		line := s.Text()
-		nowTask = NewTask(line)
+		nowTask, _ = NewTask(line)
 
 		for nowTask != nil && level <= nowTask.Level{
 			subTasks = append(subTasks, nowTask)
