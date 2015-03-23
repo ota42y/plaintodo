@@ -18,7 +18,7 @@ type Task struct {
 	Level int
 	Id int
 	Name string
-	Attribute map[string]string
+	Attributes map[string]string
 	SubTasks []*Task
 }
 
