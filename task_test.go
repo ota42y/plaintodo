@@ -118,9 +118,8 @@ func TestNewTaskWithAttributes(t *testing.T) {
 
 	for key, value := range attributes {
 		if task.Attributes[key] != value {
-			t.Errorf("key: %s shuld be %s but", key, value, task.Attributes[key])
+			t.Errorf("key: %s shuld be %s but %s", key, value, task.Attributes[key])
 		}
-
 	}
 }
 

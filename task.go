@@ -5,12 +5,16 @@ import(
 	"os"
 	"regexp"
 	"errors"
+	"strings"
 )
 
 // I don't know how to math by one regexp...
 var blankLineRegxpp, _ = regexp.Compile("^( *)$")
 var baseRegExpWithAttributes, _ = regexp.Compile("^( *)([^:]+)( :.+)")
 var baseRegExpNoAttributes, _ = regexp.Compile("^( *)([^:]+)")
+
+var attributeSplit = " :"
+var attributeKeyValueSeparator = " "
 
 var spaceNum = 2 // The Task.Level is task's top space num divide this.
 
@@ -25,6 +29,29 @@ type Task struct {
 type LoadResult struct{
 	Tasks []*Task
 	FailLines []string
+}
+
+func getAttributes(raw string) map[string]string{
+	attributes := make(map[string]string)
+
+	// split :key1 value1 :key2 value2 to ["key1 value1", "key2 value2"]
+	splits := strings.Split(raw, attributeSplit)
+	for _, attribute := range splits{
+		// split "key1 value1" to "key1", "value1"
+		fields := strings.SplitAfterN(attribute, attributeKeyValueSeparator, 2)
+
+		if 0 < len(fields){
+			key := strings.TrimSpace(fields[0])
+			value := ""
+
+			if 1 < len(fields){
+				// attribute with value
+				value = fields[1]
+			}
+			attributes[key] = value
+		}
+	}
+	return attributes
 }
 
 func NewTask(line string) (*Task, error){
@@ -43,16 +70,16 @@ func NewTask(line string) (*Task, error){
 		}
 	}
 
+	task := Task{}
 	spaces := match[1]
-	level := len(spaces) / spaceNum
+	task.Level =  len(spaces) / spaceNum
 
-	name := string(match[2])
-	//attributes := match[3]
+	task.Name = string(match[2])
 
-	return &Task{
-		Name: name,
-		Level: level,
-	}, nil
+	if 3 < len(match){
+		task.Attributes = getAttributes(string(match[3]))
+	}
+	return &task, nil
 }
 
 // create subtask under the level.
