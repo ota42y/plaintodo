@@ -1,10 +1,11 @@
 package main
 
-import(
+import (
 	"bufio"
+	"errors"
 	"os"
 	"regexp"
-	"errors"
+	"strings"
 )
 
 // I don't know how to math by one regexp...
@@ -12,53 +13,79 @@ var blankLineRegxpp, _ = regexp.Compile("^( *)$")
 var baseRegExpWithAttributes, _ = regexp.Compile("^( *)([^:]+)( :.+)")
 var baseRegExpNoAttributes, _ = regexp.Compile("^( *)([^:]+)")
 
+var attributeSplit = " :"
+var attributeKeyValueSeparator = " "
+
 var spaceNum = 2 // The Task.Level is task's top space num divide this.
 
 type Task struct {
-	Level int
-	Id int
-	Name string
-	Attribute map[string]string
-	SubTasks []*Task
+	Level      int
+	Id         int
+	Name       string
+	Attributes map[string]string
+	SubTasks   []*Task
 }
 
-type LoadResult struct{
-	Tasks []*Task
+type LoadResult struct {
+	Tasks     []*Task
 	FailLines []string
 }
 
-func NewTask(line string) (*Task, error){
+func getAttributes(raw string) map[string]string {
+	attributes := make(map[string]string)
+
+	// split :key1 value1 :key2 value2 to ["key1 value1", "key2 value2"]
+	splits := strings.Split(raw, attributeSplit)
+	for _, attribute := range splits {
+		// split "key1 value1" to "key1", "value1"
+		fields := strings.SplitAfterN(attribute, attributeKeyValueSeparator, 2)
+
+		if 0 < len(fields) {
+			key := strings.TrimSpace(fields[0])
+			value := ""
+
+			if 1 < len(fields) {
+				// attribute with value
+				value = fields[1]
+			}
+			attributes[key] = value
+		}
+	}
+	return attributes
+}
+
+func NewTask(line string) (*Task, error) {
 	b := []byte(line)
 
 	match := baseRegExpWithAttributes.FindSubmatch(b)
 	if len(match) != 4 {
 		match = baseRegExpNoAttributes.FindSubmatch(b)
-		if len(match) != 3{
+		if len(match) != 3 {
 			match = blankLineRegxpp.FindSubmatch(b)
-			if len(match) != 0{
+			if len(match) != 0 {
 				return nil, errors.New("blank line")
-			}else{
+			} else {
 				return nil, errors.New("parse error")
 			}
 		}
 	}
 
+	task := Task{}
 	spaces := match[1]
-	level := len(spaces) / spaceNum
+	task.Level = len(spaces) / spaceNum
 
-	name := string(match[2])
-	//attributes := match[3]
+	task.Name = string(match[2])
 
-	return &Task{
-		Name: name,
-		Level: level,
-	}, nil
+	if 3 < len(match) {
+		task.Attributes = getAttributes(string(match[3]))
+	}
+	return &task, nil
 }
 
 // create subtask under the level.
 // return subtasks and next Task (which Task.Level is greater than or same level)
 // if nextTask in null, all task read.
-func createSubTasks(level int, s *bufio.Scanner) (subTasks []*Task , nextTask *Task, err error){
+func createSubTasks(level int, s *bufio.Scanner) (subTasks []*Task, nextTask *Task, err error) {
 	subTasks = make([]*Task, 0)
 	var nowTask *Task = nil
 
@@ -73,17 +100,17 @@ func createSubTasks(level int, s *bufio.Scanner) (subTasks []*Task , nextTask *T
 
 		// if blank line, skip this line
 		// if not blank line end parse
-		if err.Error() != "blank line"{
+		if err.Error() != "blank line" {
 			return subTasks, nowTask, err
 		}
 	}
 
-	for nowTask != nil && level <= nowTask.Level{
+	for nowTask != nil && level <= nowTask.Level {
 		subTasks = append(subTasks, nowTask)
 
 		// get subTasks
-		nowTask.SubTasks, nextTask, err = createSubTasks(nowTask.Level + 1, s)
-		if err != nil{
+		nowTask.SubTasks, nextTask, err = createSubTasks(nowTask.Level+1, s)
+		if err != nil {
 			return subTasks, nowTask, err
 		}
 
@@ -102,21 +129,21 @@ func createSubTasks(level int, s *bufio.Scanner) (subTasks []*Task , nextTask *T
 	return subTasks, nowTask, nil
 }
 
-func createTasks(s *bufio.Scanner) []*Task{
-	topLevelTasks, nextTask, err:= createSubTasks(0, s)
+func createTasks(s *bufio.Scanner) []*Task {
+	topLevelTasks, nextTask, err := createSubTasks(0, s)
 
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
-	if nextTask != nil{
+	if nextTask != nil {
 		panic("create Task error, there is -1 or smaller task level exist")
 	}
 
 	return topLevelTasks
 }
 
-func ReadTasks(filename string) []*Task{
+func ReadTasks(filename string) []*Task {
 	var fp *os.File
 	var err error
 
