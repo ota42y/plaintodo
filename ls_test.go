@@ -27,13 +27,13 @@ func TestLs(t *testing.T) {
 
 /*
 get first task and all sub tasks
- */
-func TestFilter(t *testing.T){
+*/
+func TestFilter(t *testing.T) {
 	filename := "task.txt"
 	tasks := ReadTasks(filename)
 
 	showTask := filter(tasks[0])
-	if showTask == nil{
+	if showTask == nil {
 		t.Errorf("filter is nil")
 		t.FailNow()
 	}
@@ -43,7 +43,7 @@ func TestFilter(t *testing.T){
 		t.FailNow()
 	}
 
-	if len(showTask.SubTasks) != 2{
+	if len(showTask.SubTasks) != 2 {
 		t.Errorf("SubTasks num isn't 2")
 		t.FailNow()
 	}
