@@ -5,8 +5,7 @@ import (
 )
 
 func TestReadTasks(t *testing.T) {
-	filename := "task.txt"
-	tasks := ReadTasks(filename)
+	tasks := ReadTestTasks()
 
 	if len(tasks) != 2 {
 		t.Errorf("there is unread task, len(tasks) should be 2 but %d", len(tasks))
@@ -20,8 +19,7 @@ func TestReadTasks(t *testing.T) {
 }
 
 func TestCreateSubTasks(t *testing.T) {
-	filename := "task.txt"
-	tasks := ReadTasks(filename)
+	tasks := ReadTestTasks()
 
 	if len(tasks) != 2 {
 		t.Errorf("read top level subtasks failed, len(tasks) shuld be 2 but %d", len(tasks))
