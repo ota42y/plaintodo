@@ -3,8 +3,7 @@ package main
 import "testing"
 
 func TestLs(t *testing.T) {
-	filename := "task.txt"
-	tasks := ReadTasks(filename)
+	tasks := ReadTestTasks()
 
 	showTasks := Ls(tasks)
 	if len(showTasks) != 2 {
@@ -29,8 +28,7 @@ func TestLs(t *testing.T) {
 get first task and one subtask
 */
 func TestFilterWithDueDate(t *testing.T) {
-	filename := "task.txt"
-	tasks := ReadTasks(filename)
+	tasks := ReadTestTasks()
 
 	query := NewKeyValueQuery("due", "2015-01-31", make([]Query, 0), make([]Query, 0))
 	showTask := filter(tasks[0], query)
