@@ -51,18 +51,20 @@ func getAttributes(raw string) map[string]string {
 	// split :key1 value1 :key2 value2 to ["key1 value1", "key2 value2"]
 	splits := strings.Split(raw, attributeSplit)
 	for _, attribute := range splits {
-		// split "key1 value1" to "key1", "value1"
-		fields := strings.SplitAfterN(attribute, attributeKeyValueSeparator, 2)
+		if len(attribute) != 0 {
+			// split "key1 value1" to "key1", "value1"
+			fields := strings.SplitAfterN(attribute, attributeKeyValueSeparator, 2)
 
-		if 0 < len(fields) {
-			key := strings.TrimSpace(fields[0])
-			value := ""
+			if 0 < len(fields) {
+				key := strings.TrimSpace(fields[0])
+				value := ""
 
-			if 1 < len(fields) {
-				// attribute with value
-				value = fields[1]
+				if 1 < len(fields) {
+					// attribute with value
+					value = fields[1]
+				}
+				attributes[key] = value
 			}
-			attributes[key] = value
 		}
 	}
 	return attributes
