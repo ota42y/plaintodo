@@ -1,8 +1,8 @@
 package main
 
 import (
-	"testing"
 	"bytes"
+	"testing"
 )
 
 func TestPrint(t *testing.T) {
@@ -16,7 +16,6 @@ func TestPrint(t *testing.T) {
 	buf := &bytes.Buffer{}
 	Output(buf, outputTasks)
 
-	
 	correctString := `
 go to SSA :due 2015-02-01
   create a set list :due 2015-01-31 :important

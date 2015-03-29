@@ -81,6 +81,12 @@ func TestNewTask(t *testing.T) {
 		t.Errorf("task.Name shuold be %s but %s", correctName, task.Name)
 		t.FailNow()
 	}
+
+	taskString := task.String()
+	if taskString != line {
+		t.Errorf("task.String return invalid string %s", taskString)
+		t.FailNow()
+	}
 }
 
 func TestNewTaskWithAttributes(t *testing.T) {

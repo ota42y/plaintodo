@@ -26,6 +26,20 @@ type Task struct {
 	SubTasks   []*Task
 }
 
+func (t *Task) String() string {
+	spaces := strings.Repeat(" ", t.Level*spaceNum)
+
+	taskString := make([]string, 1)
+	taskString[0] = t.Name
+
+	for key, value := range t.Attributes {
+		str := ":" + key + " " + value
+		taskString = append(taskString, str)
+	}
+
+	return spaces + strings.Join(taskString, " ")
+}
+
 type LoadResult struct {
 	Tasks     []*Task
 	FailLines []string
