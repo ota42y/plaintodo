@@ -4,6 +4,6 @@ import (
 	"io"
 )
 
-func Output(w io.Writer, tasks []*ShowTask){
+func Output(w io.Writer, tasks []*ShowTask) {
 	return
 }

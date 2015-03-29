@@ -81,6 +81,12 @@ func TestNewTask(t *testing.T) {
 		t.Errorf("task.Name shuold be %s but %s", correctName, task.Name)
 		t.FailNow()
 	}
+
+	taskString := task.String()
+	if taskString != line {
+		t.Errorf("task.String return invalid string %s", taskString)
+		t.FailNow()
+	}
 }
 
 func TestNewTaskWithAttributes(t *testing.T) {
@@ -117,7 +123,19 @@ func TestNewTaskWithAttributes(t *testing.T) {
 	for key, value := range attributes {
 		if task.Attributes[key] != value {
 			t.Errorf("key: %s shuld be %s but %s", key, value, task.Attributes[key])
+			t.FailNow()
 		}
+	}
+
+	if len(attributes) != len(task.Attributes) {
+		t.Errorf("Task.Attributes shuld be %d num, but %d", len(attributes), len(task.Attributes))
+		t.FailNow()
+	}
+
+	taskString := task.String()
+	if taskString != line {
+		t.Errorf("task.String return invalid string %s", taskString)
+		t.FailNow()
 	}
 }
 
