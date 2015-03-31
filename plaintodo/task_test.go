@@ -90,7 +90,7 @@ func TestNewTask(t *testing.T) {
 }
 
 func TestNewTaskWithAttributes(t *testing.T) {
-	line := "    create a set list :url http://ota42y.com :due 2015-02-01 :repeat every 1 day"
+	line := "    create a set list :url http://ota42y.com :due 2015-02-01 :important :repeat every 1 day"
 	task, err := NewTask(line)
 
 	if err != nil {
@@ -119,6 +119,7 @@ func TestNewTaskWithAttributes(t *testing.T) {
 	attributes["url"] = "http://ota42y.com"
 	attributes["due"] = "2015-02-01"
 	attributes["repeat"] = "every 1 day"
+	attributes["important"] = ""
 
 	for key, value := range attributes {
 		if task.Attributes[key] != value {
