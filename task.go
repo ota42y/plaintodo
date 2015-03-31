@@ -33,7 +33,11 @@ func (t *Task) String() string {
 	taskString[0] = t.Name
 
 	for key, value := range t.Attributes {
-		str := ":" + key + " " + value
+		str := ":" + key
+		if value != ""{
+			str += " " + value
+		}
+		
 		taskString = append(taskString, str)
 	}
 
