@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"testing"
+	"strings"
 )
 
 func TestPrint(t *testing.T) {
@@ -16,8 +17,7 @@ func TestPrint(t *testing.T) {
 	buf := &bytes.Buffer{}
 	Output(buf, outputTasks)
 
-	correctString := `
-go to SSA :due 2015-02-01
+	correctString := `go to SSA :due 2015-02-01
   create a set list :due 2015-01-31 :important
     add music to player
   buy items
@@ -25,9 +25,22 @@ go to SSA :due 2015-02-01
     buy ultra orange
     buy king blade
 `
-	result := buf.String()
-	if result != correctString {
-		t.Errorf("incorrect string returned: %s", result)
+	results := strings.Split(buf.String(), "\n")
+
+	corrects := strings.Split(correctString, "\n")
+
+	if len(corrects) != len(results) {
+		t.Errorf("return %d strings bud %d", len(corrects), len(results))
 		t.FailNow()
 	}
+
+	for index, str := range corrects{
+		if results[index] != str {
+			t.Errorf("return shuld be '%s', but '%s'", str, results[index])
+			t.FailNow()
+		}
+	}
+
+
+
 }
