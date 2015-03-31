@@ -4,8 +4,8 @@ import (
 	"io"
 )
 
-func outputShowTask(w io.Writer, task *ShowTask){
-	if task.Task != nil{
+func outputShowTask(w io.Writer, task *ShowTask) {
+	if task.Task != nil {
 		w.Write([]byte(task.Task.String()))
 		w.Write([]byte("\n"))
 	}

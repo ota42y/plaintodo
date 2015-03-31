@@ -1,6 +1,6 @@
 package main
 
 func ReadTestTasks() []*Task {
-	filename := "task.txt"
+	filename := "test_task.txt"
 	return ReadTasks(filename)
 }

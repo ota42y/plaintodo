@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestPrint(t *testing.T) {
@@ -18,7 +18,7 @@ func TestPrint(t *testing.T) {
 	Output(buf, outputTasks)
 
 	correctString := `go to SSA :due 2015-02-01
-  create a set list :due 2015-01-31 :important
+  create a set list :important :due 2015-01-31
     add music to player
   buy items
     buy battery
@@ -34,13 +34,11 @@ func TestPrint(t *testing.T) {
 		t.FailNow()
 	}
 
-	for index, str := range corrects{
+	for index, str := range corrects {
 		if results[index] != str {
 			t.Errorf("return shuld be '%s', but '%s'", str, results[index])
 			t.FailNow()
 		}
 	}
-
-
 
 }

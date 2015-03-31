@@ -1,5 +1,5 @@
 go to SSA :due 2015-02-01
-  create a set list :due 2015-01-31 :important
+  create a set list :important :due 2015-01-31
     add music to player
   buy items
     buy battery
