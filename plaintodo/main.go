@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/BurntSushi/toml"
+	"os"
 )
 
 type Config struct {
@@ -12,15 +14,22 @@ type PathConfig struct {
 	Task string
 }
 
-func readConfig(tomlFilepath string) *Config{
+func readConfig(tomlFilepath string) *Config {
 	var config Config
 	_, err := toml.DecodeFile(tomlFilepath, &config)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return nil
 	}
 
 	return &config
 }
 
 func main() {
+	config := readConfig("config.toml")
+	if config != nil {
+		tasks := ReadTasks(config.Paths.Task)
+		showTasks := Ls(tasks)
+		Output(os.Stdout, showTasks)
+	}
 }

@@ -18,3 +18,12 @@ func TestReadConfig(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestReadConfigError(t *testing.T) {
+	config := readConfig("nothing")
+
+	if config != nil {
+		t.Errorf("if no file exist, return nil but return %v", config)
+		t.FailNow()
+	}
+}
