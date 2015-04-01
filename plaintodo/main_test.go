@@ -9,13 +9,21 @@ func ReadTestTasks() []*Task {
 	return ReadTasks(filename)
 }
 
-
 func TestReadConfig(t *testing.T) {
-	config := readConfig("test.toml")
+	config := readConfig("test_config.toml")
 
 	taskPath := "./test_task.txt"
-	if config.TaskFilepath != taskPath {
-		t.Errorf("config.TaskFilepath shuld be %s, but %s", taskPath, config.TaskFilepath)
+	if config.Paths.Task != taskPath {
+		t.Errorf("config.Paths.Task shuld be %s, but %s", taskPath, config.Paths.Task)
+		t.FailNow()
+	}
+}
+
+func TestReadConfigError(t *testing.T) {
+	config := readConfig("nothing")
+
+	if config != nil {
+		t.Errorf("if no file exist, return nil but return %v", config)
 		t.FailNow()
 	}
 }
