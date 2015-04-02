@@ -18,7 +18,7 @@ func TestPrint(t *testing.T) {
 	Output(buf, outputTasks)
 
 	correctString := `go to SSA :due 2015-02-01
-  create a set list :important :due 2015-01-31
+  create a set list :due 2015-01-31 :important
     add music to player
   buy items
     buy battery

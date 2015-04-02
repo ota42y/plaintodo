@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -32,7 +33,17 @@ func (t *Task) String() string {
 	taskString := make([]string, 1)
 	taskString[0] = t.Name
 
-	for key, value := range t.Attributes {
+	attributesArray := make([]string, len(t.Attributes))
+	i := 0
+	for k, _ := range t.Attributes {
+		attributesArray[i] = k
+		i++
+	}
+	sort.Strings(attributesArray)
+
+	for _, key := range attributesArray {
+		value := t.Attributes[key]
+
 		str := ":" + key
 		if value != "" {
 			str += " " + value
