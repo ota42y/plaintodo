@@ -90,7 +90,7 @@ func TestNewTask(t *testing.T) {
 }
 
 func TestNewTaskWithAttributes(t *testing.T) {
-	line := "    create a set list :url http://ota42y.com :due 2015-02-01 :important :repeat every 1 day"
+	line := "    create a set list :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com"
 	task, err := NewTask(line)
 
 	if err != nil {
