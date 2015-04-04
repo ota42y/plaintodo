@@ -5,7 +5,7 @@ import "testing"
 func TestLs(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	showTasks := Ls(tasks)
+	showTasks := Ls(tasks, nil)
 	if len(showTasks) != 2 {
 		t.Errorf("top level shud be 2 but %d", len(showTasks))
 		t.FailNow()

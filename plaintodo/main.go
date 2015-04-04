@@ -29,7 +29,7 @@ func main() {
 	config := readConfig("config.toml")
 	if config != nil {
 		tasks := ReadTasks(config.Paths.Task)
-		showTasks := Ls(tasks)
+		showTasks := Ls(tasks, nil)
 		Output(os.Stdout, showTasks)
 	}
 }

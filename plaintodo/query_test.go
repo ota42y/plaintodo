@@ -2,12 +2,13 @@ package main
 
 import (
 	"testing"
+	"time"
 )
 
 /*
 get first task and one subtask
 */
-func TestFilterWithDueDate(t *testing.T) {
+func TestKeyValueQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
 	query := NewKeyValueQuery("due", "2015-01-31", make([]Query, 0), make([]Query, 0))
@@ -36,6 +37,50 @@ func TestFilterWithDueDate(t *testing.T) {
 	showTask = filter(tasks[1], query)
 	if showTask != nil {
 		t.Errorf("if not match any query, get nil but get %v", showTask)
+		t.FailNow()
+	}
+}
+
+
+/*
+get second task and one subtask
+*/
+func TestExpireDateQuery(t *testing.T) {
+	tasks := ReadTestTasks()
+
+	key := "due"
+	dueTime := "2015-02-01 10:42"
+
+	var timeformat = "2006-01-02 15:04"
+	value, err := time.Parse(timeformat, dueTime)
+	if err != nil{
+		t.Errorf("time parse error")
+		t.FailNow()
+	}
+
+	query := NewExpireDateQuery(key, value, make([]Query, 0), make([]Query, 0))
+	showTasks := Ls(tasks, query)
+
+	if len(showTasks) == 0{
+		t.Errorf("return no tasks")
+		t.FailNow()
+	}
+
+	showTask := showTasks[0]
+
+	if showTask.Task.Name != tasks[0].Name {
+		t.Errorf("filter isn't valid")
+		t.FailNow()
+	}
+
+	if len(showTask.SubTasks) != 1 {
+		t.Errorf("SubTasks num isn't 1")
+		t.FailNow()
+	}
+
+	subTask := showTask.SubTasks[0]
+	if subTask.Task.Name != tasks[0].SubTasks[0].Name {
+		t.Errorf("SubTasks isn't correct")
 		t.FailNow()
 	}
 }

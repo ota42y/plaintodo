@@ -5,8 +5,8 @@ type ShowTask struct {
 	SubTasks []*ShowTask
 }
 
-func Ls(tasks []*Task) []*ShowTask {
-	return filterRoot(tasks, nil)
+func Ls(tasks []*Task, query Query) []*ShowTask {
+	return filterRoot(tasks, query)
 }
 
 func filterRoot(tasks []*Task, query Query) []*ShowTask {

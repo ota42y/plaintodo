@@ -8,7 +8,7 @@ import (
 
 func TestPrint(t *testing.T) {
 	tasks := ReadTestTasks()
-	showTasks := Ls(tasks)
+	showTasks := Ls(tasks, nil)
 
 	// show first task
 	outputTasks := make([]*ShowTask, 1)

@@ -1,5 +1,9 @@
 package main
 
+import (
+	"time"
+)
+
 type Query interface {
 	Check(task *Task) bool
 }
@@ -55,4 +59,30 @@ func NewKeyValueQuery(key string, value string, and []Query, or []Query) *KeyVal
 		key:   key,
 		value: value,
 	}
+}
+
+type ExpireDateQuery struct {
+	*QueryBase
+
+	key   string
+	value time.Time
+}
+
+func NewExpireDateQuery(key string, value time.Time, and []Query, or []Query) *ExpireDateQuery {
+	return &ExpireDateQuery{
+		QueryBase: &QueryBase{
+			and: and,
+			or:  or,
+		},
+		key:   key,
+		value: value,
+	}
+}
+
+func (query ExpireDateQuery) Check(task *Task) bool {
+	if task == nil {
+		return false
+	}
+
+	return false
 }
