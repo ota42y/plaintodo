@@ -41,7 +41,6 @@ func TestKeyValueQuery(t *testing.T) {
 	}
 }
 
-
 /*
 get second task and one subtask
 */
@@ -53,7 +52,7 @@ func TestExpireDateQuery(t *testing.T) {
 
 	var timeformat = "2006-01-02 15:04"
 	value, err := time.Parse(timeformat, dueTime)
-	if err != nil{
+	if err != nil {
 		t.Errorf("time parse error")
 		t.FailNow()
 	}
@@ -61,7 +60,7 @@ func TestExpireDateQuery(t *testing.T) {
 	query := NewExpireDateQuery(key, value, make([]Query, 0), make([]Query, 0))
 	showTasks := Ls(tasks, query)
 
-	if len(showTasks) == 0{
+	if len(showTasks) == 0 {
 		t.Errorf("return no tasks")
 		t.FailNow()
 	}
@@ -81,6 +80,20 @@ func TestExpireDateQuery(t *testing.T) {
 	subTask := showTask.SubTasks[0]
 	if subTask.Task.Name != tasks[0].SubTasks[0].Name {
 		t.Errorf("SubTasks isn't correct")
+		t.FailNow()
+	}
+
+	dueTime = "2015-02-02 10:42"
+	value, err = time.Parse(timeformat, dueTime)
+	if err != nil {
+		t.Errorf("time parse error")
+		t.FailNow()
+	}
+
+	query = NewExpireDateQuery(key, value, make([]Query, 0), make([]Query, 0))
+	showTasks = Ls(tasks, query)
+	if len(showTasks) != 2 {
+		t.Errorf("return 2 tasks but %d", len(showTasks))
 		t.FailNow()
 	}
 }

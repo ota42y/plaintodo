@@ -4,6 +4,9 @@ import (
 	"time"
 )
 
+var dateTimeFormat = "2006-01-02 15:04"
+var dateFormat = "2006-01-02"
+
 type Query interface {
 	Check(task *Task) bool
 }
@@ -84,5 +87,17 @@ func (query ExpireDateQuery) Check(task *Task) bool {
 		return false
 	}
 
-	return false
+	dateString := task.Attributes[query.key]
+
+	var t time.Time
+	t, err := time.Parse(dateTimeFormat, dateString)
+	if err != nil {
+		t, err = time.Parse(dateFormat, dateString)
+		if err != nil {
+			// no date value
+			return query.checkSubQuery(task, false)
+		}
+	}
+
+	return query.checkSubQuery(task, t.Before(query.value))
 }
