@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 type CommandTest struct {
 	T         *testing.T
@@ -9,7 +11,9 @@ type CommandTest struct {
 	Terminate bool
 }
 
-func (t CommandTest) Execute(option string, automaton *Automaton) (terminate bool) {
+func (t *CommandTest) Execute(option string, automaton *Automaton) (terminate bool) {
+	t.Called = true
+
 	if option != t.Option {
 		t.T.Errorf("option shud be %s but %s", t.Option, option)
 		t.T.FailNow()
@@ -19,16 +23,16 @@ func (t CommandTest) Execute(option string, automaton *Automaton) (terminate boo
 }
 
 func TestAutomatonWithOption(t *testing.T) {
-	cmd := CommandTest{
+	cmd := &CommandTest{
 		T:         t,
 		Option:    "option test",
 		Called:    false,
 		Terminate: false,
 	}
-
+	
 	cmds := make(map[string]Command)
-	cmds["test"] = cmd
-
+	cmds["test"] = cmd 
+		
 	a := NewAutomaton(nil, cmds)
 
 	terminate := a.Execute("test " + cmd.Option)
@@ -45,7 +49,7 @@ func TestAutomatonWithOption(t *testing.T) {
 }
 
 func TestAutomaton(t *testing.T) {
-	cmd := CommandTest{
+	cmd := &CommandTest{
 		T:         t,
 		Option:    "",
 		Called:    false,
