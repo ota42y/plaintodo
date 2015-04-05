@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"os"
+	"time"
 )
 
 type Config struct {
@@ -29,7 +30,7 @@ func main() {
 	config := readConfig("config.toml")
 	if config != nil {
 		tasks := ReadTasks(config.Paths.Task)
-		showTasks := Ls(tasks, nil)
+		showTasks := Ls(tasks, NewExpireDateQuery("due", time.Now(), make([]Query, 0), make([]Query, 0)))
 		Output(os.Stdout, showTasks)
 	}
 }
