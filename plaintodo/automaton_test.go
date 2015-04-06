@@ -73,3 +73,30 @@ func TestAutomaton(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+
+func TestAutomatonWithInvalidCommand(t *testing.T) {
+	cmd := &CommandTest{
+		T:         t,
+		Option:    "",
+		Called:    false,
+		Terminate: true,
+	}
+
+	cmds := make(map[string]Command)
+	cmds["test"] = cmd
+
+	a := NewAutomaton(nil, cmds)
+
+	terminate := a.Execute("no " + cmd.Option)
+
+	if cmd.Called {
+		t.Errorf("command called")
+		t.FailNow()
+	}
+
+	if terminate {
+		t.Errorf("If no command hit, shuld return false but true")
+		t.FailNow()
+	}
+}
