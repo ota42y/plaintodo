@@ -11,16 +11,16 @@ type Command interface {
 }
 
 type Automaton struct {
-	tasks    []*Task
-	commands map[string]Command
-	config   *Config // main.go
+	Tasks    []*Task
+	Commands map[string]Command
+	Config   *Config // main.go
 }
 
 func NewAutomaton(config *Config, commands map[string]Command) *Automaton {
 	return &Automaton{
-		tasks:    make([]*Task, 0),
-		commands: commands,
-		config:   config,
+		Tasks:    make([]*Task, 0),
+		Commands: commands,
+		Config:   config,
 	}
 }
 
@@ -39,7 +39,7 @@ func (a *Automaton) Execute(command string) (terminate bool) {
 		option = strings.TrimSpace(splits[1])
 	}
 
-	value, ok := a.commands[cmd]
+	value, ok := a.Commands[cmd]
 	if ok {
 		return value.Execute(option, a)
 	} else {
