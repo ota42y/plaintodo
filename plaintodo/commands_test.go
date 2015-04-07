@@ -17,3 +17,22 @@ func TestExitCommand(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestReloadCommand(t *testing.T) {
+	cmd := NewReloadCommand()
+
+	cmds := make(map[string]Command)
+	cmds["reload"] = cmd
+	a := NewAutomaton(ReadTestConfig(), cmds)
+
+	terminate := a.Execute("reload")
+	if terminate {
+		t.Errorf("ExitCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	if len(a.Tasks) == 0 {
+		t.Errorf("Task num shuldn't be 0")
+		t.FailNow()
+	}
+}

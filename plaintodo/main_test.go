@@ -9,8 +9,12 @@ func ReadTestTasks() []*Task {
 	return ReadTasks(filename)
 }
 
+func ReadTestConfig() *Config {
+	return readConfig("test_config.toml")
+}
+
 func TestReadConfig(t *testing.T) {
-	config := readConfig("test_config.toml")
+	config := ReadTestConfig()
 
 	taskPath := "./test_task.txt"
 	if config.Paths.Task != taskPath {
