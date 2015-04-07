@@ -29,10 +29,10 @@ func TestAutomatonWithOption(t *testing.T) {
 		Called:    false,
 		Terminate: false,
 	}
-	
+
 	cmds := make(map[string]Command)
-	cmds["test"] = cmd 
-		
+	cmds["test"] = cmd
+
 	a := NewAutomaton(nil, cmds)
 
 	terminate := a.Execute("test " + cmd.Option)
@@ -73,7 +73,6 @@ func TestAutomaton(t *testing.T) {
 		t.FailNow()
 	}
 }
-
 
 func TestAutomatonWithInvalidCommand(t *testing.T) {
 	cmd := &CommandTest{
