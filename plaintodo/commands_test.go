@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -27,12 +28,34 @@ func TestReloadCommand(t *testing.T) {
 
 	terminate := a.Execute("reload")
 	if terminate {
-		t.Errorf("ExitCommand.Execute shud be return false")
+		t.Errorf("ReloadCommand.Execute shud be return false")
 		t.FailNow()
 	}
 
 	if len(a.Tasks) == 0 {
 		t.Errorf("Task num shuldn't be 0")
+		t.FailNow()
+	}
+}
+
+func TestLsCommand(t *testing.T) {
+	buf := &bytes.Buffer{}
+	cmd := NewLsCommand(buf)
+
+	cmds := make(map[string]Command)
+	cmds["ls"] = cmd
+	cmds["reload"] = NewReloadCommand()
+	a := NewAutomaton(ReadTestConfig(), cmds)
+
+	a.Execute("reload")
+	terminate := a.Execute("ls")
+	if terminate {
+		t.Errorf("LsCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	if len(buf.String()) == 0 {
+		t.Errorf("No outputs")
 		t.FailNow()
 	}
 }
