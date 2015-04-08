@@ -44,8 +44,10 @@ func TestLsCommand(t *testing.T) {
 
 	cmds := make(map[string]Command)
 	cmds["ls"] = cmd
+	cmds["reload"] = NewReloadCommand()
 	a := NewAutomaton(ReadTestConfig(), cmds)
 
+	a.Execute("reload")
 	terminate := a.Execute("ls")
 	if terminate {
 		t.Errorf("LsCommand.Execute shud be return false")
