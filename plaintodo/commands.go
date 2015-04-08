@@ -1,5 +1,9 @@
 package main
 
+import (
+	"io"
+)
+
 type ExitCommand struct {
 }
 
@@ -21,4 +25,19 @@ func (t *ReloadCommand) Execute(option string, automaton *Automaton) (terminate 
 
 func NewReloadCommand() *ReloadCommand {
 	return &ReloadCommand{}
+}
+
+type LsCommand struct {
+	w io.Writer
+}
+
+func (t *LsCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+
+	return false
+}
+
+func NewLsCommand(w io.Writer) *LsCommand {
+	return &LsCommand{
+		w: w,
+	}
 }
