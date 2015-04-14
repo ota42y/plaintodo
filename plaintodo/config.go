@@ -2,10 +2,12 @@ package main
 
 import (
 	"github.com/BurntSushi/toml"
+	"io"
 )
 
 type Config struct {
-	Paths PathConfig
+	Paths  PathConfig
+	Writer io.Writer
 }
 
 type PathConfig struct {
@@ -16,8 +18,7 @@ func readConfig(tomlFilepath string) *Config {
 	var config Config
 	_, err := toml.DecodeFile(tomlFilepath, &config)
 	if err != nil {
-	   panic(err)
-	   	return nil
+		return nil
 	}
 
 	return &config
