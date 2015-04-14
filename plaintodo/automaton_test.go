@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -33,7 +34,11 @@ func TestAutomatonWithOption(t *testing.T) {
 	cmds := make(map[string]Command)
 	cmds["test"] = cmd
 
-	a := NewAutomaton(nil, cmds)
+	buf := &bytes.Buffer{}
+
+	config := ReadTestConfig()
+	config.Writer = buf
+	a := NewAutomaton(config, cmds)
 
 	terminate := a.Execute("test " + cmd.Option)
 
@@ -44,6 +49,12 @@ func TestAutomatonWithOption(t *testing.T) {
 
 	if terminate != cmd.Terminate {
 		t.Errorf("Automation.Execute shud be return %v but %v", terminate, cmd.Terminate)
+		t.FailNow()
+	}
+
+	output := buf.String()
+	if output != "test hit\n" {
+		t.Errorf("Invalid output '%s'", output)
 		t.FailNow()
 	}
 }
@@ -85,7 +96,11 @@ func TestAutomatonWithInvalidCommand(t *testing.T) {
 	cmds := make(map[string]Command)
 	cmds["test"] = cmd
 
-	a := NewAutomaton(nil, cmds)
+	buf := &bytes.Buffer{}
+
+	config := ReadTestConfig()
+	config.Writer = buf
+	a := NewAutomaton(config, cmds)
 
 	terminate := a.Execute("no " + cmd.Option)
 
@@ -96,6 +111,12 @@ func TestAutomatonWithInvalidCommand(t *testing.T) {
 
 	if terminate {
 		t.Errorf("If no command hit, shuld return false but true")
+		t.FailNow()
+	}
+
+	output := buf.String()
+	if output != "no not hit\n" {
+		t.Errorf("Invalid output '%s'", output)
 		t.FailNow()
 	}
 }

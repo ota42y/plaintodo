@@ -13,7 +13,7 @@ type Command interface {
 type Automaton struct {
 	Tasks    []*Task
 	Commands map[string]Command
-	Config   *Config // main.go
+	Config   *Config // config.go
 }
 
 func NewAutomaton(config *Config, commands map[string]Command) *Automaton {
@@ -40,6 +40,15 @@ func (a *Automaton) Execute(command string) (terminate bool) {
 	}
 
 	value, ok := a.Commands[cmd]
+
+	if a.Config != nil && a.Config.Writer != nil {
+		if ok {
+			a.Config.Writer.Write([]byte(cmd + " hit\n"))
+		} else {
+			a.Config.Writer.Write([]byte(cmd + " not hit\n"))
+		}
+	}
+
 	if ok {
 		return value.Execute(option, a)
 	} else {
