@@ -43,3 +43,19 @@ func NewLsCommand(w io.Writer) *LsCommand {
 		w: w,
 	}
 }
+
+type LsAllCommand struct {
+	w io.Writer
+}
+
+func (t *LsAllCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	showTasks := Ls(automaton.Tasks, nil)
+	Output(t.w, showTasks)
+	return false
+}
+
+func NewLsAllCommand(w io.Writer) *LsAllCommand {
+	return &LsAllCommand{
+		w: w,
+	}
+}

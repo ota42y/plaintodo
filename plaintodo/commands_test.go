@@ -59,3 +59,39 @@ func TestLsCommand(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestLsAllCommand(t *testing.T) {
+	cmds := make(map[string]Command)
+
+	buf := &bytes.Buffer{}
+	cmd := NewLsAllCommand(buf)
+	cmds["lsall"] = cmd
+
+	buf2 := &bytes.Buffer{}
+	cmd2 := NewLsCommand(buf2)
+	cmds["ls"] = cmd2
+
+	cmds["reload"] = NewReloadCommand()
+	a := NewAutomaton(ReadTestConfig(), cmds)
+
+	a.Execute("reload")
+	terminate := a.Execute("lsall")
+	if terminate {
+		t.Errorf("LsCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	a.Execute("ls")
+
+	length := len(buf.String())
+
+	if length == 0 {
+		t.Errorf("No outputs")
+		t.FailNow()
+	}
+
+	if length <= len(buf2.String()) {
+		t.Errorf("lsall output %d length, but it's shuld be more longer than ls command output length (%d)", length, len(buf2.String()))
+		t.FailNow()
+	}
+}
