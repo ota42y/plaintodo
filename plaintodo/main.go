@@ -9,6 +9,7 @@ func main() {
 	cmds["exit"] = NewExitCommand()
 	cmds["reload"] = NewReloadCommand()
 	cmds["ls"] = NewLsCommand(os.Stdout)
+	cmds["lsall"] = NewLsAllCommand(os.Stdout)
 
 	config := readConfig("config.toml")
 	config.Writer = os.Stdout
