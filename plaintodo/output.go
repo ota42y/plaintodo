@@ -18,6 +18,7 @@ func outputShowTask(w io.Writer, task *ShowTask) {
 func Output(w io.Writer, tasks []*ShowTask) {
 	for _, task := range tasks {
 		outputShowTask(w, task)
+		w.Write([]byte("\n")) // make blank line between top level task
 	}
 	return
 }
