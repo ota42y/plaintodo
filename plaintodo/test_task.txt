@@ -7,4 +7,4 @@ go to SSA :due 2015-02-01
     buy king blade
 
 rss
-  my site :url http://ota42y.com :due 2015-02-01 :important :repeat every 1 day
+  my site :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com

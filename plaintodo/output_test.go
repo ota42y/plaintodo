@@ -24,6 +24,7 @@ func TestPrint(t *testing.T) {
     buy battery
     buy ultra orange
     buy king blade
+
 `
 	results := strings.Split(buf.String(), "\n")
 
@@ -60,7 +61,7 @@ func TestAllTask(t *testing.T) {
     buy king blade
 
 rss
-  my site :url http://ota42y.com :due 2015-02-01 :important :repeat every 1 day
+  my site :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
 
 `
 	results := strings.Split(buf.String(), "\n")
@@ -80,4 +81,3 @@ rss
 	}
 
 }
-
