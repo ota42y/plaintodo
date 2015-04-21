@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"time"
+	"os"
 )
 
 type ExitCommand struct {
@@ -57,5 +58,25 @@ func (t *LsAllCommand) Execute(option string, automaton *Automaton) (terminate b
 func NewLsAllCommand(w io.Writer) *LsAllCommand {
 	return &LsAllCommand{
 		w: w,
+	}
+}
+
+type SaveCommand struct {
+}
+
+func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	fo, err := os.Create(automaton.Config.Paths.Task)
+	if err != nil {
+		automaton.Config.Writer.Write([]byte(err.Error()))
+		return false
+	}
+	defer fo.Close()
+
+	Output(fo, Ls(automaton.Tasks, nil)) // write all task
+	return false
+}
+
+func NewSaveCommand() *SaveCommand {
+	return &SaveCommand{
 	}
 }
