@@ -140,7 +140,7 @@ func TestNewTaskWithAttributes(t *testing.T) {
 	}
 }
 
-func TentNewTaskError(t *testing.T) {
+func TestNewTaskError(t *testing.T) {
 	line := "    "
 	task, err := NewTask(line)
 
