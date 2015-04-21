@@ -10,7 +10,7 @@ import (
 )
 
 // I don't know how to math by one regexp...
-var blankLineRegxpp, _ = regexp.Compile("^( *)$")
+var blankLineRegexp, _ = regexp.Compile("^( *)$")
 var baseRegExpWithAttributes, _ = regexp.Compile("^( *)([^:]+)( :.+)")
 var baseRegExpNoAttributes, _ = regexp.Compile("^( *)([^:]+)")
 
@@ -88,16 +88,16 @@ func getAttributes(raw string) map[string]string {
 func NewTask(line string) (*Task, error) {
 	b := []byte(line)
 
-	match := baseRegExpWithAttributes.FindSubmatch(b)
+	match := blankLineRegexp.FindSubmatch(b)
+	if len(match) != 0 {
+		return nil, errors.New("blank line")
+	}
+
+	match = baseRegExpWithAttributes.FindSubmatch(b)
 	if len(match) != 4 {
 		match = baseRegExpNoAttributes.FindSubmatch(b)
 		if len(match) != 3 {
-			match = blankLineRegxpp.FindSubmatch(b)
-			if len(match) != 0 {
-				return nil, errors.New("blank line")
-			} else {
-				return nil, errors.New("parse error")
-			}
+			return nil, errors.New("parse error")
 		}
 	}
 

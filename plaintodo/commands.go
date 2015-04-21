@@ -2,8 +2,8 @@ package main
 
 import (
 	"io"
-	"time"
 	"os"
+	"time"
 )
 
 type ExitCommand struct {
@@ -77,6 +77,5 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 }
 
 func NewSaveCommand() *SaveCommand {
-	return &SaveCommand{
-	}
+	return &SaveCommand{}
 }
