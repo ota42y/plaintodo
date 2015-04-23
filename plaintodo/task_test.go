@@ -16,6 +16,11 @@ func TestReadTasks(t *testing.T) {
 		t.Errorf("top level task isn't level 0")
 		t.FailNow()
 	}
+
+	if tasks[0].Id != 1 {
+		t.Errorf("first task's task id shuld be 1")
+		t.FailNow()
+	}
 }
 
 func TestCreateSubTasks(t *testing.T) {
@@ -45,6 +50,11 @@ func TestCreateSubTasks(t *testing.T) {
 		t.FailNow()
 	}
 
+	if subTask.Id != 4 {
+		t.Errorf("%s's id shuld be 4 but %d", subTask.Name, subTask.Id)
+		t.FailNow()
+	}
+
 	if len(subTask.SubTasks) != 3 {
 		t.Errorf("read subtask's subtask failed")
 		t.FailNow()
@@ -53,6 +63,11 @@ func TestCreateSubTasks(t *testing.T) {
 	subSubTask := subTask.SubTasks[0]
 	if subSubTask.Level != 2 {
 		t.Errorf("read subtask's subtask level failed")
+		t.FailNow()
+	}
+
+	if subTask.Id != 5 {
+		t.Errorf("%s's id shuld be 5 but %d", subTask.Name, subTask.Id)
 		t.FailNow()
 	}
 }
