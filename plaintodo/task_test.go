@@ -16,6 +16,11 @@ func TestReadTasks(t *testing.T) {
 		t.Errorf("top level task isn't level 0")
 		t.FailNow()
 	}
+
+	if tasks[0].Id != 1 {
+		t.Errorf("first task's task id shuld be 1")
+		t.FailNow()
+	}
 }
 
 func TestCreateSubTasks(t *testing.T) {
@@ -45,6 +50,11 @@ func TestCreateSubTasks(t *testing.T) {
 		t.FailNow()
 	}
 
+	if subTask.Id != 4 {
+		t.Errorf("%s's id shuld be 4 but %d", subTask.Name, subTask.Id)
+		t.FailNow()
+	}
+
 	if len(subTask.SubTasks) != 3 {
 		t.Errorf("read subtask's subtask failed")
 		t.FailNow()
@@ -55,11 +65,16 @@ func TestCreateSubTasks(t *testing.T) {
 		t.Errorf("read subtask's subtask level failed")
 		t.FailNow()
 	}
+
+	if subSubTask.Id != 5 {
+		t.Errorf("%s's id shuld be 5 but %d", subSubTask.Name, subSubTask.Id)
+		t.FailNow()
+	}
 }
 
 func TestNewTask(t *testing.T) {
 	line := "    add music to player"
-	task, err := NewTask(line)
+	task, err := NewTask(line, 1)
 
 	if err != nil {
 		t.Errorf("NewTask return error %v", err)
@@ -73,6 +88,11 @@ func TestNewTask(t *testing.T) {
 
 	if task.Level != 2 {
 		t.Errorf("task.Level shuold be 3 but %d", task.Level)
+		t.FailNow()
+	}
+
+	if task.Id != 1 {
+		t.Errorf("task.Id shuold be 1 but %d", task.Id)
 		t.FailNow()
 	}
 
@@ -91,7 +111,7 @@ func TestNewTask(t *testing.T) {
 
 func TestNewTaskWithAttributes(t *testing.T) {
 	line := "    create a set list :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com"
-	task, err := NewTask(line)
+	task, err := NewTask(line, 1)
 
 	if err != nil {
 		t.Errorf("NewTask return error %v", err)
@@ -105,6 +125,11 @@ func TestNewTaskWithAttributes(t *testing.T) {
 
 	if task.Level != 2 {
 		t.Errorf("task.Level shuold be 2 but %d", task.Level)
+		t.FailNow()
+	}
+
+	if task.Id != 1 {
+		t.Errorf("task.Id shuold be 1 but %d", task.Id)
 		t.FailNow()
 	}
 
@@ -142,7 +167,7 @@ func TestNewTaskWithAttributes(t *testing.T) {
 
 func TestNewTaskError(t *testing.T) {
 	line := "    "
-	task, err := NewTask(line)
+	task, err := NewTask(line, 1)
 
 	if err == nil {
 		t.Errorf("blank line return err, but err is nil")
