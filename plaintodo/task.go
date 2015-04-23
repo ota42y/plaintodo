@@ -85,7 +85,7 @@ func getAttributes(raw string) map[string]string {
 	return attributes
 }
 
-func NewTask(line string) (*Task, error) {
+func NewTask(line string, taskId int) (*Task, error) {
 	b := []byte(line)
 
 	match := blankLineRegexp.FindSubmatch(b)
@@ -101,7 +101,10 @@ func NewTask(line string) (*Task, error) {
 		}
 	}
 
-	task := Task{}
+	task := Task{
+		Id: taskId,
+	}
+
 	spaces := match[1]
 	task.Level = len(spaces) / spaceNum
 
@@ -116,14 +119,14 @@ func NewTask(line string) (*Task, error) {
 // create subtask under the level.
 // return subtasks and next Task (which Task.Level is greater than or same level)
 // if nextTask in null, all task read.
-func createSubTasks(level int, s *bufio.Scanner) (subTasks []*Task, nextTask *Task, err error) {
+func createSubTasks(level int, taskId int, s *bufio.Scanner) (subTasks []*Task, nextTask *Task, err error) {
 	subTasks = make([]*Task, 0)
 	var nowTask *Task = nil
 
 	// read next task or end input
 	for s.Scan() {
 		line := s.Text()
-		nowTask, err = NewTask(line)
+		nowTask, err = NewTask(line, taskId)
 
 		if nowTask != nil {
 			break
@@ -140,7 +143,7 @@ func createSubTasks(level int, s *bufio.Scanner) (subTasks []*Task, nextTask *Ta
 		subTasks = append(subTasks, nowTask)
 
 		// get subTasks
-		nowTask.SubTasks, nextTask, err = createSubTasks(nowTask.Level+1, s)
+		nowTask.SubTasks, nextTask, err = createSubTasks(nowTask.Level+1, nowTask.Id+1, s)
 		if err != nil {
 			return subTasks, nowTask, err
 		}
@@ -161,7 +164,8 @@ func createSubTasks(level int, s *bufio.Scanner) (subTasks []*Task, nextTask *Ta
 }
 
 func createTasks(s *bufio.Scanner) []*Task {
-	topLevelTasks, nextTask, err := createSubTasks(0, s)
+	taskId := 1
+	topLevelTasks, nextTask, err := createSubTasks(0, taskId, s)
 
 	if err != nil {
 		panic(err)
