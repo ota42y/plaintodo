@@ -35,7 +35,7 @@ type LsCommand struct {
 
 func (t *LsCommand) Execute(option string, automaton *Automaton) (terminate bool) {
 	showTasks := Ls(automaton.Tasks, NewExpireDateQuery("due", time.Now(), make([]Query, 0), make([]Query, 0)))
-	Output(t.w, showTasks)
+	Output(t.w, showTasks, true)
 	return false
 }
 
@@ -51,7 +51,7 @@ type LsAllCommand struct {
 
 func (t *LsAllCommand) Execute(option string, automaton *Automaton) (terminate bool) {
 	showTasks := Ls(automaton.Tasks, nil)
-	Output(t.w, showTasks)
+	Output(t.w, showTasks, true)
 	return false
 }
 
@@ -72,7 +72,7 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 	}
 	defer fo.Close()
 
-	Output(fo, Ls(automaton.Tasks, nil)) // write all task
+	Output(fo, Ls(automaton.Tasks, nil), false) // write all task
 	return false
 }
 

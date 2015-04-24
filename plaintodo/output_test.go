@@ -15,15 +15,15 @@ func TestPrint(t *testing.T) {
 	outputTasks[0] = showTasks[0]
 
 	buf := &bytes.Buffer{}
-	Output(buf, outputTasks)
+	Output(buf, outputTasks, true)
 
-	correctString := `go to SSA :due 2015-02-01
-  create a set list :due 2015-01-31 :important
-    add music to player
-  buy items
-    buy battery
-    buy ultra orange
-    buy king blade
+	correctString := `go to SSA :id 1 :due 2015-02-01
+  create a set list :id 2 :due 2015-01-31 :important
+    add music to player :id 3
+  buy items :id 4
+    buy battery :id 5
+    buy ultra orange :id 6
+    buy king blade :id 7
 
 `
 	results := strings.Split(buf.String(), "\n")
@@ -50,18 +50,18 @@ func TestAllTask(t *testing.T) {
 
 	// show all task
 	buf := &bytes.Buffer{}
-	Output(buf, showTasks)
+	Output(buf, showTasks, true)
 
-	correctString := `go to SSA :due 2015-02-01
-  create a set list :due 2015-01-31 :important
-    add music to player
-  buy items
-    buy battery
-    buy ultra orange
-    buy king blade
+	correctString := `go to SSA :id 1 :due 2015-02-01
+  create a set list :id 2 :due 2015-01-31 :important
+    add music to player :id 3
+  buy items :id 4
+    buy battery :id 5
+    buy ultra orange :id 6
+    buy king blade :id 7
 
-rss
-  my site :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+rss :id 8
+  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
 
 `
 	results := strings.Split(buf.String(), "\n")
@@ -79,5 +79,4 @@ rss
 			t.FailNow()
 		}
 	}
-
 }
