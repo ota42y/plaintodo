@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"regexp"
 	"sort"
@@ -32,6 +33,10 @@ func (t *Task) String(showId bool) string {
 
 	taskString := make([]string, 1)
 	taskString[0] = t.Name
+
+	if showId {
+		taskString = append(taskString, fmt.Sprint(":id ", t.Id))
+	}
 
 	attributesArray := make([]string, len(t.Attributes))
 	i := 0

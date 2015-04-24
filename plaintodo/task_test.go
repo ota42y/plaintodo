@@ -108,6 +108,7 @@ func TestNewTask(t *testing.T) {
 		t.FailNow()
 	}
 
+	taskString = task.String(true)
 	if taskString != "    add music to player :id 1" {
 		t.Errorf("task.String return invalid string %s", taskString)
 		t.FailNow()
@@ -169,6 +170,7 @@ func TestNewTaskWithAttributes(t *testing.T) {
 		t.FailNow()
 	}
 
+	taskString = task.String(true)
 	if taskString != "    create a set list :id 1 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com" {
 		t.Errorf("task.String return invalid string %s", taskString)
 		t.FailNow()
