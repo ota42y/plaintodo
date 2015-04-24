@@ -27,7 +27,7 @@ type Task struct {
 	SubTasks   []*Task
 }
 
-func (t *Task) String() string {
+func (t *Task) String(showId bool) string {
 	spaces := strings.Repeat(" ", t.Level*spaceNum)
 
 	taskString := make([]string, 1)
