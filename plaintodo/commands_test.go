@@ -98,6 +98,45 @@ func TestLsAllCommand(t *testing.T) {
 	}
 }
 
+func TestCompleteCommandError(t *testing.T) {
+	cmds := make(map[string]Command)
+
+	cmds["complete"] = NewCompleteCommand()
+
+	cmds["reload"] = NewReloadCommand()
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
+	a.Execute("reload")
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+
+	terminate := a.Execute(fmt.Sprintf("complete %da", 1))
+	if terminate {
+		t.Errorf("CompleteCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	outputString := buf.String()
+	if outputString != "complete hit\nstrconv.ParseInt: parsing \"1a\": invalid syntax" {
+		t.Errorf("CompleteCommand.Execute shuld write error, but %s", outputString)
+		t.FailNow()
+	}
+
+	buf.Reset()
+	terminate = a.Execute(fmt.Sprintf("complete %d", 100))
+	if terminate {
+		t.Errorf("CompleteCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	outputString = buf.String()
+	if outputString != "complete hit\nThere is no Task which have task id: 100\n" {
+		t.Errorf("CompleteCommand.Execute shuld write no such task error, but %s", outputString)
+		t.FailNow()
+	}
+}
+
 func TestCompleteCommand(t *testing.T) {
 	cmds := make(map[string]Command)
 
