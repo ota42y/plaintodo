@@ -96,6 +96,16 @@ func TestNewTask(t *testing.T) {
 		t.FailNow()
 	}
 
+	if len(task.Attributes) != 0 {
+		t.Errorf("task.Attributes shuld be empty but %v", task.Attributes)
+		t.FailNow()
+	}
+
+	if task.Attributes == nil {
+		t.Errorf("task.Attributes shuldn't be nil")
+		t.FailNow()
+	}
+
 	correctName := "add music to player"
 	if task.Name != correctName {
 		t.Errorf("task.Name shuold be %s but %s", correctName, task.Name)
