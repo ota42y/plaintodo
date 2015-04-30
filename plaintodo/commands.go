@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -78,4 +80,39 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 
 func NewSaveCommand() *SaveCommand {
 	return &SaveCommand{}
+}
+
+type CompleteCommand struct {
+}
+
+func (t *CompleteCommand) completeTask(taskId int, tasks []*Task) (isComplete bool) {
+	for _, task := range tasks {
+		if task.Id == taskId {
+			task.Attributes["complete"] = time.Now().Format(dateTimeFormat)
+			return true
+		}
+		if t.completeTask(taskId, task.SubTasks) {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *CompleteCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	taskId, err := strconv.Atoi(option)
+	if err != nil {
+		automaton.Config.Writer.Write([]byte(err.Error()))
+		return false
+	}
+
+	if !t.completeTask(taskId, automaton.Tasks) {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", taskId)))
+		return false
+	}
+
+	return false
+}
+
+func NewCompleteCommand() *CompleteCommand {
+	return &CompleteCommand{}
 }

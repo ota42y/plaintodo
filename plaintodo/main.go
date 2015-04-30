@@ -11,6 +11,7 @@ func main() {
 	cmds["ls"] = NewLsCommand(os.Stdout)
 	cmds["lsall"] = NewLsAllCommand(os.Stdout)
 	cmds["save"] = NewSaveCommand()
+	cmds["complete"] = NewCompleteCommand()
 
 	config := readConfig("config.toml")
 	config.Writer = os.Stdout

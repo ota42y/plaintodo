@@ -117,6 +117,8 @@ func NewTask(line string, taskId int) (*Task, error) {
 
 	if 3 < len(match) {
 		task.Attributes = getAttributes(string(match[3]))
+	} else {
+		task.Attributes = make(map[string]string)
 	}
 	return &task, nil
 }

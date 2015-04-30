@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
+	"time"
 )
 
 func TestExitCommand(t *testing.T) {
@@ -92,6 +94,97 @@ func TestLsAllCommand(t *testing.T) {
 
 	if length <= len(buf2.String()) {
 		t.Errorf("lsall output %d length, but it's shuld be more longer than ls command output length (%d)", length, len(buf2.String()))
+		t.FailNow()
+	}
+}
+
+func TestCompleteCommandError(t *testing.T) {
+	cmds := make(map[string]Command)
+
+	cmds["complete"] = NewCompleteCommand()
+
+	cmds["reload"] = NewReloadCommand()
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
+	a.Execute("reload")
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+
+	terminate := a.Execute(fmt.Sprintf("complete %da", 1))
+	if terminate {
+		t.Errorf("CompleteCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	outputString := buf.String()
+	if outputString != "complete hit\nstrconv.ParseInt: parsing \"1a\": invalid syntax" {
+		t.Errorf("CompleteCommand.Execute shuld write error, but %s", outputString)
+		t.FailNow()
+	}
+
+	buf.Reset()
+	terminate = a.Execute(fmt.Sprintf("complete %d", 100))
+	if terminate {
+		t.Errorf("CompleteCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	outputString = buf.String()
+	if outputString != "complete hit\nThere is no Task which have task id: 100\n" {
+		t.Errorf("CompleteCommand.Execute shuld write no such task error, but %s", outputString)
+		t.FailNow()
+	}
+}
+
+func TestCompleteCommand(t *testing.T) {
+	cmds := make(map[string]Command)
+
+	cmds["complete"] = NewCompleteCommand()
+
+	cmds["reload"] = NewReloadCommand()
+	a := NewAutomaton(ReadTestConfig(), cmds)
+	a.Execute("reload")
+	task := a.Tasks[0]
+
+	if task.Attributes["complete"] != "" {
+		t.Errorf("Task[\"complete\"} isn't blank")
+		t.FailNow()
+	}
+
+	terminate := a.Execute(fmt.Sprintf("complete %d", task.Id))
+	if terminate {
+		t.Errorf("CompleteCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	_, err := time.Parse(dateTimeFormat, task.Attributes["complete"])
+	if err != nil {
+		t.Errorf("Task complete format invalid '%s'", task.Attributes["complete"])
+		t.FailNow()
+	}
+}
+
+func TestCompleteTask(t *testing.T) {
+	tasks := ReadTestTasks()
+	cmd := NewCompleteCommand()
+
+	isComplete := cmd.completeTask(0, tasks)
+	if isComplete {
+		t.Errorf("If there is no task with taskId, completeTask shuld return false, but true")
+		t.FailNow()
+	}
+
+	isComplete = cmd.completeTask(4, tasks)
+	if !isComplete {
+		t.Errorf("If there is task with taskId, completeTask shuld return true, but false")
+		t.FailNow()
+	}
+
+	completeString := tasks[0].SubTasks[1].Attributes["complete"]
+	_, err := time.Parse(dateTimeFormat, completeString)
+	if err != nil {
+		t.Errorf("Task complete format invalid '%s'", completeString)
 		t.FailNow()
 	}
 }
