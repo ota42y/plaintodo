@@ -79,3 +79,14 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 func NewSaveCommand() *SaveCommand {
 	return &SaveCommand{}
 }
+
+type CompleteCommand struct {
+}
+
+func (t *CompleteCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	return false
+}
+
+func NewCompleteCommand() *CompleteCommand {
+	return &CompleteCommand{}
+}

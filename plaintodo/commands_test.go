@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
+	"time"
 )
 
 func TestExitCommand(t *testing.T) {
@@ -92,6 +94,34 @@ func TestLsAllCommand(t *testing.T) {
 
 	if length <= len(buf2.String()) {
 		t.Errorf("lsall output %d length, but it's shuld be more longer than ls command output length (%d)", length, len(buf2.String()))
+		t.FailNow()
+	}
+}
+
+func TestCompleteCommand(t *testing.T) {
+	cmds := make(map[string]Command)
+
+	cmds["complete"] = NewCompleteCommand()
+
+	cmds["reload"] = NewReloadCommand()
+	a := NewAutomaton(ReadTestConfig(), cmds)
+	a.Execute("reload")
+	task := a.Tasks[0]
+
+	if task.Attributes["complete"] != "" {
+		t.Errorf("Task[\"complete\"} isn't blank")
+		t.FailNow()
+	}
+
+	terminate := a.Execute(fmt.Sprintf("complete %d", task.Id))
+	if terminate {
+		t.Errorf("CompleteCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	_, err := time.Parse(dateTimeFormat, task.Attributes["complete"])
+	if err != nil {
+		t.Errorf("Task complete format invalid '%s'", task.Attributes["complete"])
 		t.FailNow()
 	}
 }
