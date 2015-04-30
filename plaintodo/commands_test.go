@@ -125,3 +125,27 @@ func TestCompleteCommand(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestCompleteTask(t *testing.T) {
+	tasks := ReadTestTasks()
+	cmd := NewCompleteCommand()
+
+	isComplete := cmd.completeTask(0, tasks)
+	if isComplete {
+		t.Errorf("If there is no task with taskId, completeTask shuld return false, but true")
+		t.FailNow()
+	}
+
+	isComplete = cmd.completeTask(4, tasks)
+	if !isComplete {
+		t.Errorf("If there is task with taskId, completeTask shuld return true, but false")
+		t.FailNow()
+	}
+
+	completeString := tasks[0].SubTasks[1].Attributes["complete"]
+	_, err := time.Parse(dateTimeFormat, completeString)
+	if err != nil {
+		t.Errorf("Task complete format invalid '%s'", completeString)
+		t.FailNow()
+	}
+}

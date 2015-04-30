@@ -83,6 +83,19 @@ func NewSaveCommand() *SaveCommand {
 type CompleteCommand struct {
 }
 
+func (t *CompleteCommand) completeTask(taskId int, tasks []*Task) (isComplete bool) {
+	for _, task := range tasks {
+		if task.Id == taskId {
+			task.Attributes["complete"] = time.Now().Format(dateTimeFormat)
+			return true
+		}
+		if t.completeTask(taskId, task.SubTasks) {
+			return true
+		}
+	}
+	return false
+}
+
 func (t *CompleteCommand) Execute(option string, automaton *Automaton) (terminate bool) {
 	return false
 }
