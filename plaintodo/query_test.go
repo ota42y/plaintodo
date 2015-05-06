@@ -44,7 +44,7 @@ func TestKeyValueQuery(t *testing.T) {
 /*
 get second task and one subtask
 */
-func TestExpireDateQuery(t *testing.T) {
+func TestBeforeDateQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
 	key := "due"
@@ -57,7 +57,7 @@ func TestExpireDateQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	query := NewExpireDateQuery(key, value, make([]Query, 0), make([]Query, 0))
+	query := NewBeforeDateQuery(key, value, make([]Query, 0), make([]Query, 0))
 	showTasks := Ls(tasks, query)
 
 	if len(showTasks) == 0 {
@@ -90,10 +90,54 @@ func TestExpireDateQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	query = NewExpireDateQuery(key, value, make([]Query, 0), make([]Query, 0))
+	query = NewBeforeDateQuery(key, value, make([]Query, 0), make([]Query, 0))
 	showTasks = Ls(tasks, query)
 	if len(showTasks) != 2 {
 		t.Errorf("return 2 tasks but %d", len(showTasks))
+		t.FailNow()
+	}
+}
+
+
+func TestAfterDateQuery(t *testing.T) {
+	tasks := ReadTestTasks()
+
+	tasks[0].SubTasks[0].Attributes["complete"] = "2015-01-31 10:42"
+	tasks[0].SubTasks[1].Attributes["complete"] = "2015-02-02 10:42"
+
+	key := "complete"
+	dueTime := "2015-02-01 00:00"
+
+	var timeformat = "2006-01-02 15:04"
+	value, err := time.Parse(timeformat, dueTime)
+	if err != nil {
+		t.Errorf("time parse error")
+		t.FailNow()
+	}
+
+	query := NewAfterDateQuery(key, value, make([]Query, 0), make([]Query, 0))
+	showTasks := Ls(tasks, query)
+
+	if len(showTasks) == 0 {
+		t.Errorf("return no tasks")
+		t.FailNow()
+	}
+
+	showTask := showTasks[0]
+
+	if showTask.Task.Name != tasks[0].Name {
+		t.Errorf("filter isn't valid")
+		t.FailNow()
+	}
+
+	if len(showTask.SubTasks) != 1 {
+		t.Errorf("SubTasks num isn't 1")
+		t.FailNow()
+	}
+
+	subTask := showTask.SubTasks[0]
+	if subTask.Task.Name != tasks[0].SubTasks[1].Name {
+		t.Errorf("SubTasks isn't correct")
 		t.FailNow()
 	}
 }
