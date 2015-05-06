@@ -64,15 +64,15 @@ func NewKeyValueQuery(key string, value string, and []Query, or []Query) *KeyVal
 	}
 }
 
-type ExpireDateQuery struct {
+type BeforeDateQuery struct {
 	*QueryBase
 
 	key   string
 	value time.Time
 }
 
-func NewExpireDateQuery(key string, value time.Time, and []Query, or []Query) *ExpireDateQuery {
-	return &ExpireDateQuery{
+func NewBeforeDateQuery(key string, value time.Time, and []Query, or []Query) *BeforeDateQuery {
+	return &BeforeDateQuery{
 		QueryBase: &QueryBase{
 			and: and,
 			or:  or,
@@ -82,7 +82,7 @@ func NewExpireDateQuery(key string, value time.Time, and []Query, or []Query) *E
 	}
 }
 
-func (query ExpireDateQuery) Check(task *Task) bool {
+func (query *BeforeDateQuery) Check(task *Task) bool {
 	if task == nil {
 		return false
 	}
@@ -100,4 +100,43 @@ func (query ExpireDateQuery) Check(task *Task) bool {
 	}
 
 	return query.checkSubQuery(task, t.Before(query.value))
+}
+
+
+type AfterDateQuery struct {
+	*QueryBase
+
+	key   string
+	value time.Time
+}
+
+func NewAfterDateQuery(key string, value time.Time, and []Query, or []Query) *AfterDateQuery {
+	return &AfterDateQuery{
+		QueryBase: &QueryBase{
+			and: and,
+			or:  or,
+		},
+		key:   key,
+		value: value,
+	}
+}
+
+func (query *AfterDateQuery) Check(task *Task) bool {
+	if task == nil {
+		return false
+	}
+
+	dateString := task.Attributes[query.key]
+
+	var t time.Time
+	t, err := time.Parse(dateTimeFormat, dateString)
+	if err != nil {
+		t, err = time.Parse(dateFormat, dateString)
+		if err != nil {
+			// no date value
+			return query.checkSubQuery(task, false)
+		}
+	}
+
+	return query.checkSubQuery(task, t.After(query.value))
 }

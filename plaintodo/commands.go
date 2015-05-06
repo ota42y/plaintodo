@@ -36,7 +36,7 @@ type LsCommand struct {
 }
 
 func (t *LsCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	showTasks := Ls(automaton.Tasks, NewExpireDateQuery("due", time.Now(), make([]Query, 0), make([]Query, 0)))
+	showTasks := Ls(automaton.Tasks, NewBeforeDateQuery("due", time.Now(), make([]Query, 0), make([]Query, 0)))
 	Output(t.w, showTasks, true)
 	return false
 }
