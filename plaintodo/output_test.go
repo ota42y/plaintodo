@@ -19,7 +19,7 @@ func TestPrint(t *testing.T) {
 
 	correctString := `go to SSA :id 1 :due 2015-02-01
   create a set list :id 2 :due 2015-01-31 :important
-    add music to player :id 3
+    add music to player :id 3 :due 2015-01-30
   buy items :id 4
     buy battery :id 5
     buy ultra orange :id 6
@@ -54,7 +54,7 @@ func TestAllTask(t *testing.T) {
 
 	correctString := `go to SSA :id 1 :due 2015-02-01
   create a set list :id 2 :due 2015-01-31 :important
-    add music to player :id 3
+    add music to player :id 3 :due 2015-01-30
   buy items :id 4
     buy battery :id 5
     buy ultra orange :id 6
