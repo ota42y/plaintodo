@@ -16,7 +16,7 @@ type QueryBase struct {
 	or  []Query
 }
 
-func (query QueryBase) checkSubQuery(task *Task, isShow bool) bool {
+func (query *QueryBase) checkSubQuery(task *Task, isShow bool) bool {
 	// If this query return true, check all and query
 	// (Even if or query exist, we don't need check these.
 	if isShow {
@@ -45,7 +45,7 @@ type KeyValueQuery struct {
 	value string
 }
 
-func (query KeyValueQuery) Check(task *Task) bool {
+func (query *KeyValueQuery) Check(task *Task) bool {
 	if task == nil {
 		return false
 	}
@@ -61,6 +61,31 @@ func NewKeyValueQuery(key string, value string, and []Query, or []Query) *KeyVal
 		},
 		key:   key,
 		value: value,
+	}
+}
+
+type NoKeyQuery struct {
+	*QueryBase
+
+	key string
+}
+
+func (query *NoKeyQuery) Check(task *Task) bool {
+	if task == nil {
+		return false
+	}
+
+	_, ok := task.Attributes[query.key]
+	return query.checkSubQuery(task, !ok)
+}
+
+func NewNoKeyQuery(key string, and []Query, or []Query) *NoKeyQuery {
+	return &NoKeyQuery{
+		QueryBase: &QueryBase{
+			and: and,
+			or:  or,
+		},
+		key: key,
 	}
 }
 
@@ -101,7 +126,6 @@ func (query *BeforeDateQuery) Check(task *Task) bool {
 
 	return query.checkSubQuery(task, t.Before(query.value))
 }
-
 
 type AfterDateQuery struct {
 	*QueryBase

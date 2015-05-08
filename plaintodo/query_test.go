@@ -41,6 +41,33 @@ func TestKeyValueQuery(t *testing.T) {
 	}
 }
 
+func TestNoKeyQuery(t *testing.T) {
+	tasks := ReadTestTasks()
+
+	query := NewNoKeyQuery("due", make([]Query, 0), make([]Query, 0))
+	showTasks := Ls(tasks, query)
+
+	if showTasks == nil {
+		t.Errorf("filter is nil")
+		t.FailNow()
+	}
+
+	if len(showTasks) != 2 {
+		t.Errorf("return shuld be 2 show tasks, but %d", len(showTasks))
+		t.FailNow()
+	}
+
+	if len(showTasks[0].SubTasks) != 1 {
+		t.Errorf("return shud be task which haven't due attribute but there is %d task", len(showTasks[0].SubTasks))
+		t.FailNow()
+	}
+
+	if len(showTasks[1].SubTasks) != 0 {
+		t.Errorf("return shud be task which haven't due attribute but there is %d task", len(showTasks[1].SubTasks))
+		t.FailNow()
+	}
+}
+
 /*
 get second task and one subtask
 */
@@ -98,12 +125,11 @@ func TestBeforeDateQuery(t *testing.T) {
 	}
 }
 
-
 func TestAfterDateQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
 	tasks[0].SubTasks[0].Attributes["complete"] = "2015-01-31 10:42"
-	tasks[0].SubTasks[1].Attributes["complete"] = "2015-02-02 10:42"
+	tasks[1].SubTasks[0].Attributes["complete"] = "2015-02-02 10:42"
 
 	key := "complete"
 	dueTime := "2015-02-01 00:00"
@@ -125,7 +151,7 @@ func TestAfterDateQuery(t *testing.T) {
 
 	showTask := showTasks[0]
 
-	if showTask.Task.Name != tasks[0].Name {
+	if showTask.Task.Name != tasks[1].Name {
 		t.Errorf("filter isn't valid")
 		t.FailNow()
 	}
@@ -136,8 +162,39 @@ func TestAfterDateQuery(t *testing.T) {
 	}
 
 	subTask := showTask.SubTasks[0]
-	if subTask.Task.Name != tasks[0].SubTasks[1].Name {
+	if subTask.Task.Name != tasks[1].SubTasks[0].Name {
 		t.Errorf("SubTasks isn't correct")
+		t.FailNow()
+	}
+
+	orQuery := make([]Query, 0)
+	orQuery = append(orQuery, query)
+	noCompleteOrTodayCompleteQuery := NewNoKeyQuery("due", make([]Query, 0), orQuery)
+	showTasks = Ls(tasks, noCompleteOrTodayCompleteQuery)
+
+	if len(showTasks) != 2 {
+		t.Errorf("return shuld be 2 tasks but %d task", len(showTasks))
+		t.FailNow()
+	}
+
+	if len(showTasks[0].SubTasks) != 1 {
+		t.Errorf("return shud be task which haven't due attribute but there is %d task", len(showTasks[0].SubTasks))
+		t.FailNow()
+	}
+
+	// or query can reverse
+	orQuery = make([]Query, 0)
+	orQuery = append(orQuery, NewNoKeyQuery("due", make([]Query, 0), make([]Query, 0)))
+	reverseOrQuery := NewAfterDateQuery(key, value, make([]Query, 0), orQuery)
+	showTasks = Ls(tasks, reverseOrQuery)
+
+	if len(showTasks) != 2 {
+		t.Errorf("return shuld be 2 tasks but %d task", len(showTasks))
+		t.FailNow()
+	}
+
+	if len(showTasks[0].SubTasks) != 1 {
+		t.Errorf("return shud be task which haven't due attribute but there is %d task", len(showTasks[0].SubTasks))
 		t.FailNow()
 	}
 }
