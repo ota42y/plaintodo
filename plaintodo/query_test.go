@@ -198,3 +198,52 @@ func TestAfterDateQuery(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestSameDayQuery(t *testing.T) {
+	tasks := ReadTestTasks()
+
+	tasks[0].SubTasks[0].Attributes["complete"] = "2015-02-01 10:42"
+	tasks[0].SubTasks[1].Attributes["complete"] = "2015-02-01 20:42"
+
+	key := "complete"
+	dueTime := "2015-02-01 12:00"
+
+	var timeformat = "2006-01-02 15:04"
+	value, err := time.Parse(timeformat, dueTime)
+	if err != nil {
+		t.Errorf("time parse error")
+		t.FailNow()
+	}
+
+	query := NewSameDayQuery(key, value, make([]Query, 0), make([]Query, 0))
+	showTasks := Ls(tasks, query)
+
+	if len(showTasks) == 0 {
+		t.Errorf("return no tasks")
+		t.FailNow()
+	}
+
+	showTask := showTasks[0]
+
+	if showTask.Task.Name != tasks[0].Name {
+		t.Errorf("filter isn't valid")
+		t.FailNow()
+	}
+
+	if len(showTask.SubTasks) != 2 {
+		t.Errorf("SubTasks num isn't 2")
+		t.FailNow()
+	}
+
+	subTask := showTask.SubTasks[0]
+	if subTask.Task.Name != tasks[0].SubTasks[0].Name {
+		t.Errorf("SubTasks isn't correct")
+		t.FailNow()
+	}
+
+	if len(subTask.SubTasks) != 0 {
+		t.Errorf("There is not same day query")
+		t.FailNow()
+	}
+
+}
