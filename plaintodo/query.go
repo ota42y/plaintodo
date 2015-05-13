@@ -164,3 +164,46 @@ func (query *AfterDateQuery) Check(task *Task) bool {
 
 	return query.checkSubQuery(task, t.After(query.value))
 }
+
+type SameDayQuery struct {
+	*QueryBase
+
+	key   string
+	value time.Time
+}
+
+func NewSameDayQuery(key string, value time.Time, and []Query, or []Query) *SameDayQuery {
+	return &SameDayQuery{
+		QueryBase: &QueryBase{
+			and: and,
+			or:  or,
+		},
+		key:   key,
+		value: value,
+	}
+}
+
+func (query *SameDayQuery) Check(task *Task) bool {
+	if task == nil {
+		return false
+	}
+
+	dateString := task.Attributes[query.key]
+
+	var t time.Time
+	t, err := time.Parse(dateTimeFormat, dateString)
+	if err != nil {
+		t, err = time.Parse(dateFormat, dateString)
+		if err != nil {
+			// no date value
+			return query.checkSubQuery(task, false)
+		}
+	}
+
+	// not check time
+	year, month, day := t.Date()
+	y, m, d := query.value.Date()
+	ok := (y == year) && (m == month) && (d == day)
+
+	return query.checkSubQuery(task, ok)
+}
