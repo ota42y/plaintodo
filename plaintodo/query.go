@@ -7,6 +7,19 @@ import (
 var dateTimeFormat = "2006-01-02 15:04"
 var dateFormat = "2006-01-02"
 
+func ParseTime(dateString string) (time.Time, bool) {
+	var t time.Time
+	t, err := time.Parse(dateTimeFormat, dateString)
+	if err != nil {
+		t, err = time.Parse(dateFormat, dateString)
+		if err != nil {
+			// not date value
+			return t, false
+		}
+	}
+	return t, true
+}
+
 type Query interface {
 	Check(task *Task) bool
 }
@@ -113,18 +126,13 @@ func (query *BeforeDateQuery) Check(task *Task) bool {
 	}
 
 	dateString := task.Attributes[query.key]
+	t, ok := ParseTime(dateString)
 
-	var t time.Time
-	t, err := time.Parse(dateTimeFormat, dateString)
-	if err != nil {
-		t, err = time.Parse(dateFormat, dateString)
-		if err != nil {
-			// no date value
-			return query.checkSubQuery(task, false)
-		}
+	if ok {
+		return query.checkSubQuery(task, t.Before(query.value))
+	} else {
+		return query.checkSubQuery(task, false)
 	}
-
-	return query.checkSubQuery(task, t.Before(query.value))
 }
 
 type AfterDateQuery struct {
@@ -152,17 +160,12 @@ func (query *AfterDateQuery) Check(task *Task) bool {
 
 	dateString := task.Attributes[query.key]
 
-	var t time.Time
-	t, err := time.Parse(dateTimeFormat, dateString)
-	if err != nil {
-		t, err = time.Parse(dateFormat, dateString)
-		if err != nil {
-			// no date value
-			return query.checkSubQuery(task, false)
-		}
+	t, ok := ParseTime(dateString)
+	if ok {
+		return query.checkSubQuery(task, t.After(query.value))
+	} else {
+		return query.checkSubQuery(task, false)
 	}
-
-	return query.checkSubQuery(task, t.After(query.value))
 }
 
 type SameDayQuery struct {
@@ -190,20 +193,16 @@ func (query *SameDayQuery) Check(task *Task) bool {
 
 	dateString := task.Attributes[query.key]
 
-	var t time.Time
-	t, err := time.Parse(dateTimeFormat, dateString)
-	if err != nil {
-		t, err = time.Parse(dateFormat, dateString)
-		if err != nil {
-			// no date value
-			return query.checkSubQuery(task, false)
-		}
+	t, ok := ParseTime(dateString)
+
+	if ok {
+		// not check time
+		year, month, day := t.Date()
+		y, m, d := query.value.Date()
+		ok := (y == year) && (m == month) && (d == day)
+
+		return query.checkSubQuery(task, ok)
+	} else {
+		return query.checkSubQuery(task, false)
 	}
-
-	// not check time
-	year, month, day := t.Date()
-	y, m, d := query.value.Date()
-	ok := (y == year) && (m == month) && (d == day)
-
-	return query.checkSubQuery(task, ok)
 }
