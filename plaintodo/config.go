@@ -6,12 +6,18 @@ import (
 )
 
 type Config struct {
-	Paths  PathConfig
-	Writer io.Writer
+	Archive ArchiveConfig
+	Paths   PathConfig
+	Writer  io.Writer
 }
 
 type PathConfig struct {
 	Task string
+}
+
+type ArchiveConfig struct {
+	Directory  string
+	NameFormat string
 }
 
 func readConfig(tomlFilepath string) *Config {

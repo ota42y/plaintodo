@@ -1,2 +1,6 @@
 [paths]
 task = "./test_task.txt"
+
+[archive]
+directory = "archives"
+nameFormat = "2006-01-02"
