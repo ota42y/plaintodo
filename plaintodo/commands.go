@@ -4,9 +4,25 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"sort"
 	"strconv"
 	"time"
 )
+
+type timeList []time.Time
+
+func (l timeList) Len() int {
+	return len(l)
+}
+
+func (l timeList) Less(i, j int) bool {
+	return l[i].Before(l[j])
+}
+
+func (l timeList) Swap(i, j int) {
+	l[i], l[j] = l[j], l[i]
+}
 
 type ExitCommand struct {
 }
@@ -66,15 +82,82 @@ func NewLsAllCommand(w io.Writer) *LsAllCommand {
 type SaveCommand struct {
 }
 
-func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	fo, err := os.Create(automaton.Config.Paths.Task)
+func (t *SaveCommand) collectCompleteDay(tasks []*Task, times *map[string]bool) {
+	for _, task := range tasks {
+		completeDateString, ok := task.Attributes["complete"]
+		if ok {
+			t, ok := ParseTime(completeDateString)
+			if ok {
+				str := t.Format(dateFormat)
+				(*times)[str] = true
+			}
+		}
+
+		t.collectCompleteDay(task.SubTasks, times)
+	}
+}
+
+func (t *SaveCommand) getCompleteDayList(tasks []*Task) []time.Time {
+	allTimes := make(map[string]bool)
+	t.collectCompleteDay(tasks, &allTimes)
+
+	times := make(timeList, 0)
+	for key, _ := range allTimes {
+		t, ok := ParseTime(key)
+		if ok {
+			times = append(times, t)
+		}
+	}
+
+	sort.Sort(times)
+	return times
+}
+
+func (t *SaveCommand) appendFile(filePath string, tasks []*ShowTask) (terminate bool, err error) {
+	fo, err := os.OpenFile(filePath, os.O_RDWR|os.O_APPEND, 0660)
 	if err != nil {
-		automaton.Config.Writer.Write([]byte(err.Error()))
-		return false
+		return false, err
 	}
 	defer fo.Close()
 
-	Output(fo, Ls(automaton.Tasks, nil), false) // write all task
+	Output(fo, tasks, false)
+	return true, nil
+}
+
+func (t *SaveCommand) writeFile(filePath string, tasks []*ShowTask) (terminate bool, err error) {
+	fo, err := os.Create(filePath)
+	if err != nil {
+		return false, err
+	}
+	defer fo.Close()
+
+	Output(fo, tasks, false)
+	return true, nil
+}
+
+func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	today, ok := ParseTime(time.Now().Format(dateFormat))
+	if !ok {
+		automaton.Config.Writer.Write([]byte("time format error"))
+		return false
+	}
+
+	// save old task to task file
+	times := t.getCompleteDayList(automaton.Tasks)
+	for _, value := range times {
+		if value != today {
+			fileName := value.Format(automaton.Config.Archive.NameFormat) + ".txt"
+			p := path.Join(automaton.Config.Archive.Directory, fileName)
+
+			query := NewSameDayQuery("complete", value, make([]Query, 0), make([]Query, 0))
+			t.appendFile(p, Ls(automaton.Tasks, query))
+		}
+	}
+
+	orQuery := make([]Query, 0)
+	orQuery = append(orQuery, NewNoKeyQuery("complete", make([]Query, 0), make([]Query, 0)))
+	query := NewSameDayQuery("complete", time.Now(), make([]Query, 0), orQuery)
+	t.writeFile(automaton.Config.Paths.Task, Ls(automaton.Tasks, query)) // write today's complete or no complete task
 	return false
 }
 
