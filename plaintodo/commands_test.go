@@ -175,13 +175,13 @@ func TestCompleteTask(t *testing.T) {
 		t.FailNow()
 	}
 
-	isComplete = cmd.completeTask(4, tasks)
+	isComplete = cmd.completeTask(9, tasks)
 	if !isComplete {
 		t.Errorf("If there is task with taskId, completeTask shuld return true, but false")
 		t.FailNow()
 	}
 
-	completeString := tasks[0].SubTasks[1].Attributes["complete"]
+	completeString := tasks[1].SubTasks[0].Attributes["complete"]
 	_, err := time.Parse(dateTimeFormat, completeString)
 	if err != nil {
 		t.Errorf("Task complete format invalid '%s'", completeString)
