@@ -165,6 +165,21 @@ func TestCompleteCommand(t *testing.T) {
 	}
 }
 
+func isAllCompleted(task *Task) bool {
+	_, ok := task.Attributes["complete"]
+	if !ok {
+		return false
+	}
+
+	for _, subTask := range task.SubTasks {
+		if !isAllCompleted(subTask) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func TestCompleteTask(t *testing.T) {
 	tasks := ReadTestTasks()
 	cmd := NewCompleteCommand()
@@ -175,9 +190,17 @@ func TestCompleteTask(t *testing.T) {
 		t.FailNow()
 	}
 
+	alreadyCompleted := "2014-01-01"
+	tasks[0].SubTasks[1].SubTasks[1].Attributes["complete"] = alreadyCompleted
+
 	isComplete = cmd.completeTask(4, tasks)
 	if !isComplete {
 		t.Errorf("If there is task with taskId, completeTask shuld return true, but false")
+		t.FailNow()
+	}
+
+	if !isAllCompleted(tasks[0].SubTasks[1]) {
+		t.Errorf("not complete selected task and all sub tasks")
 		t.FailNow()
 	}
 
@@ -185,6 +208,19 @@ func TestCompleteTask(t *testing.T) {
 	_, err := time.Parse(dateTimeFormat, completeString)
 	if err != nil {
 		t.Errorf("Task complete format invalid '%s'", completeString)
+		t.FailNow()
+	}
+
+	completeString = tasks[0].SubTasks[1].SubTasks[0].Attributes["complete"]
+	_, err = time.Parse(dateTimeFormat, completeString)
+	if err != nil {
+		t.Errorf("Task complete format invalid '%s'", completeString)
+		t.FailNow()
+	}
+
+	alreadyCompletedAttribute := tasks[0].SubTasks[1].SubTasks[1].Attributes["complete"]
+	if (alreadyCompleted != alreadyCompletedAttribute) || alreadyCompletedAttribute == completeString {
+		t.Errorf("Already completed task isn't overwrite but %s", alreadyCompletedAttribute)
 		t.FailNow()
 	}
 }
