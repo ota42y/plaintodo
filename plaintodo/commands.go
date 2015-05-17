@@ -169,7 +169,12 @@ type CompleteCommand struct {
 }
 
 func (t *CompleteCommand) completeAllSubTask(dateString string, task *Task) {
-	task.Attributes["complete"] = dateString
+	_, ok := task.Attributes["complete"]
+	if !ok {
+		// if not completed, set complete date
+		task.Attributes["complete"] = dateString
+	}
+
 	for _, subTask := range task.SubTasks {
 		t.completeAllSubTask(dateString, subTask)
 	}
