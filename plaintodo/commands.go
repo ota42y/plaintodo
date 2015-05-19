@@ -159,6 +159,8 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 	orQuery = append(orQuery, NewNoKeyQuery("complete", make([]Query, 0), make([]Query, 0)))
 	query := NewSameDayQuery("complete", time.Now(), make([]Query, 0), orQuery)
 	t.writeFile(automaton.Config.Paths.Task, Ls(automaton.Tasks, query)) // write today's complete or no complete task
+
+	automaton.Tasks = ReadTasks(automaton.Config.Paths.Task)
 	return false
 }
 
