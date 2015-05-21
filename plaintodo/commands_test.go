@@ -143,7 +143,8 @@ func TestCompleteCommand(t *testing.T) {
 	cmds["complete"] = NewCompleteCommand()
 
 	cmds["reload"] = NewReloadCommand()
-	a := NewAutomaton(ReadTestConfig(), cmds)
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 	task := a.Tasks[0]
 
@@ -151,6 +152,9 @@ func TestCompleteCommand(t *testing.T) {
 		t.Errorf("Task[\"complete\"} isn't blank")
 		t.FailNow()
 	}
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
 
 	terminate := a.Execute(fmt.Sprintf("complete %d", task.Id))
 	if terminate {
@@ -161,6 +165,13 @@ func TestCompleteCommand(t *testing.T) {
 	_, err := time.Parse(dateTimeFormat, task.Attributes["complete"])
 	if err != nil {
 		t.Errorf("Task complete format invalid '%s'", task.Attributes["complete"])
+		t.FailNow()
+	}
+
+	outputString := buf.String()
+	correctString := fmt.Sprintf("complete hit\nComplete %s and %d sub tasks\n", task.Name, 7)
+	if outputString != correctString {
+		t.Errorf("CompleteCommand.Execute shuld write '%s', but '%s'", correctString, outputString)
 		t.FailNow()
 	}
 }
@@ -184,18 +195,28 @@ func TestCompleteTask(t *testing.T) {
 	tasks := ReadTestTasks()
 	cmd := NewCompleteCommand()
 
-	isComplete := cmd.completeTask(0, tasks)
-	if isComplete {
-		t.Errorf("If there is no task with taskId, completeTask shuld return false, but true")
+	completeTask, n := cmd.completeTask(0, tasks)
+	if completeTask != nil {
+		t.Errorf("If there is no task with taskId, completeTask shuld return nil, but %v", completeTask)
+		t.FailNow()
+	}
+
+	if n != 0 {
+		t.Errorf("If there is no task with taskId, completeTask shuld return complete 0 subtask, but %d", n)
 		t.FailNow()
 	}
 
 	alreadyCompleted := "2014-01-01"
 	tasks[0].SubTasks[1].SubTasks[1].Attributes["complete"] = alreadyCompleted
 
-	isComplete = cmd.completeTask(4, tasks)
-	if !isComplete {
-		t.Errorf("If there is task with taskId, completeTask shuld return true, but false")
+	completeTask, n = cmd.completeTask(4, tasks)
+	if completeTask == nil {
+		t.Errorf("If there is task with taskId, completeTask shuld return complete task, but nil")
+		t.FailNow()
+	}
+
+	if n != 3 {
+		t.Errorf("If there is task with taskId, completeTask shuld return complete subtask num (4) but %d", n)
 		t.FailNow()
 	}
 
@@ -262,3 +283,4 @@ func TestGetCompleteDayList(t *testing.T) {
 		}
 	}
 }
+
