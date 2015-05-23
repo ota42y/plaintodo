@@ -171,29 +171,33 @@ func NewSaveCommand() *SaveCommand {
 type CompleteCommand struct {
 }
 
-func (t *CompleteCommand) completeAllSubTask(dateString string, task *Task) {
+func (t *CompleteCommand) completeAllSubTask(dateString string, task *Task) (completeNum int){
+	n := 0
+
 	_, ok := task.Attributes["complete"]
 	if !ok {
 		// if not completed, set complete date
 		task.Attributes["complete"] = dateString
+		n += 1
 	}
 
 	for _, subTask := range task.SubTasks {
-		t.completeAllSubTask(dateString, subTask)
+		n += t.completeAllSubTask(dateString, subTask)
 	}
+	return n
 }
 
-func (t *CompleteCommand) completeTask(taskId int, tasks []*Task) (isComplete bool) {
+func (t *CompleteCommand) completeTask(taskId int, tasks []*Task) (completeTask *Task, completeNum int) {
 	for _, task := range tasks {
 		if task.Id == taskId {
-			t.completeAllSubTask(time.Now().Format(dateTimeFormat), task)
-			return true
+			return task, t.completeAllSubTask(time.Now().Format(dateTimeFormat), task)
 		}
-		if t.completeTask(taskId, task.SubTasks) {
-			return true
+		t, n := t.completeTask(taskId, task.SubTasks)
+		if t != nil {
+			return t, n
 		}
 	}
-	return false
+	return nil, 0
 }
 
 func (t *CompleteCommand) Execute(option string, automaton *Automaton) (terminate bool) {
@@ -203,14 +207,17 @@ func (t *CompleteCommand) Execute(option string, automaton *Automaton) (terminat
 		return false
 	}
 
-	if !t.completeTask(taskId, automaton.Tasks) {
+	task, n := t.completeTask(taskId, automaton.Tasks)
+	if task == nil {
 		automaton.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", taskId)))
 		return false
 	}
 
+	automaton.Config.Writer.Write([]byte(fmt.Sprintf("Complete %s and %d sub tasks\n", task.Name, n)))
 	return false
 }
 
 func NewCompleteCommand() *CompleteCommand {
 	return &CompleteCommand{}
 }
+
