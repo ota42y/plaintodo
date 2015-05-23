@@ -114,7 +114,7 @@ func (t *SaveCommand) getCompleteDayList(tasks []*Task) []time.Time {
 }
 
 func (t *SaveCommand) appendFile(filePath string, tasks []*ShowTask) (terminate bool, err error) {
-	fo, err := os.OpenFile(filePath, os.O_RDWR|os.O_APPEND, 0660)
+	fo, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		return false, err
 	}
@@ -151,6 +151,7 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 
 			query := NewSameDayQuery("complete", value, make([]Query, 0), make([]Query, 0))
 			t.appendFile(p, Ls(automaton.Tasks, query))
+			automaton.Config.Writer.Write([]byte("append tasks to " + p + "\n"))
 		}
 	}
 
@@ -158,6 +159,8 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 	orQuery = append(orQuery, NewNoKeyQuery("complete", make([]Query, 0), make([]Query, 0)))
 	query := NewSameDayQuery("complete", time.Now(), make([]Query, 0), orQuery)
 	t.writeFile(automaton.Config.Paths.Task, Ls(automaton.Tasks, query)) // write today's complete or no complete task
+
+	automaton.Tasks = ReadTasks(automaton.Config.Paths.Task)
 	return false
 }
 

@@ -17,6 +17,7 @@ func main() {
 	config.Writer = os.Stdout
 	if config != nil {
 		l := NewLiner(config, cmds)
+		l.automaton.Execute("reload")
 		l.Start()
 	}
 }
