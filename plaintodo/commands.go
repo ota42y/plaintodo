@@ -39,7 +39,7 @@ type ReloadCommand struct {
 }
 
 func (t *ReloadCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	automaton.Tasks = ReadTasks(automaton.Config.Paths.Task)
+	automaton.Tasks, automaton.MaxTaskId = ReadTasks(automaton.Config.Paths.Task)
 	return false
 }
 
@@ -160,7 +160,7 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 	query := NewSameDayQuery("complete", time.Now(), make([]Query, 0), orQuery)
 	t.writeFile(automaton.Config.Paths.Task, Ls(automaton.Tasks, query)) // write today's complete or no complete task
 
-	automaton.Tasks = ReadTasks(automaton.Config.Paths.Task)
+	automaton.Tasks, automaton.MaxTaskId = ReadTasks(automaton.Config.Paths.Task)
 	return false
 }
 
@@ -171,7 +171,7 @@ func NewSaveCommand() *SaveCommand {
 type CompleteCommand struct {
 }
 
-func (t *CompleteCommand) completeAllSubTask(dateString string, task *Task) (completeNum int){
+func (t *CompleteCommand) completeAllSubTask(dateString string, task *Task) (completeNum int) {
 	n := 0
 
 	_, ok := task.Attributes["complete"]
@@ -221,3 +221,22 @@ func NewCompleteCommand() *CompleteCommand {
 	return &CompleteCommand{}
 }
 
+type AddTaskCommand struct {
+}
+
+func (t *AddTaskCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	nowTask, err := NewTask(option, automaton.MaxTaskId+1)
+	if err != nil {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
+		return false
+	}
+
+	automaton.Tasks = append(automaton.Tasks, nowTask)
+	automaton.MaxTaskId = nowTask.Id
+	automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task: %s\n", nowTask.String(true))))
+	return false
+}
+
+func NewAddTaskCommand() *AddTaskCommand {
+	return &AddTaskCommand{}
+}

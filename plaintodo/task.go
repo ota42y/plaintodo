@@ -126,23 +126,25 @@ func NewTask(line string, taskId int) (*Task, error) {
 // create subtask under the level.
 // return subtasks and next Task (which Task.Level is greater than or same level)
 // if nextTask in null, all task read.
-func createSubTasks(level int, taskId int, s *bufio.Scanner) (subTasks []*Task, nextTask *Task, err error) {
+func createSubTasks(level int, nowTaskId int, s *bufio.Scanner) (subTasks []*Task, nextTask *Task, maxTaskId int, err error) {
 	subTasks = make([]*Task, 0)
 	var nowTask *Task = nil
+	maxTaskId = nowTaskId
 
 	// read next task or end input
 	for s.Scan() {
 		line := s.Text()
-		nowTask, err = NewTask(line, taskId)
+		nowTask, err = NewTask(line, maxTaskId+1)
 
 		if nowTask != nil {
+			maxTaskId = nowTask.Id
 			break
 		}
 
 		// if blank line, skip this line
 		// if not blank line end parse
 		if err.Error() != "blank line" {
-			return subTasks, nowTask, err
+			return subTasks, nowTask, maxTaskId, err
 		}
 	}
 
@@ -150,9 +152,9 @@ func createSubTasks(level int, taskId int, s *bufio.Scanner) (subTasks []*Task, 
 		subTasks = append(subTasks, nowTask)
 
 		// get subTasks
-		nowTask.SubTasks, nextTask, err = createSubTasks(nowTask.Level+1, nowTask.Id+1, s)
+		nowTask.SubTasks, nextTask, nowTaskId, err = createSubTasks(nowTask.Level+1, maxTaskId, s)
 		if err != nil {
-			return subTasks, nowTask, err
+			return subTasks, nowTask, nowTaskId, err
 		}
 
 		// if get smaller level task, createSubTasks end
@@ -160,19 +162,19 @@ func createSubTasks(level int, taskId int, s *bufio.Scanner) (subTasks []*Task, 
 		// createSubTasks don't return greater level task
 		if nextTask != nil {
 			if nextTask.Level < level {
-				return subTasks, nextTask, nil
+				return subTasks, nextTask, nowTaskId, nil
 			}
 		}
 
+		maxTaskId = nowTaskId
 		nowTask = nextTask
 	}
-
-	return subTasks, nowTask, nil
+	return subTasks, nowTask, maxTaskId, nil
 }
 
-func createTasks(s *bufio.Scanner) []*Task {
-	taskId := 1
-	topLevelTasks, nextTask, err := createSubTasks(0, taskId, s)
+func createTasks(s *bufio.Scanner) ([]*Task, int) {
+	taskId := 0
+	topLevelTasks, nextTask, maxTaskId, err := createSubTasks(0, taskId, s)
 
 	if err != nil {
 		panic(err)
@@ -182,10 +184,10 @@ func createTasks(s *bufio.Scanner) []*Task {
 		panic("create Task error, there is -1 or smaller task level exist")
 	}
 
-	return topLevelTasks
+	return topLevelTasks, maxTaskId
 }
 
-func ReadTasks(filename string) []*Task {
+func ReadTasks(filename string) ([]*Task, int) {
 	var fp *os.File
 	var err error
 
@@ -196,10 +198,10 @@ func ReadTasks(filename string) []*Task {
 	defer fp.Close()
 
 	scanner := bufio.NewScanner(fp)
-	tasks := createTasks(scanner)
+	tasks, maxTaskId := createTasks(scanner)
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
 
-	return tasks
+	return tasks, maxTaskId
 }

@@ -11,9 +11,10 @@ type Command interface {
 }
 
 type Automaton struct {
-	Tasks    []*Task
-	Commands map[string]Command
-	Config   *Config // config.go
+	Tasks     []*Task
+	MaxTaskId int
+	Commands  map[string]Command
+	Config    *Config // config.go
 }
 
 func NewAutomaton(config *Config, commands map[string]Command) *Automaton {
