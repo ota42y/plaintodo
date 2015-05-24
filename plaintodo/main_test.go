@@ -6,7 +6,8 @@ import (
 
 func ReadTestTasks() []*Task {
 	filename := "test_task.txt"
-	return ReadTasks(filename)
+	tasks, _ := ReadTasks(filename)
+	return tasks
 }
 
 func ReadTestConfig() *Config {

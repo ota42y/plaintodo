@@ -38,6 +38,12 @@ func TestReloadCommand(t *testing.T) {
 		t.Errorf("Task num shuldn't be 0")
 		t.FailNow()
 	}
+
+	id := a.Tasks[1].SubTasks[0].Id
+	if a.MaxTaskId != id {
+		t.Errorf("Save max task id %d, but %d", id, a.MaxTaskId)
+		t.FailNow()
+	}
 }
 
 func TestLsCommand(t *testing.T) {
@@ -283,4 +289,3 @@ func TestGetCompleteDayList(t *testing.T) {
 		}
 	}
 }
-
