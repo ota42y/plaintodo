@@ -220,3 +220,23 @@ func (t *CompleteCommand) Execute(option string, automaton *Automaton) (terminat
 func NewCompleteCommand() *CompleteCommand {
 	return &CompleteCommand{}
 }
+
+type AddTaskCommand struct {
+}
+
+func (t *AddTaskCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	nowTask, err := NewTask(option, automaton.MaxTaskId+1)
+	if err != nil {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
+		return false
+	}
+
+	automaton.Tasks = append(automaton.Tasks, nowTask)
+	automaton.MaxTaskId = nowTask.Id
+	automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task: %s\n", nowTask.String(true))))
+	return false
+}
+
+func NewAddTaskCommand() *AddTaskCommand {
+	return &AddTaskCommand{}
+}

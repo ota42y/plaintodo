@@ -289,3 +289,61 @@ func TestGetCompleteDayList(t *testing.T) {
 		}
 	}
 }
+
+func TestAddTaskCommand(t *testing.T) {
+	taskName := "create new task"
+	taskDue := "2015-02-01"
+
+	cmds := make(map[string]Command)
+	cmds["task"] = NewAddTaskCommand()
+	cmds["reload"] = NewReloadCommand()
+
+	config := ReadTestConfig()
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+
+	a := NewAutomaton(config, cmds)
+
+	input := "task " + taskName + " :due " + taskDue
+	terminate := a.Execute(input)
+
+	if terminate {
+		t.Errorf("AddTaskCommand terminate automaton")
+		t.FailNow()
+	}
+
+	if len(a.Tasks) == 0 {
+		t.Errorf("Task not add")
+		t.FailNow()
+	}
+
+	task := a.Tasks[0]
+	if task.Name != taskName {
+		t.Errorf("Task name shud %s, but %s", taskName, task.Name)
+		t.FailNow()
+	}
+
+	if task.Attributes["due"] != taskDue {
+		t.Errorf("Task due shud %s, but %s", taskDue, task.Attributes["due"])
+		t.FailNow()
+	}
+
+	outputString := buf.String()
+	correctString := "task hit\nCreate task: " + taskName + " :id 1 :due " + taskDue + "\n"
+	if outputString != correctString {
+		t.Errorf("Output %s, but %s", correctString, outputString)
+		t.FailNow()
+	}
+
+	buf = &bytes.Buffer{}
+	config.Writer = buf
+	a.Execute("task ")
+
+	outputString = buf.String()
+	correctString = "task hit\nCreate task error: blank line\n"
+	if outputString != correctString {
+		t.Errorf("Output %s, but %s", correctString, outputString)
+		t.FailNow()
+	}
+
+}
