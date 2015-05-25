@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 	"time"
@@ -239,4 +240,52 @@ func (t *AddTaskCommand) Execute(option string, automaton *Automaton) (terminate
 
 func NewAddTaskCommand() *AddTaskCommand {
 	return &AddTaskCommand{}
+}
+
+var subTaskRegexp, _ = regexp.Compile("^([0-9])+ (.+)$")
+
+type AddSubTaskCommand struct {
+}
+
+func (t *AddSubTaskCommand) addSubTask(taskId int, addTask *Task, tasks []*Task) (parent *Task, success bool) {
+	for _, task := range tasks {
+		if task.Id == taskId {
+			task.SubTasks = append(task.SubTasks, addTask)
+			return task, true
+		}
+		parent, success = t.addSubTask(taskId, addTask, task.SubTasks)
+		if success {
+			return parent, success
+		}
+	}
+	return nil, false
+}
+
+func (t *AddSubTaskCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	match := subTaskRegexp.FindSubmatch([]byte(option))
+	if len(match) < 3 {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create Subtask error: invalid format '%s'\n", option)))
+		return false
+	}
+
+	nowTask, err := NewTask(string(match[2]), automaton.MaxTaskId+1)
+	if err != nil {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
+		return false
+	}
+
+	parentTaskId, _ := strconv.Atoi(string(match[1]))
+	parent, success := t.addSubTask(parentTaskId, nowTask, automaton.Tasks)
+	if success {
+		automaton.MaxTaskId = nowTask.Id
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask:\nParent: %s\nSubTask: %s\n", parent.String(true), nowTask.String(true))))
+	} else {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask error: thee is no task which have :id %d\n", parentTaskId)))
+	}
+
+	return false
+}
+
+func NewAddSubTaskCommand() *AddSubTaskCommand {
+	return &AddSubTaskCommand{}
 }
