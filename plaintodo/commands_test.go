@@ -328,12 +328,19 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
+	if a.MaxTaskId != task.Id {
+		t.Errorf("Automaton.MaxTaskId shuld be %d, but %d", a.MaxTaskId, task.Id)
+		t.FailNow()
+	}
+
 	outputString := buf.String()
 	correctString := "task hit\nCreate task: " + taskName + " :id 1 :due " + taskDue + "\n"
 	if outputString != correctString {
 		t.Errorf("Output %s, but %s", correctString, outputString)
 		t.FailNow()
 	}
+
+	taskId := a.MaxTaskId
 
 	buf = &bytes.Buffer{}
 	config.Writer = buf
@@ -346,4 +353,97 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
+	if a.MaxTaskId != taskId {
+		t.Errorf("When error occerd, Automaton.MaxTaskId shuldn't change but %d", taskId)
+		t.FailNow()
+	}
+}
+
+func TestAddSubTaskCommand(t *testing.T) {
+	taskName := "create sub task"
+	taskDue := "2015-02-01"
+
+	cmds := make(map[string]Command)
+	cmds["subtask"] = NewAddSubTaskCommand()
+	cmds["reload"] = NewReloadCommand()
+
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
+	a.Execute("reload")
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+
+	taskId := a.MaxTaskId
+
+	input := "subtask 6 " + taskName + " :due " + taskDue
+	terminate := a.Execute(input)
+
+	if terminate {
+		t.Errorf("AddSubTaskCommand terminate automaton")
+		t.FailNow()
+	}
+
+	parent := a.Tasks[0].SubTasks[1].SubTasks[1]
+
+	if len(parent.SubTasks) == 0 {
+		t.Errorf("SubTask not add")
+		t.FailNow()
+	}
+
+	task := parent.SubTasks[0]
+	if task.Name != taskName {
+		t.Errorf("Task name shud %s, but %s", taskName, task.Name)
+		t.FailNow()
+	}
+
+	if task.Attributes["due"] != taskDue {
+		t.Errorf("Task due shud %s, but %s", taskDue, task.Attributes["due"])
+		t.FailNow()
+	}
+
+	if taskId+1 != task.Id {
+		t.Errorf("Task's id shud be %d but %d", taskId+1, task.Id)
+		t.FailNow()
+	}
+
+	if a.MaxTaskId != task.Id {
+		t.Errorf("Automaton.MaxTaskId shuld be %d, but %d", a.MaxTaskId, task.Id)
+		t.FailNow()
+	}
+	taskId = a.MaxTaskId
+
+	outputString := buf.String()
+	correctString := "subtask hit\nCreate SubTask:\nParent: " + parent.String(true) + "\nSubTask: " + task.String(true) + "\n"
+	if outputString != correctString {
+		t.Errorf("Output %s, but %s", correctString, outputString)
+		t.FailNow()
+	}
+
+	buf = &bytes.Buffer{}
+	config.Writer = buf
+	a.Execute("subtask test")
+
+	outputString = buf.String()
+	correctString = "subtask hit\nCreate Subtask error: invalid format 'test'\n"
+	if outputString != correctString {
+		t.Errorf("Output %s, but %s", correctString, outputString)
+		t.FailNow()
+	}
+
+	buf = &bytes.Buffer{}
+	config.Writer = buf
+	a.Execute("subtask 0 no parent task")
+
+	outputString = buf.String()
+	correctString = "subtask hit\nCreate SubTask error: thee is no task which have :id 0\n"
+	if outputString != correctString {
+		t.Errorf("Output %s, but %s", correctString, outputString)
+		t.FailNow()
+	}
+
+	if a.MaxTaskId != taskId {
+		t.Errorf("When error occerd, Automaton.MaxTaskId shuldn't change but %d", taskId)
+		t.FailNow()
+	}
 }
