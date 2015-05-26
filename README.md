@@ -65,6 +65,63 @@ nameFormat = "2006-01-02"
 
 ### commands
 
+### add
+Add new task.
+
+```
+> ls
+ls hit
+go to SSA :id 1 :due 2015-02-01
+  create a set list :id 2 :due 2015-01-31 :important
+    add music to player :id 3 :due 2015-01-30
+
+rss :id 8
+  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  
+> task write reply mail :due 2015-02-01
+task hit
+Create task: write reply mail :id 10 :due 2015-02-01
+> ls
+ls hit
+go to SSA :id 1 :due 2015-02-01
+  create a set list :id 2 :due 2015-01-31 :important
+    add music to player :id 3 :due 2015-01-30
+
+rss :id 8
+  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  
+write reply mail :id 10 :due 2015-02-01
+```
+
+### subtask
+Add sub task.
+
+```
+> ls
+ls hit
+go to SSA :id 1 :due 2015-02-01
+  create a set list :id 2 :due 2015-01-31 :important
+    add music to player :id 3 :due 2015-01-30
+
+rss :id 8
+  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  
+> subtask 2 change volume
+subtask hit
+Create SubTask:
+Parent: create a set list :id 2 :due 2015-01-31 :important
+SubTask: change volume :id 10
+> ls
+ls hit
+go to SSA :id 1 :due 2015-02-01
+  create a set list :id 2 :due 2015-01-31 :important
+    add music to player :id 3 :due 2015-01-30
+    change volume :id 10
+
+rss :id 8
+  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+```
+
 #### ls
 Show all overdate task, which check :due
 (sorry, this isn't support query yet)
