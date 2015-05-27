@@ -23,6 +23,93 @@ func TestReadTasks(t *testing.T) {
 	}
 }
 
+func TestEqualTasks(t *testing.T) {
+	task := &Task{
+		Level:      1,
+		Id:         1,
+		Name:       "name",
+		Attributes: make(map[string]string),
+		SubTasks:   make([]*Task, 0),
+	}
+	task.Attributes["attr"] = "attr"
+
+	subTask := &Task{
+		Level:      2,
+		Id:         2,
+		Name:       "subtask",
+		Attributes: make(map[string]string),
+		SubTasks:   make([]*Task, 0),
+	}
+	subTask.Attributes["attr"] = "subattr"
+	task.SubTasks = append(task.SubTasks, subTask)
+
+	eqTask := &Task{
+		Level:      1,
+		Id:         3,
+		Name:       "name",
+		Attributes: make(map[string]string),
+		SubTasks:   make([]*Task, 0),
+	}
+	task.Attributes["attr"] = "attr"
+
+	eqSubTask := &Task{
+		Level:      2,
+		Id:         4,
+		Name:       "subtask",
+		Attributes: make(map[string]string),
+		SubTasks:   make([]*Task, 0),
+	}
+	eqSubTask.Attributes["attr"] = "subattr"
+	eqTask.SubTasks = append(eqTask.SubTasks, eqSubTask)
+
+	eqTask.Name = "notEq"
+	if task.Equal(eqTask) {
+		t.Errorf("even task name isn't equal, Task.Equal return true")
+		t.FailNow()
+	}
+	eqTask.Name = "name"
+
+	eqTask.Level = 10
+	if task.Equal(eqTask) {
+		t.Errorf("even task level isn't equal, Task.Equal return true")
+		t.FailNow()
+	}
+	eqTask.Level = 1
+
+	eqTask.Attributes["attr"] = "aaaa"
+	if task.Equal(eqTask) {
+		t.Errorf("even task attribute isn't equal, Task.Equal return true")
+		t.FailNow()
+	}
+	eqTask.Attributes["attr"] = "attr"
+
+	eqTask.Attributes["bbb"] = "test"
+	if task.Equal(eqTask) {
+		t.Errorf("even task attribute isn't equal, Task.Equal return true")
+		t.FailNow()
+	}
+	delete(eqTask.Attributes, "bbb")
+
+	eqTask.SubTasks = make([]*Task, 0)
+	if task.Equal(eqTask) {
+		t.Errorf("even subtask num isn't equal, Task.Equal return true")
+		t.FailNow()
+	}
+	eqTask.SubTasks = append(eqTask.SubTasks, eqSubTask)
+
+	eqSubTask.Name = "notEq"
+	if task.Equal(eqTask) {
+		t.Errorf("even subtask isn't equal, Task.Equal return true")
+		t.FailNow()
+	}
+	eqSubTask.Name = "subtask"
+
+	if !task.Equal(eqTask) {
+		t.Errorf("task isn't equal")
+		t.FailNow()
+	}
+}
+
 func TestCreateSubTasks(t *testing.T) {
 	tasks := ReadTestTasks()
 
