@@ -28,6 +28,38 @@ type Task struct {
 	SubTasks   []*Task
 }
 
+func (t *Task) Equal(task *Task) bool {
+	if t.Name != task.Name {
+		return false
+	}
+
+	if t.Level != task.Level {
+		return false
+	}
+
+	if len(t.Attributes) != len(task.Attributes) {
+		return false
+	}
+
+	for key, value := range task.Attributes {
+		if t.Attributes[key] != value {
+			return false
+		}
+	}
+
+	if len(t.SubTasks) != len(task.SubTasks) {
+		return false
+	}
+
+	for index, subTask := range task.SubTasks {
+		if !t.SubTasks[index].Equal(subTask) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (t *Task) String(showId bool) string {
 	spaces := strings.Repeat(" ", t.Level*spaceNum)
 
