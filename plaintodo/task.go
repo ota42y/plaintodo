@@ -60,6 +60,26 @@ func (t *Task) Equal(task *Task) bool {
 	return true
 }
 
+func (t *Task) Copy(taskId int) *Task {
+	attributes := make(map[string]string)
+	for key, value := range t.Attributes {
+		attributes[key] = value
+	}
+
+	subTasks := make([]*Task, 0)
+	for index, subTask := range t.SubTasks {
+		subTasks = append(subTasks, subTask.Copy(taskId+index+1))
+	}
+
+	return &Task{
+		Level:      t.Level,
+		Id:         taskId,
+		Name:       t.Name,
+		Attributes: attributes,
+		SubTasks:   subTasks,
+	}
+}
+
 func (t *Task) String(showId bool) string {
 	spaces := strings.Repeat(" ", t.Level*spaceNum)
 
