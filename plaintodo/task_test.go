@@ -23,6 +23,34 @@ func TestReadTasks(t *testing.T) {
 	}
 }
 
+func TestCopyTasks(t *testing.T) {
+	task := &Task{
+		Level:      1,
+		Id:         1,
+		Name:       "name",
+		Attributes: make(map[string]string),
+		SubTasks:   make([]*Task, 0),
+	}
+	task.Attributes["attr"] = "attr"
+
+	subTask := &Task{
+		Level:      2,
+		Id:         2,
+		Name:       "subtask",
+		Attributes: make(map[string]string),
+		SubTasks:   make([]*Task, 0),
+	}
+	subTask.Attributes["attr"] = "subattr"
+	task.SubTasks = append(task.SubTasks, subTask)
+
+	copyTask := task.Copy(3)
+
+	if !task.Equal(copyTask) {
+		t.Errorf("Task.Copy don't return same task")
+		t.FailNow()
+	}
+}
+
 func TestEqualTasks(t *testing.T) {
 	task := &Task{
 		Level:      1,
