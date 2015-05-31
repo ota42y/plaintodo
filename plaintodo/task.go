@@ -60,15 +60,17 @@ func (t *Task) Equal(task *Task) bool {
 	return true
 }
 
-func (t *Task) Copy(taskId int) *Task {
+func (t *Task) Copy(taskId int, copySubTask bool) *Task {
 	attributes := make(map[string]string)
 	for key, value := range t.Attributes {
 		attributes[key] = value
 	}
 
 	subTasks := make([]*Task, 0)
-	for index, subTask := range t.SubTasks {
-		subTasks = append(subTasks, subTask.Copy(taskId+index+1))
+	if copySubTask {
+		for index, subTask := range t.SubTasks {
+			subTasks = append(subTasks, subTask.Copy(taskId+index+1, copySubTask))
+		}
 	}
 
 	return &Task{

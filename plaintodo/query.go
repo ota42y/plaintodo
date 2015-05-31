@@ -9,14 +9,15 @@ var dateFormat = "2006-01-02"
 
 func ParseTime(dateString string) (time.Time, bool) {
 	var t time.Time
-	t, err := time.Parse(dateTimeFormat, dateString)
+	t, err := time.Parse(dateTimeFormat+"-0700", dateString+"+0900")
 	if err != nil {
-		t, err = time.Parse(dateFormat, dateString)
+		t, err = time.Parse(dateFormat+"-0700", dateString+"+0900")
 		if err != nil {
 			// not date value
 			return t, false
 		}
 	}
+
 	return t, true
 }
 
