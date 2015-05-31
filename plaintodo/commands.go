@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -170,45 +171,120 @@ func NewSaveCommand() *SaveCommand {
 }
 
 type CompleteCommand struct {
+	MaxTaskId int
 }
 
-func (t *CompleteCommand) completeAllSubTask(dateString string, task *Task) (completeNum int) {
-	n := 0
+func (t *CompleteCommand) addDuration(base time.Time, num string, unit string) time.Time {
+	n, err := strconv.Atoi(num)
+	if err != nil {
+		return time.Unix(0, 0)
+	}
+	switch {
+	case unit == "minutes":
+		return base.Add(time.Duration(n) * time.Minute)
+	case unit == "hour":
+		return base.Add(time.Duration(n) * time.Hour)
+	case unit == "day":
+		return base.AddDate(0, 0, n)
+	case unit == "week":
+		return base.AddDate(0, 0, n*7)
+	case unit == "month":
+		return base.AddDate(0, n, 0)
+	case unit == "year":
+		return base.AddDate(n, 0, 0)
+	}
 
-	_, ok := task.Attributes["complete"]
+	return time.Unix(0, 0)
+}
+
+func (t *CompleteCommand) setNewRepeat(baseTime time.Time, task *Task) {
+	repeatString, ok := task.Attributes["repeat"]
+	if !ok {
+		return
+	}
+
+	// every 1 day
+	splits := strings.Split(repeatString, " ")
+	if len(splits) != 3 {
+		return
+	}
+
+	if splits[0] == "every" {
+		dueString, ok := task.Attributes["due"]
+		if !ok {
+			return
+		}
+		baseTime, ok = ParseTime(dueString)
+		if !ok {
+			return
+		}
+	}
+
+	newTime := t.addDuration(baseTime, splits[1], splits[2])
+	task.Attributes["due"] = newTime.Format(dateTimeFormat)
+}
+
+func (t *CompleteCommand) completeAllSubTask(completeDate time.Time, task *Task) (repeatTask *Task, completeNum int) {
+	n := 0
+	newSubTasks := make([]*Task, 0)
+
+	for _, subTask := range task.SubTasks {
+		repeatSubTask, num := t.completeAllSubTask(completeDate, subTask)
+		n += num
+		if repeatSubTask != nil {
+			newSubTasks = append(newSubTasks, repeatSubTask)
+		}
+	}
+
+	_, ok := task.Attributes["repeat"]
+	if len(newSubTasks) != 0 || ok {
+		repeatTask = task.Copy(t.MaxTaskId+1, false)
+		repeatTask.SubTasks = newSubTasks
+		t.setNewRepeat(completeDate, repeatTask)
+		t.MaxTaskId += 1
+	}
+
+	_, ok = task.Attributes["complete"]
 	if !ok {
 		// if not completed, set complete date
-		task.Attributes["complete"] = dateString
+		task.Attributes["complete"] = completeDate.Format(dateTimeFormat)
 		n += 1
 	}
 
-	for _, subTask := range task.SubTasks {
-		n += t.completeAllSubTask(dateString, subTask)
-	}
-	return n
+	return repeatTask, n
 }
 
-func (t *CompleteCommand) completeTask(taskId int, tasks []*Task) (completeTask *Task, completeNum int) {
+func (t *CompleteCommand) completeTask(taskId int, tasks []*Task) (completeTask *Task, newTasks []*Task, completeNum int) {
 	for _, task := range tasks {
 		if task.Id == taskId {
-			return task, t.completeAllSubTask(time.Now().Format(dateTimeFormat), task)
+			repeatTask, n := t.completeAllSubTask(time.Now(), task)
+			if repeatTask != nil {
+				tasks = append(tasks, repeatTask)
+			}
+
+			return task, tasks, n
 		}
-		t, n := t.completeTask(taskId, task.SubTasks)
-		if t != nil {
-			return t, n
+		completeTask, newTasks, n := t.completeTask(taskId, task.SubTasks)
+		if completeTask != nil {
+			task.SubTasks = newTasks
+			return completeTask, tasks, n
 		}
 	}
-	return nil, 0
+	return nil, tasks, 0
 }
 
 func (t *CompleteCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	t.MaxTaskId = automaton.MaxTaskId
+
 	taskId, err := strconv.Atoi(option)
 	if err != nil {
 		automaton.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 
-	task, n := t.completeTask(taskId, automaton.Tasks)
+	task, newTasks, n := t.completeTask(taskId, automaton.Tasks)
+	automaton.Tasks = newTasks
+	automaton.MaxTaskId = t.MaxTaskId
 	if task == nil {
 		automaton.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", taskId)))
 		return false

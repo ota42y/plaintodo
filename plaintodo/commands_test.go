@@ -197,13 +197,148 @@ func isAllCompleted(task *Task) bool {
 	return true
 }
 
+func TestSetNewRepeat(t *testing.T) {
+	cmd := NewCompleteCommand()
+	task := &Task{
+		Attributes: make(map[string]string),
+	}
+
+	now := time.Now()
+	base := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.Local)
+	task.Attributes["due"] = base.Format(dateTimeFormat)
+
+	task.Attributes["repeat"] = "every 1 day"
+	cmd.setNewRepeat(now, task)
+	correct := base.AddDate(0, 0, 1)
+	correctString := correct.Format(dateTimeFormat)
+
+	if correctString != task.Attributes["due"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+		t.FailNow()
+	}
+
+	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["repeat"] = "every 1 month"
+	cmd.setNewRepeat(now, task)
+	correct = base.AddDate(0, 1, 0)
+	correctString = correct.Format(dateTimeFormat)
+
+	if correctString != task.Attributes["due"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+		t.FailNow()
+	}
+
+	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["repeat"] = "every 1 year"
+	cmd.setNewRepeat(now, task)
+	correct = base.AddDate(1, 0, 0)
+	correctString = correct.Format(dateTimeFormat)
+
+	if correctString != task.Attributes["due"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+		t.FailNow()
+	}
+
+	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["repeat"] = "every 2 week"
+	cmd.setNewRepeat(now, task)
+	correct = base.AddDate(0, 0, 14)
+	correctString = correct.Format(dateTimeFormat)
+
+	if correctString != task.Attributes["due"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+		t.FailNow()
+	}
+
+	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["repeat"] = "every 30 minutes"
+	cmd.setNewRepeat(now, task)
+	correct = base.Add(30 * time.Minute)
+	correctString = correct.Format(dateTimeFormat)
+
+	if correctString != task.Attributes["due"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+		t.FailNow()
+	}
+
+	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["repeat"] = "every 2 hour"
+	cmd.setNewRepeat(now, task)
+	correct = base.Add(2 * time.Hour)
+	correctString = correct.Format(dateTimeFormat)
+
+	if correctString != task.Attributes["due"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+		t.FailNow()
+	}
+
+	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["repeat"] = "after 4 day"
+	cmd.setNewRepeat(now, task)
+	correct = now.AddDate(0, 0, 4)
+	correctString = correct.Format(dateTimeFormat)
+
+	if correctString != task.Attributes["due"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+		t.FailNow()
+	}
+}
+
+func TestCompleteRepeatTask(t *testing.T) {
+	tasks := ReadTestTasks()
+	cmd := NewCompleteCommand()
+
+	completeTask, newTasks, n := cmd.completeTask(8, tasks)
+	if completeTask == nil {
+		t.Errorf("If there is task with taskId, completeTask shuld return complete task, but nil")
+		t.FailNow()
+	}
+
+	if n != 2 {
+		t.Errorf("If there is task with taskId, completeTask shuld return complete subtask num (2) but %d", n)
+		t.FailNow()
+	}
+
+	if len(newTasks) != 3 {
+		t.Errorf("If repeat task complete, task will copy")
+		t.FailNow()
+	}
+
+	baseDue, baseOk := ParseTime(newTasks[1].SubTasks[0].Attributes["due"])
+	repeatDue, repeatOk := ParseTime(newTasks[2].SubTasks[0].Attributes["due"])
+	if !baseOk || !repeatOk {
+		t.Errorf("due parse error")
+		t.FailNow()
+	}
+
+	nextDue := baseDue.AddDate(0, 0, 1)
+	if nextDue != repeatDue {
+		t.Errorf("set after 1 day (%v), but %v", nextDue, repeatDue)
+		t.FailNow()
+	}
+
+	delete(newTasks[1].SubTasks[0].Attributes, "due")
+	delete(newTasks[2].SubTasks[0].Attributes, "due")
+	delete(newTasks[1].Attributes, "complete")
+	delete(newTasks[1].SubTasks[0].Attributes, "complete")
+	if !newTasks[1].Equal(newTasks[2]) {
+		t.Errorf("If copy by repeat, it's same task without complete attribute")
+		t.FailNow()
+	}
+}
+
 func TestCompleteTask(t *testing.T) {
 	tasks := ReadTestTasks()
 	cmd := NewCompleteCommand()
 
-	completeTask, n := cmd.completeTask(0, tasks)
+	completeTask, tasks, n := cmd.completeTask(0, tasks)
 	if completeTask != nil {
 		t.Errorf("If there is no task with taskId, completeTask shuld return nil, but %v", completeTask)
+		t.FailNow()
+	}
+
+	if len(tasks) != 2 {
+		t.Errorf("task num shudn't change")
 		t.FailNow()
 	}
 
@@ -215,9 +350,14 @@ func TestCompleteTask(t *testing.T) {
 	alreadyCompleted := "2014-01-01"
 	tasks[0].SubTasks[1].SubTasks[1].Attributes["complete"] = alreadyCompleted
 
-	completeTask, n = cmd.completeTask(4, tasks)
+	completeTask, tasks, n = cmd.completeTask(4, tasks)
 	if completeTask == nil {
 		t.Errorf("If there is task with taskId, completeTask shuld return complete task, but nil")
+		t.FailNow()
+	}
+
+	if len(tasks) != 2 {
+		t.Errorf("task num shudn't change")
 		t.FailNow()
 	}
 

@@ -29,8 +29,16 @@ task = <space><task name><attributes>
   task completed time
 
 ### :repeat
-  (not support yet)
+  `:repeat [every|after] num [minutes|hour|day|week|year]`  
   when task completed, next deadline set
+  
+```
+:due 2015-01-30 :repeat every 1 day 
+// when complete in 2015-02-14, set :due 2015-01-31
+:due 2015-01-30 :repeat after 1 day 
+// when complete in 2015-02-14, set :due 2015-02-15
+```
+  
 
 ### :url
   (not support yet)

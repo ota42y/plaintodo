@@ -43,9 +43,16 @@ func TestCopyTasks(t *testing.T) {
 	subTask.Attributes["attr"] = "subattr"
 	task.SubTasks = append(task.SubTasks, subTask)
 
-	copyTask := task.Copy(3)
+	copyTask := task.Copy(3, true)
 
 	if !task.Equal(copyTask) {
+		t.Errorf("Task.Copy don't return same task")
+		t.FailNow()
+	}
+
+	copyParentTask := task.Copy(5, false)
+	task.SubTasks = make([]*Task, 0)
+	if !task.Equal(copyParentTask) {
 		t.Errorf("Task.Copy don't return same task")
 		t.FailNow()
 	}
