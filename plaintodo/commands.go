@@ -318,7 +318,7 @@ func NewAddTaskCommand() *AddTaskCommand {
 	return &AddTaskCommand{}
 }
 
-var subTaskRegexp, _ = regexp.Compile("^([0-9])+ (.+)$")
+var subTaskRegexp, _ = regexp.Compile("^([0-9]+) (.+)$")
 
 type AddSubTaskCommand struct {
 }
