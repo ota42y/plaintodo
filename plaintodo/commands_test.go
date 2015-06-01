@@ -504,6 +504,7 @@ func TestAddSubTaskCommand(t *testing.T) {
 	taskDue := "2015-02-01"
 
 	cmds := make(map[string]Command)
+	cmds["task"] = NewAddTaskCommand()
 	cmds["subtask"] = NewAddSubTaskCommand()
 	cmds["reload"] = NewReloadCommand()
 
@@ -584,6 +585,14 @@ func TestAddSubTaskCommand(t *testing.T) {
 
 	if a.MaxTaskId != taskId {
 		t.Errorf("When error occerd, Automaton.MaxTaskId shuldn't change but %d", taskId)
+		t.FailNow()
+	}
+
+	a.Execute("task test11")
+	a.Execute("task test12")
+	a.Execute("subtask 12 child in task12")
+	if len(a.Tasks[3].SubTasks) == 0 {
+		t.Errorf("Subtask isn't added by id=12 task's child")
 		t.FailNow()
 	}
 }
