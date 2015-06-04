@@ -326,6 +326,7 @@ type AddSubTaskCommand struct {
 func (t *AddSubTaskCommand) addSubTask(taskId int, addTask *Task, tasks []*Task) (parent *Task, success bool) {
 	for _, task := range tasks {
 		if task.Id == taskId {
+			addTask.Level = task.Level + 1
 			task.SubTasks = append(task.SubTasks, addTask)
 			return task, true
 		}
