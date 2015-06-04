@@ -533,6 +533,11 @@ func TestAddSubTaskCommand(t *testing.T) {
 	}
 
 	task := parent.SubTasks[0]
+	if task.Level != parent.Level+1 {
+		t.Errorf("Subtask level shuld be %d but %d", parent.Level+1, task.Level)
+		t.FailNow()
+	}
+
 	if task.Name != taskName {
 		t.Errorf("Task name shud %s, but %s", taskName, task.Name)
 		t.FailNow()
