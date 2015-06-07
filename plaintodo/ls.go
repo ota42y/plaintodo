@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strconv"
+)
+
 type ShowTask struct {
 	Task     *Task
 	SubTasks []*ShowTask
@@ -45,4 +49,23 @@ func filter(task *Task, query Query) *ShowTask {
 	}
 
 	return nil
+}
+
+func GetQuery(queryString string) Query {
+	queryArray := ParseOptions(queryString)
+	parent := NewQueryBase(make([]Query, 0), make([]Query, 0))
+
+	for key, value := range queryArray {
+		switch {
+		case key == "level":
+			{
+				num, err := strconv.Atoi(value)
+				if err == nil {
+					parent.and = append(parent.and, NewMaxLevelQuery(num, make([]Query, 0), make([]Query, 0)))
+				}
+			}
+		}
+	}
+
+	return parent
 }

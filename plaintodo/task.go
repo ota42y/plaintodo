@@ -119,8 +119,8 @@ type LoadResult struct {
 	FailLines []string
 }
 
-func getAttributes(raw string) map[string]string {
-	attributes := make(map[string]string)
+func ParseOptions(raw string) map[string]string {
+	options := make(map[string]string)
 
 	// split :key1 value1 :key2 value2 to ["key1 value1", "key2 value2"]
 	splits := strings.Split(raw, attributeSplit)
@@ -137,11 +137,11 @@ func getAttributes(raw string) map[string]string {
 					// attribute with value
 					value = fields[1]
 				}
-				attributes[key] = value
+				options[key] = value
 			}
 		}
 	}
-	return attributes
+	return options
 }
 
 func NewTask(line string, taskId int) (*Task, error) {
@@ -170,7 +170,7 @@ func NewTask(line string, taskId int) (*Task, error) {
 	task.Name = string(match[2])
 
 	if 3 < len(match) {
-		task.Attributes = getAttributes(string(match[3]))
+		task.Attributes = ParseOptions(string(match[3]))
 	} else {
 		task.Attributes = make(map[string]string)
 	}

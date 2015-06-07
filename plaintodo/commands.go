@@ -54,7 +54,16 @@ type LsCommand struct {
 }
 
 func (t *LsCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	showTasks := Ls(automaton.Tasks, NewBeforeDateQuery("due", time.Now(), make([]Query, 0), make([]Query, 0)))
+	var query Query = nil
+	if option != "" {
+		// GetCommand expected ' :key value :key value', but option give ':key value :key value'
+		// so add space to first
+		query = GetQuery(" " + option)
+	}else{
+		query = NewBeforeDateQuery("due", time.Now(), make([]Query, 0), make([]Query, 0))
+	}
+
+	showTasks := Ls(automaton.Tasks, query)
 	Output(t.w, showTasks, true)
 	return false
 }

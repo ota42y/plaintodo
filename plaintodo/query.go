@@ -52,6 +52,18 @@ func (query *QueryBase) checkSubQuery(task *Task, isShow bool) bool {
 	}
 }
 
+func (query *QueryBase) Check(task *Task) bool {
+	// do nothing
+	return query.checkSubQuery(task, true)
+}
+
+func NewQueryBase(and []Query, or []Query) *QueryBase {
+	return &QueryBase{
+		and: and,
+		or:  or,
+	}
+}
+
 type KeyValueQuery struct {
 	*QueryBase
 
@@ -206,4 +218,27 @@ func (query *SameDayQuery) Check(task *Task) bool {
 	} else {
 		return query.checkSubQuery(task, false)
 	}
+}
+
+type MaxLevelQuery struct {
+	*QueryBase
+	level int
+}
+
+func NewMaxLevelQuery(level int, and []Query, or []Query) *MaxLevelQuery {
+	return &MaxLevelQuery{
+		QueryBase: &QueryBase{
+			and: and,
+			or:  or,
+		},
+		level: level,
+	}
+}
+
+func (query *MaxLevelQuery) Check(task *Task) bool {
+	if task == nil {
+		return false
+	}
+
+	return query.checkSubQuery(task, task.Level < query.level)
 }
