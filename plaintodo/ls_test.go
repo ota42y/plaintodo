@@ -27,7 +27,7 @@ func TestLs(t *testing.T) {
 func TestGetQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	query := GetQuery(" :level 2")
+	query, _ := GetQuery(" :level 2")
 	base := query.(*QueryBase)
 
 	if len(base.and) == 0 {
@@ -57,5 +57,29 @@ func TestGetQuery(t *testing.T) {
 				t.FailNow()
 			}
 		}
+	}
+
+	query, _ = GetQuery(" :id 1")
+	base = query.(*QueryBase)
+
+	if len(base.and) == 0 {
+		t.Errorf("IdQuery dosen't created")
+		t.FailNow()
+	}
+
+	showTasks = Ls(tasks, query)
+	if len(showTasks) != 1 {
+		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
+		t.FailNow()
+	}
+
+	if showTasks[0].Task.Id != 1 {
+		t.Errorf("shuld return task id = 1, but $v task", showTasks[0].Task)
+		t.FailNow()
+	}
+
+	if len(showTasks[0].SubTasks) != 0 {
+		t.Errorf("sub task shuld be blank, but %d's sub task exist.", len(showTasks[0].SubTasks))
+		t.FailNow()
 	}
 }
