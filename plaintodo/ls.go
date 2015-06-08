@@ -51,11 +51,30 @@ func filter(task *Task, query Query) *ShowTask {
 	return nil
 }
 
-func GetQuery(queryString string) Query {
-	queryArray := ParseOptions(queryString)
+// show all sub task in selected task
+func ShowAllChildSubTasks(showTasks []*ShowTask) {
+	for _, task := range showTasks {
+		showSubTasks(task)
+	}
+}
+
+func showSubTasks(task *ShowTask) {
+	if len(task.SubTasks) == 0 {
+		// overwrite all sub tasks
+		task.SubTasks = filterRoot(task.Task.SubTasks, nil)
+		return
+	}
+
+	for _, subTask := range task.SubTasks {
+		showSubTasks(subTask)
+	}
+}
+
+func GetQuery(queryString string) (query Query, queryMap map[string]string) {
+	queryMap = ParseOptions(queryString)
 	parent := NewQueryBase(make([]Query, 0), make([]Query, 0))
 
-	for key, value := range queryArray {
+	for key, value := range queryMap {
 		switch {
 		case key == "level":
 			{
@@ -64,8 +83,16 @@ func GetQuery(queryString string) Query {
 					parent.and = append(parent.and, NewMaxLevelQuery(num, make([]Query, 0), make([]Query, 0)))
 				}
 			}
+
+		case key == "id":
+			{
+				num, err := strconv.Atoi(value)
+				if err == nil {
+					parent.and = append(parent.and, NewIdQuery(num, make([]Query, 0), make([]Query, 0)))
+				}
+			}
 		}
 	}
 
-	return parent
+	return parent, queryMap
 }

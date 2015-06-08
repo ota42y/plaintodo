@@ -242,3 +242,26 @@ func (query *MaxLevelQuery) Check(task *Task) bool {
 
 	return query.checkSubQuery(task, task.Level < query.level)
 }
+
+type IdQuery struct {
+	*QueryBase
+	id int
+}
+
+func NewIdQuery(id int, and []Query, or []Query) *IdQuery {
+	return &IdQuery{
+		QueryBase: &QueryBase{
+			and: and,
+			or:  or,
+		},
+		id: id,
+	}
+}
+
+func (query *IdQuery) Check(task *Task) bool {
+	if task == nil {
+		return false
+	}
+
+	return query.checkSubQuery(task, task.Id == query.id)
+}
