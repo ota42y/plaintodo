@@ -73,8 +73,8 @@ nameFormat = "2006-01-02"
 
 ### commands
 
-### add
-Add new task.
+### task
+Create new task.
 
 ```
 > ls
@@ -102,7 +102,7 @@ write reply mail :id 10 :due 2015-02-01
 ```
 
 ### subtask
-Add sub task.
+Create sub task.
 
 ```
 > ls
@@ -131,8 +131,16 @@ rss :id 8
 ```
 
 #### ls
-Show all overdate task, which check :due
-(sorry, this isn't support query yet)
+Show all tasks.
+
+ls command take options
+
+|option|example|description|
+|:id|ls :id 1| show specific task|
+|:subtask|ls :id 1 :subtask| show all subtasks|
+|:level| ls :level 1| show only tasks which same or lower level|
+
+If no options, overdate task, which check :due
 
 ```
 > ls
