@@ -27,7 +27,7 @@ func TestLs(t *testing.T) {
 func TestGetQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	query, _ := GetQuery(" :level 2")
+	query, _ := getQuery(" :level 2")
 	base := query.(*QueryBase)
 
 	if len(base.and) == 0 {
@@ -59,7 +59,7 @@ func TestGetQuery(t *testing.T) {
 		}
 	}
 
-	query, _ = GetQuery(" :id 1")
+	query, _ = getQuery(" :subtask :id 2")
 	base = query.(*QueryBase)
 
 	if len(base.and) == 0 {
@@ -67,7 +67,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	showTasks = Ls(tasks, query)
+	showTasks = ExecuteQuery(" :subtask :id 2", tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
 		t.FailNow()
@@ -78,8 +78,36 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	if len(showTasks[0].SubTasks) != 0 {
-		t.Errorf("sub task shuld be blank, but %d's sub task exist.", len(showTasks[0].SubTasks))
+	if len(showTasks[0].SubTasks) != 1 {
+		t.Errorf("one sub task shuld be exsit, but %d task", len(showTasks[0].SubTasks))
 		t.FailNow()
 	}
+
+	task := showTasks[0].SubTasks[0]
+	if task.Task.Id != 2 {
+		t.Errorf("Task.Id shuld be 2 but %d", task.Task.Id)
+		t.FailNow()
+	}
+
+	if task.Task.Name != "create a set list" {
+		t.Errorf("shuld return task id = 2, but $v task", task.Task)
+		t.FailNow()
+	}
+
+	if len(task.SubTasks) != len(task.Task.SubTasks) {
+		t.Errorf("When :subtask option set, get %d sub tasks, but %d sub tasks", len(task.Task.SubTasks), len(task.SubTasks))
+		t.FailNow()
+	}
+
+	subTask := task.SubTasks[0]
+	if subTask.Task.Id != 3 {
+		t.Errorf("Get :id 3 task, but %d", subTask.Task.Id)
+		t.FailNow()
+	}
+
+	if len(subTask.SubTasks) != len(subTask.Task.SubTasks) {
+		t.Errorf("When :subtask option set, get %d sub tasks, but %d sub tasks", len(subTask.Task.SubTasks), len(subTask.SubTasks))
+		t.FailNow()
+	}
+
 }
