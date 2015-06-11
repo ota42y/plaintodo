@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"time"
 )
 
 type ShowTask struct {
@@ -70,7 +71,7 @@ func showSubTasks(task *ShowTask) {
 	}
 }
 
-func GetQuery(queryString string) (query Query, queryMap map[string]string) {
+func getQuery(queryString string) (query Query, queryMap map[string]string) {
 	queryMap = ParseOptions(queryString)
 	parent := NewQueryBase(make([]Query, 0), make([]Query, 0))
 
@@ -95,4 +96,24 @@ func GetQuery(queryString string) (query Query, queryMap map[string]string) {
 	}
 
 	return parent, queryMap
+}
+
+func ExecuteQuery(queryString string, tasks []*Task) []*ShowTask{
+	var query Query = nil
+	queryMap := make(map[string]string)
+	if queryString != "" {
+		// GetCommand expected ' :key value :key value', but option give ':key value :key value'
+		// so add space to first
+		query, queryMap = getQuery(" " + queryString)
+	} else {
+		query = NewBeforeDateQuery("due", time.Now(), make([]Query, 0), make([]Query, 0))
+	}
+
+	showTasks := Ls(tasks, query)
+	_, ok := queryMap["subtask"]
+	if ok {
+		ShowAllChildSubTasks(showTasks)
+	}
+
+	return showTasks
 }
