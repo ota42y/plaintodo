@@ -52,6 +52,41 @@ func filter(task *Task, query Query) *ShowTask {
 	return nil
 }
 
+func DeleteAllCompletedTasks(showTasks []*ShowTask) []*ShowTask {
+	newSubTasks := make([]*ShowTask, 0)
+
+	for _, task := range showTasks {
+		if deleteAllCompletedSubTasks(task) {
+			newSubTasks = append(newSubTasks, task)
+		}
+	}
+	return newSubTasks
+}
+func deleteAllCompletedSubTasks(task *ShowTask) bool {
+	// check all sub tasks
+	newSubTasks := make([]*ShowTask, 0)
+	for _, subTask := range task.SubTasks {
+		if deleteAllCompletedSubTasks(subTask) {
+			newSubTasks = append(newSubTasks, subTask)
+		}
+	}
+
+	task.SubTasks = newSubTasks
+	if len(newSubTasks) == 0 {
+		// no sub task or all sub task is completed
+
+		// if not show complete task
+		_, isComplete := task.Task.Attributes["complete"]
+
+		if isComplete {
+			return false
+		}
+	}
+
+	// task exist or no completed task
+	return true
+}
+
 // show all sub task in selected task
 func ShowAllChildSubTasks(showTasks []*ShowTask) {
 	for _, task := range showTasks {
@@ -63,12 +98,17 @@ func showSubTasks(task *ShowTask) {
 	if len(task.SubTasks) == 0 {
 		// overwrite all sub tasks
 		task.SubTasks = filterRoot(task.Task.SubTasks, nil)
-		return
 	}
 
+	// check all sub tasks
+	newSubTasks := make([]*ShowTask, 0)
 	for _, subTask := range task.SubTasks {
 		showSubTasks(subTask)
+		newSubTasks = append(newSubTasks, subTask)
 	}
+
+	task.SubTasks = newSubTasks
+	return
 }
 
 func getQuery(queryString string) (query Query, queryMap map[string]string) {
@@ -98,7 +138,7 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 	return parent, queryMap
 }
 
-func ExecuteQuery(queryString string, tasks []*Task) []*ShowTask{
+func ExecuteQuery(queryString string, tasks []*Task) []*ShowTask {
 	var query Query = nil
 	queryMap := make(map[string]string)
 	if queryString != "" {
@@ -113,6 +153,12 @@ func ExecuteQuery(queryString string, tasks []*Task) []*ShowTask{
 	_, ok := queryMap["subtask"]
 	if ok {
 		ShowAllChildSubTasks(showTasks)
+	}
+
+	// if not complete query, show only no completed query
+	_, ok = queryMap["complete"]
+	if !ok {
+		showTasks = DeleteAllCompletedTasks(showTasks)
 	}
 
 	return showTasks

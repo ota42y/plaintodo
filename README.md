@@ -133,12 +133,15 @@ rss :id 8
 #### ls
 Show all tasks.
 
-ls command take options
+ls command take options.
+If not set :subtask, show specific task.
+If not set :complete, show not completed task.
 
 |option|example|description|
 |:id|ls :id 1| show specific task|
 |:subtask|ls :id 1 :subtask| show all subtasks|
 |:level| ls :level 1| show only tasks which same or lower level|
+|:complete| ls :complete | show completed task|
 
 If no options, overdate task, which check :due
 
