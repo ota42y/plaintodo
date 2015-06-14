@@ -132,32 +132,45 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 					parent.and = append(parent.and, NewIdQuery(num, make([]Query, 0), make([]Query, 0)))
 				}
 			}
+
+		case key == "due":
+			{
+				t, ok := ParseTime(value)
+				if ok {
+					parent.and = append(parent.and, NewBeforeDateQuery("due", t, make([]Query, 0), make([]Query, 0)))
+				}
+			}
 		}
+	}
+
+	// if not complete show
+	_, isCompleteShow := queryMap["complete"]
+	if !isCompleteShow {
+		parent.and = append(parent.and, NewNoKeyQuery("complete", make([]Query, 0), make([]Query, 0)))
 	}
 
 	return parent, queryMap
 }
 
 func ExecuteQuery(queryString string, tasks []*Task) []*ShowTask {
-	var query Query = nil
-	queryMap := make(map[string]string)
-	if queryString != "" {
-		// GetCommand expected ' :key value :key value', but option give ':key value :key value'
-		// so add space to first
-		query, queryMap = getQuery(" " + queryString)
-	} else {
-		query = NewBeforeDateQuery("due", time.Now(), make([]Query, 0), make([]Query, 0))
+	if queryString == "" {
+		// default query
+		queryString = " :due " + time.Now().Format(dateTimeFormat)
 	}
 
+	// GetCommand expected ' :key value :key value', but option give ':key value :key value'
+	// so add space to first
+	query, queryMap := getQuery(" " + queryString)
 	showTasks := Ls(tasks, query)
+
 	_, ok := queryMap["subtask"]
 	if ok {
 		ShowAllChildSubTasks(showTasks)
 	}
 
 	// if not complete query, show only no completed query
-	_, ok = queryMap["complete"]
-	if !ok {
+	_, isCompleteShow := queryMap["complete"]
+	if !isCompleteShow {
 		showTasks = DeleteAllCompletedTasks(showTasks)
 	}
 

@@ -248,11 +248,21 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	cmd.completeTask(1, tasks)
+	tasks = ReadTestTasks()
+	cmd.completeTask(8, tasks)
 	showTasks = ExecuteQuery("", tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("if top level task completed, not show task, but %d task showed", len(showTasks))
 		t.FailNow()
 	}
 
+	tasks = ReadTestTasks()
+	delete(tasks[0].Attributes, "due")
+	cmd.completeTask(2, tasks)
+	cmd.completeTask(4, tasks)
+	showTasks = ExecuteQuery("", tasks)
+	if len(showTasks) != 1 {
+		t.Errorf("if specific task is completed, don't show all parent")
+		t.FailNow()
+	}
 }
