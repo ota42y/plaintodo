@@ -219,8 +219,8 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	// When no option set, get all overdue and no completed tasks
-	tasks[0].SubTasks[1].SubTasks[1].Attributes["due"] = time.Now().Format(dateFormat)
+	// When no option set, get all started and no completed tasks
+	tasks[0].SubTasks[1].SubTasks[1].Attributes["start"] = time.Now().Format(dateFormat)
 	showTasks = ExecuteQuery("", tasks)
 	if len(showTasks) != 2 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
@@ -257,7 +257,7 @@ func TestGetQuery(t *testing.T) {
 	}
 
 	tasks = ReadTestTasks()
-	delete(tasks[0].Attributes, "due")
+	delete(tasks[0].Attributes, "start")
 	cmd.completeTask(2, tasks)
 	cmd.completeTask(4, tasks)
 	showTasks = ExecuteQuery("", tasks)
