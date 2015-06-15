@@ -22,8 +22,8 @@ task = <space><task name><attributes>
 
 ## Options
 
-### :due
-  task deadline
+### :start
+  task start time
 
 ### :completed
   task completed time
@@ -33,10 +33,10 @@ task = <space><task name><attributes>
   when task completed, next deadline set
   
 ```
-:due 2015-01-30 :repeat every 1 day 
-// when complete in 2015-02-14, set :due 2015-01-31
-:due 2015-01-30 :repeat after 1 day 
-// when complete in 2015-02-14, set :due 2015-02-15
+:start 2015-01-30 :repeat every 1 day 
+// when complete in 2015-02-14, set :start 2015-01-31
+:start 2015-01-30 :repeat after 1 day 
+// when complete in 2015-02-14, set :start 2015-02-15
 ```
   
 
@@ -50,15 +50,15 @@ task = <space><task name><attributes>
 ### sample text
 task.txt
 ```
-go to SSA :due 2015-02-01
-  create a set list :due 2015-01-31
+go to SSA :start 2015-02-01
+  create a set list :start 2015-01-31
     add music to player
   buy items
     buy battery
     buy ultra orange
     buy king blade
 rss
-  my site :url http://ota42y.com :due 2015-02-01 :repeat every 1 day
+  my site :url http://ota42y.com :start 2015-02-01 :repeat every 1 day
 ```
 
 config.toml
@@ -79,26 +79,26 @@ Create new task.
 ```
 > ls
 ls hit
-go to SSA :id 1 :due 2015-02-01
-  create a set list :id 2 :due 2015-01-31 :important
-    add music to player :id 3 :due 2015-01-30
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :start 2015-01-31 :important
+    add music to player :id 3 :start 2015-01-30
 
 rss :id 8
-  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  my site :id 9 :start 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
   
-> task write reply mail :due 2015-02-01
+> task write reply mail :start 2015-02-01
 task hit
-Create task: write reply mail :id 10 :due 2015-02-01
+Create task: write reply mail :id 10 :start 2015-02-01
 > ls
 ls hit
-go to SSA :id 1 :due 2015-02-01
-  create a set list :id 2 :due 2015-01-31 :important
-    add music to player :id 3 :due 2015-01-30
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :start 2015-01-31 :important
+    add music to player :id 3 :start 2015-01-30
 
 rss :id 8
-  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  my site :id 9 :start 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
   
-write reply mail :id 10 :due 2015-02-01
+write reply mail :id 10 :start 2015-02-01
 ```
 
 ### subtask
@@ -107,27 +107,27 @@ Create sub task.
 ```
 > ls
 ls hit
-go to SSA :id 1 :due 2015-02-01
-  create a set list :id 2 :due 2015-01-31 :important
-    add music to player :id 3 :due 2015-01-30
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :start 2015-01-31 :important
+    add music to player :id 3 :start 2015-01-30
 
 rss :id 8
-  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  my site :id 9 :start 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
   
 > subtask 2 change volume
 subtask hit
 Create SubTask:
-Parent: create a set list :id 2 :due 2015-01-31 :important
+Parent: create a set list :id 2 :start 2015-01-31 :important
 SubTask: change volume :id 10
 > ls
 ls hit
-go to SSA :id 1 :due 2015-02-01
-  create a set list :id 2 :due 2015-01-31 :important
-    add music to player :id 3 :due 2015-01-30
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :start 2015-01-31 :important
+    add music to player :id 3 :start 2015-01-30
     change volume :id 10
 
 rss :id 8
-  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  my site :id 9 :start 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
 ```
 
 #### ls
@@ -143,33 +143,33 @@ If not set :complete, show not completed task.
 |:level| ls :level 1| show only tasks which same or lower level|
 |:complete| ls :complete | show completed task|
 
-If no options, overdate task, which check :due
+If no options, overdate task, which check :start
 
 ```
 > ls
 ls hit
-go to SSA :id 1 :due 2015-02-01
-  create a set list :id 2 :due 2015-01-31 :important
-    add music to player :id 3 :due 2015-01-30
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :start 2015-01-31 :important
+    add music to player :id 3 :start 2015-01-30
 
 rss :id 8
-  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  my site :id 9 :start 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
 ```
 
 #### lsall
 Show all tasks
 ```
 > lsall
-go to SSA :due 2015-02-01
-  create a set list :important :due 2015-01-31
-    add music to player :due 2015-01-30
+go to SSA :start 2015-02-01
+  create a set list :important :start 2015-01-31
+    add music to player :start 2015-01-30
   buy items
     buy battery
     buy ultra orange
     buy king blade
 
 rss
-  my site :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  my site :start 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
 ```
 
 #### complete
@@ -180,16 +180,16 @@ This command add :complete attribute to selected task.
 complete hit
 > lsall
 lsall hit
-go to SSA :id 1 :due 2015-02-01
-  create a set list :id 2 :due 2015-01-31 :important
-    add music to player :id 3 :due 2015-01-30
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :start 2015-01-31 :important
+    add music to player :id 3 :start 2015-01-30
   buy items :id 4
     buy battery :id 5 :complete 2015-02-01 13:48
     buy ultra orange :id 6
     buy king blade :id 7
 
 rss :id 8
-  my site :id 9 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
+  my site :id 9 :start 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
 ```
 
 #### save
@@ -203,15 +203,15 @@ save hit
 append tasks to archives/2015-02-01.txt
 > lsall
 lsall hit
-go to SSA :id 1 :due 2015-02-01
-  create a set list :id 2 :due 2015-01-31 :important
-    add music to player :id 3 :due 2015-01-30
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :start 2015-01-31 :important
+    add music to player :id 3 :start 2015-01-30
   buy items :id 4
     buy ultra orange :id 5
     buy king blade :id 6
 
 rss :id 7
-  my site :id 8 :due 2015-01-31 :important :repeat every 1 day :url http://ota42y.com
+  my site :id 8 :start 2015-01-31 :important :repeat every 1 day :url http://ota42y.com
 ```
 
 #### exit

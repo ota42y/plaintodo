@@ -209,18 +209,18 @@ func (t *CompleteCommand) setNewRepeat(baseTime time.Time, task *Task) {
 	}
 
 	if splits[0] == "every" {
-		dueString, ok := task.Attributes["due"]
+		startString, ok := task.Attributes["start"]
 		if !ok {
 			return
 		}
-		baseTime, ok = ParseTime(dueString)
+		baseTime, ok = ParseTime(startString)
 		if !ok {
 			return
 		}
 	}
 
 	newTime := t.addDuration(baseTime, splits[1], splits[2])
-	task.Attributes["due"] = newTime.Format(dateTimeFormat)
+	task.Attributes["start"] = newTime.Format(dateTimeFormat)
 }
 
 func (t *CompleteCommand) completeAllSubTask(completeDate time.Time, task *Task) (repeatTask *Task, completeNum int) {

@@ -133,11 +133,11 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 				}
 			}
 
-		case key == "due":
+		case key == "start":
 			{
 				t, ok := ParseTime(value)
 				if ok {
-					parent.and = append(parent.and, NewBeforeDateQuery("due", t, make([]Query, 0), make([]Query, 0)))
+					parent.and = append(parent.and, NewBeforeDateQuery("start", t, make([]Query, 0), make([]Query, 0)))
 				}
 			}
 		}
@@ -155,7 +155,7 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 func ExecuteQuery(queryString string, tasks []*Task) []*ShowTask {
 	if queryString == "" {
 		// default query
-		queryString = " :due " + time.Now().Format(dateTimeFormat)
+		queryString = " :start " + time.Now().Format(dateTimeFormat)
 	}
 
 	// GetCommand expected ' :key value :key value', but option give ':key value :key value'

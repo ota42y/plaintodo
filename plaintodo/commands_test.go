@@ -205,81 +205,81 @@ func TestSetNewRepeat(t *testing.T) {
 
 	now := time.Now()
 	base := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.Local)
-	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["start"] = base.Format(dateTimeFormat)
 
 	task.Attributes["repeat"] = "every 1 day"
 	cmd.setNewRepeat(now, task)
 	correct := base.AddDate(0, 0, 1)
 	correctString := correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["due"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+	if correctString != task.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["start"] = base.Format(dateTimeFormat)
 	task.Attributes["repeat"] = "every 1 month"
 	cmd.setNewRepeat(now, task)
 	correct = base.AddDate(0, 1, 0)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["due"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+	if correctString != task.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["start"] = base.Format(dateTimeFormat)
 	task.Attributes["repeat"] = "every 1 year"
 	cmd.setNewRepeat(now, task)
 	correct = base.AddDate(1, 0, 0)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["due"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+	if correctString != task.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["start"] = base.Format(dateTimeFormat)
 	task.Attributes["repeat"] = "every 2 week"
 	cmd.setNewRepeat(now, task)
 	correct = base.AddDate(0, 0, 14)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["due"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+	if correctString != task.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["start"] = base.Format(dateTimeFormat)
 	task.Attributes["repeat"] = "every 30 minutes"
 	cmd.setNewRepeat(now, task)
 	correct = base.Add(30 * time.Minute)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["due"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+	if correctString != task.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["start"] = base.Format(dateTimeFormat)
 	task.Attributes["repeat"] = "every 2 hour"
 	cmd.setNewRepeat(now, task)
 	correct = base.Add(2 * time.Hour)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["due"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+	if correctString != task.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["due"] = base.Format(dateTimeFormat)
+	task.Attributes["start"] = base.Format(dateTimeFormat)
 	task.Attributes["repeat"] = "after 4 day"
 	cmd.setNewRepeat(now, task)
 	correct = now.AddDate(0, 0, 4)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["due"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["due"])
+	if correctString != task.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
 		t.FailNow()
 	}
 }
@@ -304,21 +304,21 @@ func TestCompleteRepeatTask(t *testing.T) {
 		t.FailNow()
 	}
 
-	baseDue, baseOk := ParseTime(newTasks[1].SubTasks[0].Attributes["due"])
-	repeatDue, repeatOk := ParseTime(newTasks[2].SubTasks[0].Attributes["due"])
+	baseStart, baseOk := ParseTime(newTasks[1].SubTasks[0].Attributes["start"])
+	repeatStart, repeatOk := ParseTime(newTasks[2].SubTasks[0].Attributes["start"])
 	if !baseOk || !repeatOk {
-		t.Errorf("due parse error")
+		t.Errorf("start parse error")
 		t.FailNow()
 	}
 
-	nextDue := baseDue.AddDate(0, 0, 1)
-	if nextDue != repeatDue {
-		t.Errorf("set after 1 day (%v), but %v", nextDue, repeatDue)
+	nextStart := baseStart.AddDate(0, 0, 1)
+	if nextStart != repeatStart {
+		t.Errorf("set after 1 day (%v), but %v", nextStart, repeatStart)
 		t.FailNow()
 	}
 
-	delete(newTasks[1].SubTasks[0].Attributes, "due")
-	delete(newTasks[2].SubTasks[0].Attributes, "due")
+	delete(newTasks[1].SubTasks[0].Attributes, "start")
+	delete(newTasks[2].SubTasks[0].Attributes, "start")
 	delete(newTasks[1].Attributes, "complete")
 	delete(newTasks[1].SubTasks[0].Attributes, "complete")
 	if !newTasks[1].Equal(newTasks[2]) {
@@ -432,7 +432,7 @@ func TestGetCompleteDayList(t *testing.T) {
 
 func TestAddTaskCommand(t *testing.T) {
 	taskName := "create new task"
-	taskDue := "2015-02-01"
+	taskStart := "2015-02-01"
 
 	cmds := make(map[string]Command)
 	cmds["task"] = NewAddTaskCommand()
@@ -444,7 +444,7 @@ func TestAddTaskCommand(t *testing.T) {
 
 	a := NewAutomaton(config, cmds)
 
-	input := "task " + taskName + " :due " + taskDue
+	input := "task " + taskName + " :start " + taskStart
 	terminate := a.Execute(input)
 
 	if terminate {
@@ -463,8 +463,8 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if task.Attributes["due"] != taskDue {
-		t.Errorf("Task due shud %s, but %s", taskDue, task.Attributes["due"])
+	if task.Attributes["start"] != taskStart {
+		t.Errorf("Task start shud %s, but %s", taskStart, task.Attributes["start"])
 		t.FailNow()
 	}
 
@@ -474,7 +474,7 @@ func TestAddTaskCommand(t *testing.T) {
 	}
 
 	outputString := buf.String()
-	correctString := "task hit\nCreate task: " + taskName + " :id 1 :due " + taskDue + "\n"
+	correctString := "task hit\nCreate task: " + taskName + " :id 1 :start " + taskStart + "\n"
 	if outputString != correctString {
 		t.Errorf("Output %s, but %s", correctString, outputString)
 		t.FailNow()
@@ -501,7 +501,7 @@ func TestAddTaskCommand(t *testing.T) {
 
 func TestAddSubTaskCommand(t *testing.T) {
 	taskName := "create sub task"
-	taskDue := "2015-02-01"
+	taskStart := "2015-02-01"
 
 	cmds := make(map[string]Command)
 	cmds["task"] = NewAddTaskCommand()
@@ -517,7 +517,7 @@ func TestAddSubTaskCommand(t *testing.T) {
 
 	taskId := a.MaxTaskId
 
-	input := "subtask 6 " + taskName + " :due " + taskDue
+	input := "subtask 6 " + taskName + " :start " + taskStart
 	terminate := a.Execute(input)
 
 	if terminate {
@@ -543,8 +543,8 @@ func TestAddSubTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if task.Attributes["due"] != taskDue {
-		t.Errorf("Task due shud %s, but %s", taskDue, task.Attributes["due"])
+	if task.Attributes["start"] != taskStart {
+		t.Errorf("Task start shud %s, but %s", taskStart, task.Attributes["start"])
 		t.FailNow()
 	}
 

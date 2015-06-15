@@ -11,7 +11,7 @@ get first task and one subtask
 func TestKeyValueQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	query := NewKeyValueQuery("due", "2015-01-31", make([]Query, 0), make([]Query, 0))
+	query := NewKeyValueQuery("start", "2015-01-31", make([]Query, 0), make([]Query, 0))
 	showTask := filter(tasks[0], query)
 	if showTask == nil {
 		t.Errorf("filter is nil")
@@ -44,7 +44,7 @@ func TestKeyValueQuery(t *testing.T) {
 func TestNoKeyQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	query := NewNoKeyQuery("due", make([]Query, 0), make([]Query, 0))
+	query := NewNoKeyQuery("start", make([]Query, 0), make([]Query, 0))
 	showTasks := Ls(tasks, query)
 
 	if showTasks == nil {
@@ -58,12 +58,12 @@ func TestNoKeyQuery(t *testing.T) {
 	}
 
 	if len(showTasks[0].SubTasks) != 1 {
-		t.Errorf("return shud be task which haven't due attribute but there is %d task", len(showTasks[0].SubTasks))
+		t.Errorf("return shud be task which haven't start attribute but there is %d task", len(showTasks[0].SubTasks))
 		t.FailNow()
 	}
 
 	if len(showTasks[1].SubTasks) != 0 {
-		t.Errorf("return shud be task which haven't due attribute but there is %d task", len(showTasks[1].SubTasks))
+		t.Errorf("return shud be task which haven't start attribute but there is %d task", len(showTasks[1].SubTasks))
 		t.FailNow()
 	}
 }
@@ -74,11 +74,11 @@ get second task and one subtask
 func TestBeforeDateQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	key := "due"
-	dueTime := "2015-02-01 10:42"
+	key := "start"
+	startTime := "2015-02-01 10:42"
 
 	var timeformat = "2006-01-02 15:04"
-	value, err := time.Parse(timeformat, dueTime)
+	value, err := time.Parse(timeformat, startTime)
 	if err != nil {
 		t.Errorf("time parse error")
 		t.FailNow()
@@ -110,8 +110,8 @@ func TestBeforeDateQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	dueTime = "2015-02-02 10:42"
-	value, err = time.Parse(timeformat, dueTime)
+	startTime = "2015-02-02 10:42"
+	value, err = time.Parse(timeformat, startTime)
 	if err != nil {
 		t.Errorf("time parse error")
 		t.FailNow()
@@ -132,10 +132,10 @@ func TestAfterDateQuery(t *testing.T) {
 	tasks[1].SubTasks[0].Attributes["complete"] = "2015-02-02 10:42"
 
 	key := "complete"
-	dueTime := "2015-02-01 00:00"
+	startTime := "2015-02-01 00:00"
 
 	var timeformat = "2006-01-02 15:04"
-	value, err := time.Parse(timeformat, dueTime)
+	value, err := time.Parse(timeformat, startTime)
 	if err != nil {
 		t.Errorf("time parse error")
 		t.FailNow()
@@ -169,7 +169,7 @@ func TestAfterDateQuery(t *testing.T) {
 
 	orQuery := make([]Query, 0)
 	orQuery = append(orQuery, query)
-	noCompleteOrTodayCompleteQuery := NewNoKeyQuery("due", make([]Query, 0), orQuery)
+	noCompleteOrTodayCompleteQuery := NewNoKeyQuery("start", make([]Query, 0), orQuery)
 	showTasks = Ls(tasks, noCompleteOrTodayCompleteQuery)
 
 	if len(showTasks) != 2 {
@@ -178,13 +178,13 @@ func TestAfterDateQuery(t *testing.T) {
 	}
 
 	if len(showTasks[0].SubTasks) != 1 {
-		t.Errorf("return shud be task which haven't due attribute but there is %d task", len(showTasks[0].SubTasks))
+		t.Errorf("return shud be task which haven't start attribute but there is %d task", len(showTasks[0].SubTasks))
 		t.FailNow()
 	}
 
 	// or query can reverse
 	orQuery = make([]Query, 0)
-	orQuery = append(orQuery, NewNoKeyQuery("due", make([]Query, 0), make([]Query, 0)))
+	orQuery = append(orQuery, NewNoKeyQuery("start", make([]Query, 0), make([]Query, 0)))
 	reverseOrQuery := NewAfterDateQuery(key, value, make([]Query, 0), orQuery)
 	showTasks = Ls(tasks, reverseOrQuery)
 
@@ -194,7 +194,7 @@ func TestAfterDateQuery(t *testing.T) {
 	}
 
 	if len(showTasks[0].SubTasks) != 1 {
-		t.Errorf("return shud be task which haven't due attribute but there is %d task", len(showTasks[0].SubTasks))
+		t.Errorf("return shud be task which haven't start attribute but there is %d task", len(showTasks[0].SubTasks))
 		t.FailNow()
 	}
 }
@@ -206,10 +206,10 @@ func TestSameDayQuery(t *testing.T) {
 	tasks[0].SubTasks[1].Attributes["complete"] = "2015-02-01 20:42"
 
 	key := "complete"
-	dueTime := "2015-02-01 12:00"
+	startTime := "2015-02-01 12:00"
 
 	var timeformat = "2006-01-02 15:04"
-	value, err := time.Parse(timeformat, dueTime)
+	value, err := time.Parse(timeformat, startTime)
 	if err != nil {
 		t.Errorf("time parse error")
 		t.FailNow()

@@ -248,7 +248,7 @@ func TestNewTask(t *testing.T) {
 }
 
 func TestNewTaskWithAttributes(t *testing.T) {
-	line := "    create a set list :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com"
+	line := "    create a set list :important :repeat every 1 day :start 2015-02-01 :url http://ota42y.com"
 	task, err := NewTask(line, 1)
 
 	if err != nil {
@@ -277,10 +277,10 @@ func TestNewTaskWithAttributes(t *testing.T) {
 		t.FailNow()
 	}
 
-	// :url http://ota42y.com :due 2015-02-01 :repeat every 1 day"
+	// :url http://ota42y.com :start 2015-02-01 :repeat every 1 day"
 	attributes := make(map[string]string)
 	attributes["url"] = "http://ota42y.com"
-	attributes["due"] = "2015-02-01"
+	attributes["start"] = "2015-02-01"
 	attributes["repeat"] = "every 1 day"
 	attributes["important"] = ""
 
@@ -303,8 +303,9 @@ func TestNewTaskWithAttributes(t *testing.T) {
 	}
 
 	taskString = task.String(true)
-	if taskString != "    create a set list :id 1 :due 2015-02-01 :important :repeat every 1 day :url http://ota42y.com" {
-		t.Errorf("task.String return invalid string %s", taskString)
+	correctString := "    create a set list :id 1 :important :repeat every 1 day :start 2015-02-01 :url http://ota42y.com"
+	if taskString != correctString {
+		t.Errorf("task.String shuld return '%s' string '%s'", correctString, taskString)
 		t.FailNow()
 	}
 }
