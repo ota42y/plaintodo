@@ -14,6 +14,7 @@ func main() {
 	cmds["complete"] = NewCompleteCommand()
 	cmds["task"] = NewAddTaskCommand()
 	cmds["subtask"] = NewAddSubTaskCommand()
+	cmds["set"] = NewSetAttributeCommand()
 
 	config := readConfig("config.toml")
 	config.Writer = os.Stdout

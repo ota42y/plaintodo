@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,6 +12,20 @@ import (
 	"strings"
 	"time"
 )
+
+func GetIntAttribute(name string, attributes map[string]string) (int, error) {
+	str, ok := attributes[name]
+	if !ok {
+		return -1, errors.New(fmt.Sprintf("not set :%s\n", name))
+	}
+
+	num, err := strconv.Atoi(str)
+	if err != nil {
+		return -1, err
+	}
+
+	return num, nil
+}
 
 type timeList []time.Time
 
@@ -364,4 +379,37 @@ func (t *AddSubTaskCommand) Execute(option string, automaton *Automaton) (termin
 
 func NewAddSubTaskCommand() *AddSubTaskCommand {
 	return &AddSubTaskCommand{}
+}
+
+type SetAttributeCommand struct {
+}
+
+func (c *SetAttributeCommand) setAttribute(task *Task, attributes map[string]string) {
+	for key, value := range attributes {
+		task.Attributes[key] = value
+	}
+}
+
+func (c *SetAttributeCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	optionMap := ParseOptions(" " + option)
+
+	id, err := GetIntAttribute("id", optionMap)
+	if err != nil {
+		automaton.Config.Writer.Write([]byte(err.Error()))
+		return false
+	}
+	delete(optionMap, "id")
+
+	task := GetTask(id, automaton.Tasks)
+	if task != nil {
+		c.setAttribute(task, optionMap)
+		automaton.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
+	} else {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
+	}
+	return false
+}
+
+func NewSetAttributeCommand() *SetAttributeCommand {
+	return &SetAttributeCommand{}
 }

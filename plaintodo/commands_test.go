@@ -601,3 +601,70 @@ func TestAddSubTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestSetAttributeCommand(t *testing.T) {
+	cmd := NewSetAttributeCommand()
+	url := "http://example.com"
+
+	cmds := make(map[string]Command)
+	cmds["reload"] = NewReloadCommand()
+	cmds["set"] = cmd
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
+	a.Execute("reload")
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+
+	terminate := a.Execute("set :url " + url)
+	if terminate {
+		t.Errorf("SetAttributeCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	outputString := buf.String()
+	correctString := "set hit\nnot set :id\n"
+	if outputString != correctString {
+		t.Errorf("Shuld output '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+
+	task := a.Tasks[0].SubTasks[0].SubTasks[0]
+	task.Attributes["url"] = url
+	correctString = "set hit\nset attribute " + task.String(true) + "\n"
+	delete(task.Attributes, "url")
+
+	buf.Reset()
+	terminate = a.Execute("set :id 3 :url " + url)
+	if terminate {
+		t.Errorf("SetAttributeCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	value, ok := task.Attributes["url"]
+	if !ok {
+		t.Errorf("attribute not set")
+		t.FailNow()
+	}
+
+	if value != url {
+		t.Errorf("set attribute shuld %s, but %s", url, value)
+		t.FailNow()
+	}
+
+	outputString = buf.String()
+	if outputString != correctString {
+		t.Errorf("Shuld output '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+
+	buf.Reset()
+	terminate = a.Execute("set :id 0 :url " + url)
+
+	outputString = buf.String()
+	correctString = "set hit\nthere is no exist :id 0 task\n"
+	if outputString != correctString {
+		t.Errorf("Shuld output '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+}

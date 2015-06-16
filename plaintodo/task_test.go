@@ -330,3 +330,24 @@ func TestNewTaskError(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestGetTask(t *testing.T) {
+	tasks := ReadTestTasks()
+
+	task := GetTask(6, tasks)
+	if task == nil {
+		t.Errorf("GetTask shuld return Task.Id = 6 task, but nil")
+		t.FailNow()
+	}
+
+	if task.Id != 6 {
+		t.Errorf("GetTask shuld return Task.Id = 6 task, but other task return")
+		t.FailNow()
+	}
+
+	task = GetTask(0, tasks)
+	if task != nil {
+		t.Errorf("GetTask shuld return nil when task isn't exist, but %v", task)
+		t.FailNow()
+	}
+}
