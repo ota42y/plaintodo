@@ -259,3 +259,18 @@ func ReadTasks(filename string) ([]*Task, int) {
 
 	return tasks, maxTaskId
 }
+
+func GetTask(id int, tasks []*Task) *Task {
+	for _, task := range tasks {
+		if task.Id == id {
+			return task
+		}
+
+		t := GetTask(id, task.SubTasks)
+		if t != nil {
+			return t
+		}
+	}
+
+	return nil
+}
