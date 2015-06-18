@@ -413,3 +413,17 @@ func (c *SetAttributeCommand) Execute(option string, automaton *Automaton) (term
 func NewSetAttributeCommand() *SetAttributeCommand {
 	return &SetAttributeCommand{}
 }
+
+type StartCommand struct {
+	*SetAttributeCommand
+}
+
+func (c *StartCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	return c.SetAttributeCommand.Execute(option+" :start "+time.Now().Format(dateTimeFormat), automaton)
+}
+
+func NewStartCommand() *StartCommand {
+	return &StartCommand{
+		SetAttributeCommand: &SetAttributeCommand{},
+	}
+}

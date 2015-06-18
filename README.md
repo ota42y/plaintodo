@@ -214,6 +214,40 @@ rss :id 7
   my site :id 8 :start 2015-01-31 :important :repeat every 1 day :url http://ota42y.com
 ```
 
+#### set
+Set attribute to task.
+If already set, this command overwrite it.
+
+```
+> ls :id 8
+ls hit
+rss :id 8
+
+> set :id 8 :repeat every 1 day
+set hit
+set attribute rss :id 8 :repeat every 1 day
+> ls :id 8
+ls hit
+rss :id 8 :repeat every 1 day
+```
+
+### start
+Set start attribute with now datetime to task.
+
+```
+> ls :id 8
+ls hit
+rss :id 8
+
+> start :id 8
+start hit
+set attribute rss :id 8 :start 2015-02-01 14:00
+> ls :id 8
+ls hit
+rss :id 8 :start 2015-02-01 14:00
+```
+
+
 #### exit
 Exit this application.
 This command don't save task.
