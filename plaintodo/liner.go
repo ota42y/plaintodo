@@ -22,18 +22,35 @@ func NewLiner(config *Config, commands map[string]Command) *Liner {
 }
 
 func (l *Liner) Start() {
+	f, err := os.Open(l.automaton.Config.Paths.History)
+	if err == nil {
+		n, _ := l.ReadHistory(f)
+		fmt.Fprintln(l.automaton.Config.Writer, "load", n, "history")
+		f.Close()
+	}
+
 	for {
 		cmd, err := l.Prompt("> ")
 		if err != nil {
 			if err == io.EOF {
-				return
+				break
 			}
 			fmt.Fprintf(os.Stderr, "fatal: %s", err)
 			os.Exit(1)
 		}
 
+		l.AppendHistory(cmd)
 		if l.automaton.Execute(cmd) {
-			return
+			break
 		}
+	}
+
+	f, err = os.Create(l.automaton.Config.Paths.History)
+	if err == nil {
+		fmt.Fprintln(l.automaton.Config.Writer, "write history")
+		l.WriteHistory(f)
+		f.Close()
+	} else {
+		fmt.Fprintln(l.automaton.Config.Writer, "write history error:", err)
 	}
 }

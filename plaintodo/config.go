@@ -12,7 +12,8 @@ type Config struct {
 }
 
 type PathConfig struct {
-	Task string
+	Task    string
+	History string
 }
 
 type ArchiveConfig struct {
