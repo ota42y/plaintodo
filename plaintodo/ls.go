@@ -163,8 +163,8 @@ func ExecuteQuery(queryString string, tasks []*Task) []*ShowTask {
 	query, queryMap := getQuery(" " + queryString)
 	showTasks := Ls(tasks, query)
 
-	_, ok := queryMap["subtask"]
-	if ok {
+	_, ok := queryMap["no-sub-tasks"]
+	if !ok {
 		ShowAllChildSubTasks(showTasks)
 	}
 
