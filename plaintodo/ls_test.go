@@ -116,7 +116,7 @@ func TestGetQuery(t *testing.T) {
 		}
 	}
 
-	query, _ = getQuery(" :subtask :id 2")
+	query, _ = getQuery(" :id 2")
 	base = query.(*QueryBase)
 
 	if len(base.and) == 0 {
@@ -124,7 +124,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	showTasks = ExecuteQuery(" :subtask :id 2", tasks)
+	showTasks = ExecuteQuery(" :id 2", tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
 		t.FailNow()
@@ -167,10 +167,37 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
+	showTasks = ExecuteQuery(" :id 2 :no-sub-tasks", tasks)
+	if len(showTasks) != 1 {
+		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
+		t.FailNow()
+	}
+
+	if showTasks[0].Task.Id != 1 {
+		t.Errorf("shuld return task id = 1, but $v task", showTasks[0].Task)
+		t.FailNow()
+	}
+
+	if len(showTasks[0].SubTasks) != 1 {
+		t.Errorf("one sub task shuld be exsit, but %d task", len(showTasks[0].SubTasks))
+		t.FailNow()
+	}
+
+	task = showTasks[0].SubTasks[0]
+	if task.Task.Id != 2 {
+		t.Errorf("Task.Id shuld be 2 but %d", task.Task.Id)
+		t.FailNow()
+	}
+
+	if len(task.SubTasks) != 0 {
+		t.Errorf("shuld no subtasks, but %d subtasks", len(task.SubTasks))
+		t.FailNow()
+	}
+
 	cmd := NewCompleteCommand()
 	cmd.completeTask(2, tasks)
 
-	showTasks = ExecuteQuery(" :subtask :id 1 :complete", tasks)
+	showTasks = ExecuteQuery(" :id 1 :complete", tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
 		t.FailNow()
@@ -192,7 +219,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	showTasks = ExecuteQuery(" :subtask :id 1", tasks)
+	showTasks = ExecuteQuery(" :id 1", tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
 		t.FailNow()
