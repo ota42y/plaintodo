@@ -717,3 +717,81 @@ func TestStartCommand(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestPostPoneCommand(t *testing.T) {
+	cmd := NewPostPoneCommand()
+
+	cmds := make(map[string]Command)
+	cmds["reload"] = NewReloadCommand()
+	cmds["start"] = NewStartCommand()
+	cmds["postpone"] = cmd
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
+	a.Execute("reload")
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+	now := time.Now()
+
+	task := a.Tasks[0].SubTasks[1].SubTasks[0]
+	if _, ok := task.Attributes["postpone"]; ok {
+		t.Errorf("task already set postpone attribute, test data is invalid %v", task)
+		t.FailNow()
+	}
+
+	a.Execute("postpone :id 5 :postpone 1 month")
+	outputString := buf.String()
+	correctString := fmt.Sprintln("postpone hit\ntask :id", task.Id, "haven't start attribute")
+	if outputString != correctString {
+		t.Errorf("shuld return '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	task.Attributes["start"] = "test"
+	a.Execute("postpone :id 5 :postpone 1 month")
+	outputString = buf.String()
+	correctString = fmt.Sprintln("postpone hit\ntest is invalid format")
+	if outputString != correctString {
+		t.Errorf("shuld return '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	// set start now
+	a.Execute("start :id 5")
+	buf.Reset()
+
+	// invalid case
+	a.Execute("postpone :id 5 :postpone 1")
+	outputString = buf.String()
+	correctString = fmt.Sprintln("postpone hit\n1 is invalid format")
+	if outputString != correctString {
+		t.Errorf("shuld return '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+
+	terminate := a.Execute("postpone :id 5 :postpone 1 month")
+	if terminate {
+		t.Errorf("PostPoneCommand.Execute shud be return false")
+		t.FailNow()
+	}
+
+	value, ok := task.Attributes["postpone"]
+	if !ok {
+		t.Errorf("postpone attribute not set %v", task)
+		t.FailNow()
+	}
+
+	dateTime, ok := ParseTime(value)
+	if !ok {
+		t.Errorf("postpone attribute value is invalid formt %s", value)
+		t.FailNow()
+	}
+
+	diff := dateTime.Sub(now.AddDate(0, 1, 0))
+	if diff.Minutes() < -2 || 2 < diff.Minutes() {
+		t.Errorf("postpone time (%v) isn't 1 month ofter because %v minutes after", value, diff.Minutes())
+		t.FailNow()
+	}
+}

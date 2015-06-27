@@ -27,6 +27,29 @@ func GetIntAttribute(name string, attributes map[string]string) (int, error) {
 	return num, nil
 }
 
+func AddDuration(base time.Time, num string, unit string) time.Time {
+	n, err := strconv.Atoi(num)
+	if err != nil {
+		return time.Unix(0, 0)
+	}
+	switch {
+	case unit == "minutes":
+		return base.Add(time.Duration(n) * time.Minute)
+	case unit == "hour":
+		return base.Add(time.Duration(n) * time.Hour)
+	case unit == "day":
+		return base.AddDate(0, 0, n)
+	case unit == "week":
+		return base.AddDate(0, 0, n*7)
+	case unit == "month":
+		return base.AddDate(0, n, 0)
+	case unit == "year":
+		return base.AddDate(n, 0, 0)
+	}
+
+	return time.Unix(0, 0)
+}
+
 type timeList []time.Time
 
 func (l timeList) Len() int {
@@ -188,29 +211,6 @@ type CompleteCommand struct {
 	MaxTaskId int
 }
 
-func (t *CompleteCommand) addDuration(base time.Time, num string, unit string) time.Time {
-	n, err := strconv.Atoi(num)
-	if err != nil {
-		return time.Unix(0, 0)
-	}
-	switch {
-	case unit == "minutes":
-		return base.Add(time.Duration(n) * time.Minute)
-	case unit == "hour":
-		return base.Add(time.Duration(n) * time.Hour)
-	case unit == "day":
-		return base.AddDate(0, 0, n)
-	case unit == "week":
-		return base.AddDate(0, 0, n*7)
-	case unit == "month":
-		return base.AddDate(0, n, 0)
-	case unit == "year":
-		return base.AddDate(n, 0, 0)
-	}
-
-	return time.Unix(0, 0)
-}
-
 func (t *CompleteCommand) setNewRepeat(baseTime time.Time, task *Task) {
 	repeatString, ok := task.Attributes["repeat"]
 	if !ok {
@@ -234,7 +234,7 @@ func (t *CompleteCommand) setNewRepeat(baseTime time.Time, task *Task) {
 		}
 	}
 
-	newTime := t.addDuration(baseTime, splits[1], splits[2])
+	newTime := AddDuration(baseTime, splits[1], splits[2])
 	task.Attributes["start"] = newTime.Format(dateTimeFormat)
 }
 
@@ -424,6 +424,68 @@ func (c *StartCommand) Execute(option string, automaton *Automaton) (terminate b
 
 func NewStartCommand() *StartCommand {
 	return &StartCommand{
+		SetAttributeCommand: &SetAttributeCommand{},
+	}
+}
+
+// postpone :id 1 :postpone 5 hour
+type PostPoneCommand struct {
+	*SetAttributeCommand
+}
+
+func (c *PostPoneCommand) postpone(task *Task, optionMap map[string]string) error {
+	// get start time
+	startString, ok := task.Attributes["start"]
+	if !ok {
+		return errors.New(fmt.Sprint("task :id ", task.Id, " haven't start attribute"))
+	}
+
+	startTime, ok := ParseTime(startString)
+	if !ok {
+		return errors.New(fmt.Sprint(startString, " is invalid format"))
+	}
+
+	// :postpone 1 hour
+	postPoneData := strings.Split(optionMap["postpone"], " ")
+	if len(postPoneData) != 2 {
+		return errors.New(fmt.Sprint(optionMap["postpone"], " is invalid format"))
+	}
+
+	postPoneTime := AddDuration(startTime, postPoneData[0], postPoneData[1])
+	optionMap["postpone"] = postPoneTime.Format(dateTimeFormat)
+
+	c.setAttribute(task, optionMap)
+	return nil
+}
+
+func (c *PostPoneCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	optionMap := ParseOptions(" " + option)
+
+	id, err := GetIntAttribute("id", optionMap)
+	if err != nil {
+		automaton.Config.Writer.Write([]byte(err.Error()))
+		return false
+	}
+	delete(optionMap, "id")
+
+	task := GetTask(id, automaton.Tasks)
+	if task == nil {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
+		return false
+	}
+
+	err = c.postpone(task, optionMap)
+	if err != nil {
+		fmt.Fprintln(automaton.Config.Writer, err)
+	} else {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
+	}
+
+	return false
+}
+
+func NewPostPoneCommand() *PostPoneCommand {
+	return &PostPoneCommand{
 		SetAttributeCommand: &SetAttributeCommand{},
 	}
 }
