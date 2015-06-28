@@ -429,11 +429,11 @@ func NewStartCommand() *StartCommand {
 }
 
 // postpone :id 1 :postpone 5 hour
-type PostPoneCommand struct {
+type PostponeCommand struct {
 	*SetAttributeCommand
 }
 
-func (c *PostPoneCommand) postpone(task *Task, optionMap map[string]string) error {
+func (c *PostponeCommand) postpone(task *Task, optionMap map[string]string) error {
 	// get start time
 	startString, ok := task.Attributes["start"]
 	if !ok {
@@ -446,19 +446,19 @@ func (c *PostPoneCommand) postpone(task *Task, optionMap map[string]string) erro
 	}
 
 	// :postpone 1 hour
-	postPoneData := strings.Split(optionMap["postpone"], " ")
-	if len(postPoneData) != 2 {
+	postponeData := strings.Split(optionMap["postpone"], " ")
+	if len(postponeData) != 2 {
 		return errors.New(fmt.Sprint(optionMap["postpone"], " is invalid format"))
 	}
 
-	postPoneTime := AddDuration(startTime, postPoneData[0], postPoneData[1])
-	optionMap["postpone"] = postPoneTime.Format(dateTimeFormat)
+	postponeTime := AddDuration(startTime, postponeData[0], postponeData[1])
+	optionMap["postpone"] = postponeTime.Format(dateTimeFormat)
 
 	c.setAttribute(task, optionMap)
 	return nil
 }
 
-func (c *PostPoneCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+func (c *PostponeCommand) Execute(option string, automaton *Automaton) (terminate bool) {
 	optionMap := ParseOptions(" " + option)
 
 	id, err := GetIntAttribute("id", optionMap)
@@ -484,8 +484,8 @@ func (c *PostPoneCommand) Execute(option string, automaton *Automaton) (terminat
 	return false
 }
 
-func NewPostPoneCommand() *PostPoneCommand {
-	return &PostPoneCommand{
+func NewPostponeCommand() *PostponeCommand {
+	return &PostponeCommand{
 		SetAttributeCommand: &SetAttributeCommand{},
 	}
 }

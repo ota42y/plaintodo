@@ -718,8 +718,8 @@ func TestStartCommand(t *testing.T) {
 	}
 }
 
-func TestPostPoneCommand(t *testing.T) {
-	cmd := NewPostPoneCommand()
+func TestPostponeCommand(t *testing.T) {
+	cmd := NewPostponeCommand()
 
 	cmds := make(map[string]Command)
 	cmds["reload"] = NewReloadCommand()
