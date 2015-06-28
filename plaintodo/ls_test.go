@@ -292,4 +292,29 @@ func TestGetQuery(t *testing.T) {
 		t.Errorf("if specific task is completed, don't show all parent")
 		t.FailNow()
 	}
+
+	tasks = ReadTestTasks()
+	showTasks = ExecuteQuery(" :overdue 2015-02-02", tasks)
+	if len(showTasks) != 2 {
+		t.Errorf("When start option set, return 2 tasks, but %d", len(showTasks))
+		t.FailNow()
+	}
+
+	taskData := tasks[1].SubTasks[0]
+	postpone := NewPostponeCommand()
+	op := make(map[string]string)
+	op["postpone"] = "3 day"
+	postpone.postpone(taskData, op)
+
+	showTasks = ExecuteQuery(" :overdue 2015-02-02", tasks)
+	if len(showTasks) != 1 {
+		t.Errorf("when postpone task, task isn't overdue but return %v", showTasks[1].Task)
+		t.FailNow()
+	}
+
+	showTasks = ExecuteQuery(" :overdue 2015-02-05", tasks)
+	if len(showTasks) != 2 {
+		t.Errorf("when task ovordue in postpone time but return %d", len(showTasks))
+		t.FailNow()
+	}
 }
