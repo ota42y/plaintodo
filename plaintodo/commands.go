@@ -253,6 +253,7 @@ func (t *CompleteCommand) completeAllSubTask(completeDate time.Time, task *Task)
 	_, ok := task.Attributes["repeat"]
 	if len(newSubTasks) != 0 || ok {
 		repeatTask = task.Copy(t.MaxTaskId+1, false)
+		delete(repeatTask.Attributes, "postpone")
 		repeatTask.SubTasks = newSubTasks
 		t.setNewRepeat(completeDate, repeatTask)
 		t.MaxTaskId += 1
