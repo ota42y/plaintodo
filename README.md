@@ -142,7 +142,7 @@ If not set :complete, show not completed task.
 |:no-sub-tasks|ls :id 1 :no-sub-tasks| show specific task|
 |:level| ls :level 1| show only tasks which same or lower level|
 |:complete| ls :complete | show completed task|
-
+|:overdue| ls :overdue 2015-01-31| show overdue task|
 
 If no options, overdue task, which check :start
 
@@ -247,6 +247,32 @@ set attribute rss :id 8 :start 2015-02-01 14:00
 ls hit
 rss :id 8 :start 2015-02-01 14:00
 ```
+
+### postpone
+Set postpone task.
+If task postpone, ls :overdue check postpone attribute
+
+```
+> ls
+ls hit
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :important :start 2015-01-31
+    add music to player :id 3 :start 2015-01-30
+
+rss :id 8
+  my site :id 9 :important :repeat every 1 day :start 2015-02-01 :url http://ota42y.com
+
+> postpone :id 9 :postpone 1 year
+postpone hit
+set attribute   my site :id 9 :important :postpone 2016-02-01 00:00 :repeat every 1 day :start 2015-02-01 :url http://ota42y.com
+> ls
+ls hit
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :important :start 2015-01-31
+    add music to player :id 3 :start 2015-01-30
+
+```
+
 
 
 #### exit

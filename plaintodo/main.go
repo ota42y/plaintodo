@@ -16,6 +16,7 @@ func main() {
 	cmds["subtask"] = NewAddSubTaskCommand()
 	cmds["set"] = NewSetAttributeCommand()
 	cmds["start"] = NewStartCommand()
+	cmds["postpone"] = NewPostponeCommand()
 
 	config := readConfig("config.toml")
 	config.Writer = os.Stdout

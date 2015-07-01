@@ -147,7 +147,6 @@ func TestCompleteCommand(t *testing.T) {
 	cmds := make(map[string]Command)
 
 	cmds["complete"] = NewCompleteCommand()
-
 	cmds["reload"] = NewReloadCommand()
 	config := ReadTestConfig()
 	a := NewAutomaton(config, cmds)
@@ -286,8 +285,14 @@ func TestSetNewRepeat(t *testing.T) {
 
 func TestCompleteRepeatTask(t *testing.T) {
 	tasks := ReadTestTasks()
-	cmd := NewCompleteCommand()
+	baseTask := tasks[1].SubTasks[0]
 
+	postponeCommand := NewPostponeCommand()
+	optionMap := make(map[string]string)
+	optionMap["postpone"] = "1 day"
+	postponeCommand.postpone(baseTask, optionMap)
+
+	cmd := NewCompleteCommand()
 	completeTask, newTasks, n := cmd.completeTask(8, tasks)
 	if completeTask == nil {
 		t.Errorf("If there is task with taskId, completeTask shuld return complete task, but nil")
@@ -316,6 +321,17 @@ func TestCompleteRepeatTask(t *testing.T) {
 		t.Errorf("set after 1 day (%v), but %v", nextStart, repeatStart)
 		t.FailNow()
 	}
+
+	if _, ok := newTasks[1].SubTasks[0].Attributes["postpone"]; !ok {
+		t.Errorf("postpone attribute delete from base task %v", newTasks[1])
+		t.FailNow()
+	}
+
+	if _, ok := newTasks[2].SubTasks[0].Attributes["postpone"]; ok {
+		t.Errorf("postpone attribute copy to repeat task")
+		t.FailNow()
+	}
+	delete(newTasks[1].SubTasks[0].Attributes, "postpone")
 
 	delete(newTasks[1].SubTasks[0].Attributes, "start")
 	delete(newTasks[2].SubTasks[0].Attributes, "start")
