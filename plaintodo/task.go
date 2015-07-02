@@ -114,6 +114,23 @@ func (t *Task) String(showId bool) string {
 	return spaces + strings.Join(taskString, " ")
 }
 
+func (t *Task) RemoveSubTask(id int) bool {
+	index := -1
+	for i, task := range t.SubTasks {
+		if task.Id == id {
+			index = i
+		}
+	}
+
+	if index == -1 {
+		// task isn't exist
+		return false
+	}
+
+	t.SubTasks = append(t.SubTasks[:index], t.SubTasks[index+1:]...)
+	return true
+}
+
 type LoadResult struct {
 	Tasks     []*Task
 	FailLines []string

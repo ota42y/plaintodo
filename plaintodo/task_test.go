@@ -372,3 +372,37 @@ func TestGetTask(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestRemoveSubTask(t *testing.T) {
+	tasks := ReadTestTasks()
+
+	parent, task := GetTask(6, tasks)
+	num := len(parent.SubTasks)
+
+	success := parent.RemoveSubTask(42)
+	if success {
+		t.Errorf("If task not exist, RemoveSubTask return false, but true")
+		t.FailNow()
+	}
+
+	success = parent.RemoveSubTask(task.Id)
+	if !success {
+		t.Errorf("If task exist, RemoveSubTask return true, but false")
+		t.FailNow()
+	}
+
+	if num-1 != len(parent.SubTasks) {
+		t.Errorf("If task removed, parent task num shuld be %d, but %d", num-1, len(parent.SubTasks))
+		t.FailNow()
+	}
+
+	p, removed := GetTask(6, tasks)
+	if p != nil {
+		t.Errorf("If task removed, task isn't exist, but sub task in %v", p)
+		t.FailNow()
+	}
+	if removed != nil {
+		t.Errorf("If task removed, task isn't exist, but return %v", removed)
+		t.FailNow()
+	}
+}
