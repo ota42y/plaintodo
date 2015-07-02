@@ -334,7 +334,7 @@ func TestNewTaskError(t *testing.T) {
 func TestGetTask(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	task := GetTask(6, tasks)
+	parent, task := GetTask(6, tasks)
 	if task == nil {
 		t.Errorf("GetTask shuld return Task.Id = 6 task, but nil")
 		t.FailNow()
@@ -345,9 +345,30 @@ func TestGetTask(t *testing.T) {
 		t.FailNow()
 	}
 
-	task = GetTask(0, tasks)
+	if parent == nil {
+		t.Errorf("shuld return parent task")
+		t.FailNow()
+	}
+
+	if parent.Id != 4 {
+		t.Errorf("shuld return parent task, but %v", parent)
+		t.FailNow()
+	}
+
+	parent, task = GetTask(0, tasks)
 	if task != nil {
 		t.Errorf("GetTask shuld return nil when task isn't exist, but %v", task)
+		t.FailNow()
+	}
+
+	if parent != nil {
+		t.Errorf("if task isn't exist, shuld return parent as nil")
+		t.FailNow()
+	}
+
+	parent, task = GetTask(1, tasks)
+	if parent != nil {
+		t.Errorf("if no parent exist, shuld return nil")
 		t.FailNow()
 	}
 }

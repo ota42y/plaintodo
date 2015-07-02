@@ -401,7 +401,7 @@ func (c *SetAttributeCommand) Execute(option string, automaton *Automaton) (term
 	}
 	delete(optionMap, "id")
 
-	task := GetTask(id, automaton.Tasks)
+	_, task := GetTask(id, automaton.Tasks)
 	if task != nil {
 		c.setAttribute(task, optionMap)
 		automaton.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
@@ -469,7 +469,7 @@ func (c *PostponeCommand) Execute(option string, automaton *Automaton) (terminat
 	}
 	delete(optionMap, "id")
 
-	task := GetTask(id, automaton.Tasks)
+	_, task := GetTask(id, automaton.Tasks)
 	if task == nil {
 		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
 		return false
