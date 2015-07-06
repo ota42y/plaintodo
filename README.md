@@ -273,7 +273,52 @@ go to SSA :id 1 :start 2015-02-01
 
 ```
 
+### move
+Move task to other task's sub task.
+If move to  :id=0 task's sub task, task move to top level task
 
+```
+> lsall
+lsall hit
+go to SSA :id 1 :start 2015-02-01
+  buy items :id 4
+    buy battery :id 5
+    buy ultra orange :id 6
+    buy king blade :id 7
+
+rss :id 8
+  my site :id 9 :important :repeat every 1 day :start 2015-02-01 :url http://ota42y.com
+
+> move :from 4 :to 8
+move hit
+task moved to sub task
+parent: rss :id 8
+> lsall
+lsall hit
+go to SSA :id 1 :start 2015-02-01
+
+rss :id 8
+  my site :id 9 :important :repeat every 1 day :start 2015-02-01 :url http://ota42y.com
+  buy items :id 4
+    buy battery :id 5
+    buy ultra orange :id 6
+    buy king blade :id 7
+
+> move :from 4 :to 0
+move hit
+task moved to top level task
+> lsall
+lsall hit
+go to SSA :id 1 :start 2015-02-01
+
+rss :id 8
+  my site :id 9 :important :repeat every 1 day :start 2015-02-01 :url http://ota42y.com
+
+buy items :id 4
+  buy battery :id 5
+  buy ultra orange :id 6
+  buy king blade :id 7
+```
 
 #### exit
 Exit this application.
