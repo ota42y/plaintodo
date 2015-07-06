@@ -7,6 +7,22 @@ import (
 	"time"
 )
 
+func TestGetIntAttribute(t *testing.T) {
+	m := make(map[string]string)
+	m["id"] = "42"
+
+	n, err := GetIntAttribute("id", m)
+	if err != nil {
+		t.Errorf("When not error, shuld return err as nil, but %v", err)
+		t.FailNow()
+	}
+
+	if 42 != n {
+		t.Errorf("shuld return %d, but %d", 42, n)
+		t.FailNow()
+	}
+}
+
 func TestExitCommand(t *testing.T) {
 	cmd := NewExitCommand()
 
@@ -639,7 +655,7 @@ func TestSetAttributeCommand(t *testing.T) {
 	}
 
 	outputString := buf.String()
-	correctString := "set hit\nnot set :id\n"
+	correctString := "set hit\nnot exist :id\n"
 	if outputString != correctString {
 		t.Errorf("Shuld output '%s', but '%s'", correctString, outputString)
 		t.FailNow()
@@ -808,6 +824,147 @@ func TestPostponeCommand(t *testing.T) {
 	diff := dateTime.Sub(now.AddDate(0, 1, 0))
 	if diff.Minutes() < -2 || 2 < diff.Minutes() {
 		t.Errorf("postpone time (%v) isn't 1 month ofter because %v minutes after", value, diff.Minutes())
+		t.FailNow()
+	}
+}
+
+func TestMoveCommand(t *testing.T) {
+	cmd := NewMoveCommand()
+
+	cmds := make(map[string]Command)
+	cmds["reload"] = NewReloadCommand()
+	cmds["move"] = cmd
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
+	a.Execute("reload")
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+
+	fromTask, moveTask := GetTask(4, a.Tasks)
+	_, toTask := GetTask(8, a.Tasks)
+
+	fromNum := len(fromTask.SubTasks)
+	toNum := len(toTask.SubTasks)
+
+	a.Execute("move :to 42")
+	outputString := buf.String()
+	correctString := fmt.Sprintf("move hit\nnot exist :from\n")
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	a.Execute("move :from 4")
+	outputString = buf.String()
+	correctString = fmt.Sprintf("move hit\nnot exist :to\n")
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	a.Execute("move :from 42 :to 4")
+	outputString = buf.String()
+	correctString = fmt.Sprintf("move hit\nthere is no exist %d task\n", 42)
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	a.Execute("move :from 4 :to 42")
+	outputString = buf.String()
+	correctString = fmt.Sprintf("move hit\nthere is no exist %d task\n", 42)
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	movedParent, movedTask := GetTask(4, a.Tasks)
+	if movedParent == nil {
+		t.Errorf("when not meved task, parent shuldn't be change from %v but %v", toTask, movedParent)
+		t.FailNow()
+	}
+	if movedParent.Id != fromTask.Id {
+		t.Errorf("when not meved task, parent shuldn't be change from %v but %v", fromTask, movedParent)
+		t.FailNow()
+	}
+
+	terminate := a.Execute("move :from 4 :to 8")
+	if terminate {
+		t.Errorf("ReloadCommand.Execute shud be return false")
+		t.FailNow()
+	}
+	outputString = buf.String()
+	correctString = fmt.Sprintf("move hit\ntask moved to sub task\nparent: %v\n", toTask.String(true))
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	if fromNum-1 != len(fromTask.SubTasks) {
+		t.Errorf("if task moved, from task's subtask shuld be %d, but %d in %v", fromNum-1, len(fromTask.SubTasks), fromTask)
+		t.FailNow()
+	}
+
+	if toNum+1 != len(toTask.SubTasks) {
+		t.Errorf("if task moved, to task's subtask shuld be %d, but %d", toNum+1, len(toTask.SubTasks))
+		t.FailNow()
+	}
+
+	movedParent, movedTask = GetTask(4, a.Tasks)
+	if toTask.Id != movedParent.Id {
+		t.Errorf("move %d task's sub task, but %d task's subtask", toTask.Id, movedParent.Id)
+		t.FailNow()
+	}
+
+	if 3 != len(movedTask.SubTasks) {
+		t.Errorf("move all sub tasks (%d), but %d sub task exist", 3, len(movedTask.SubTasks))
+		t.FailNow()
+	}
+
+	a.Execute("move :from 4 :to 9")
+	if 2 != moveTask.Level {
+		t.Errorf("when task moved, Task.Level shuld be %d, but %d", 2, moveTask.Level)
+		t.FailNow()
+	}
+	if 3 != moveTask.SubTasks[0].Level {
+		t.Errorf("when task moved, sub task's Task.Level shuld be %d, but %d", 3, moveTask.SubTasks[0].Level)
+		t.FailNow()
+	}
+
+	buf.Reset()
+
+	a.Execute("move :from 4 :to 0")
+	outputString = buf.String()
+	correctString = fmt.Sprintf("move hit\ntask moved to top level task\n")
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	movedParent, movedTask = GetTask(4, a.Tasks)
+	if movedParent != nil {
+		t.Errorf("if task moved top level task, parent shuld be nil but %v", movedParent)
+		t.FailNow()
+	}
+	if len(a.Tasks) != 3 {
+		t.Errorf("if task moved top level task, Automaton.Task shuld be %d tasks, but %d", 3, len(a.Tasks))
+		t.FailNow()
+	}
+
+	if 0 != moveTask.Level {
+		t.Errorf("when task moved, Task.Level shuld be %d, but %d", 0, moveTask.Level)
+		t.FailNow()
+	}
+
+	if 1 != moveTask.SubTasks[0].Level {
+		t.Errorf("when task moved, sub task's Task.Level shuld be %d, but %d", 1, moveTask.SubTasks[0].Level)
 		t.FailNow()
 	}
 }

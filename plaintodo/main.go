@@ -17,6 +17,7 @@ func main() {
 	cmds["set"] = NewSetAttributeCommand()
 	cmds["start"] = NewStartCommand()
 	cmds["postpone"] = NewPostponeCommand()
+	cmds["move"] = NewMoveCommand()
 
 	config := readConfig("config.toml")
 	config.Writer = os.Stdout

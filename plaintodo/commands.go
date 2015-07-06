@@ -16,7 +16,7 @@ import (
 func GetIntAttribute(name string, attributes map[string]string) (int, error) {
 	str, ok := attributes[name]
 	if !ok {
-		return -1, errors.New(fmt.Sprintf("not set :%s\n", name))
+		return -1, errors.New(fmt.Sprintf("not exist :%s\n", name))
 	}
 
 	num, err := strconv.Atoi(str)
@@ -489,4 +489,60 @@ func NewPostponeCommand() *PostponeCommand {
 	return &PostponeCommand{
 		SetAttributeCommand: &SetAttributeCommand{},
 	}
+}
+
+// move :id 1 :to 1
+type MoveCommand struct {
+}
+
+func (c *MoveCommand) updateTaskLevel(level int, t *Task) {
+	t.Level = level
+	for _, subTask := range t.SubTasks {
+		c.updateTaskLevel(level+1, subTask)
+	}
+}
+
+func (c *MoveCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	m := ParseOptions(" " + option)
+
+	taskId, err := GetIntAttribute("from", m)
+	if err != nil {
+		automaton.Config.Writer.Write([]byte(err.Error()))
+		return false
+	}
+
+	toId, err := GetIntAttribute("to", m)
+	if err != nil {
+		automaton.Config.Writer.Write([]byte(err.Error()))
+		return false
+	}
+
+	from, t := GetTask(taskId, automaton.Tasks)
+	if t == nil {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", taskId)))
+		return false
+	}
+
+	_, toTask := GetTask(toId, automaton.Tasks)
+	if toTask == nil && toId != 0 {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", toId)))
+		return false
+	}
+
+	from.RemoveSubTask(t.Id)
+	if toTask != nil {
+		c.updateTaskLevel(toTask.Level+1, t)
+		toTask.SubTasks = append(toTask.SubTasks, t)
+		fmt.Fprintf(automaton.Config.Writer, "task moved to sub task\nparent: %s\n", toTask.String(true))
+	} else {
+		c.updateTaskLevel(0, t)
+		automaton.Tasks = append(automaton.Tasks, t)
+		fmt.Fprintf(automaton.Config.Writer, "task moved to top level task\n")
+	}
+
+	return false
+}
+
+func NewMoveCommand() *MoveCommand {
+	return &MoveCommand{}
 }
