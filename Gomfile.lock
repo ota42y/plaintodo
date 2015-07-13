@@ -1,2 +1,3 @@
 gom 'github.com/peterh/liner', :commit => '1bb0d1c1a25ed393d8feb09bab039b2b1b1fbced'
 gom 'github.com/BurntSushi/toml', :commit => '443a628bc233f634a75bcbdd71fe5350789f1afa'
+gom 'github.com/skratchdot/open-golang/open'

@@ -38,11 +38,9 @@ task = <space><task name><attributes>
 :start 2015-01-30 :repeat after 1 day 
 // when complete in 2015-02-14, set :start 2015-02-15
 ```
-  
 
 ### :url
-  (not support yet)
-  releated url
+  related url
 
 
 ## Usage
@@ -318,6 +316,16 @@ buy items :id 4
   buy battery :id 5
   buy ultra orange :id 6
   buy king blade :id 7
+```
+
+#### open
+Execute open command by :url attribute
+
+```
+> open :id 9
+open hit
+open: http://ota42y.com
+# Probably your computer open this url by web browser
 ```
 
 #### exit

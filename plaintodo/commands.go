@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/skratchdot/open-golang/open"
 )
 
 func GetIntAttribute(name string, attributes map[string]string) (int, error) {
@@ -545,4 +546,48 @@ func (c *MoveCommand) Execute(option string, automaton *Automaton) (terminate bo
 
 func NewMoveCommand() *MoveCommand {
 	return &MoveCommand{}
+}
+
+type OpenCommand struct {
+}
+
+func (c *OpenCommand) getUrl(task *Task) (string, error) {
+	urlString, ok := task.Attributes["url"]
+	if !ok {
+		return "", errors.New(fmt.Sprintf("There is no url in task:\n%s", task.String(true)))
+	}
+
+	return urlString, nil
+}
+
+func (c *OpenCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	// There is no url in task:rss :id 8
+
+	optionMap := ParseOptions(" " + option)
+	id, err := GetIntAttribute("id", optionMap)
+	if err != nil {
+		fmt.Fprintf(automaton.Config.Writer, "%s", err.Error())
+		return false
+	}
+
+	_, task := GetTask(id, automaton.Tasks)
+	if task == nil {
+		fmt.Fprintf(automaton.Config.Writer, "There is no such task :id %d\n", id)
+		return false
+	}
+
+	url, err := c.getUrl(task)
+	if err != nil {
+		fmt.Fprintf(automaton.Config.Writer, "%s\n", err.Error())
+		return false
+	}
+
+	open.Run(url)
+	fmt.Fprintf(automaton.Config.Writer, "open: %s\n", url)
+
+	return false
+}
+
+func NewOpenCommand() *OpenCommand {
+	return &OpenCommand{}
 }
