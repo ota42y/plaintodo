@@ -968,3 +968,66 @@ func TestMoveCommand(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestOpenCommand(t *testing.T) {
+	cmd := NewOpenCommand()
+
+	cmds := make(map[string]Command)
+	cmds["reload"] = NewReloadCommand()
+	cmds["open"] = cmd
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
+	a.Execute("reload")
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+
+	a.Execute("open :id 8")
+	_, task := GetTask(8, a.Tasks)
+	outputString := buf.String()
+	correctString := fmt.Sprintf("open hit\nThere is no url in task:\n%s\n", task.String(true))
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	a.Execute("open :id 42")
+	outputString = buf.String()
+	correctString = fmt.Sprintf("open hit\nThere is no such task :id %d\n", 42)
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	a.Execute("open :aaa bbb")
+	outputString = buf.String()
+	correctString = fmt.Sprintf("open hit\nnot exist :id\n")
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	_, task = GetTask(9, a.Tasks)
+	url, err := cmd.getUrl(task)
+	if task.Attributes["url"] != url {
+		t.Errorf("getUrl shuld return %s, but %s", task.Attributes["url"], url)
+		t.FailNow()
+	}
+
+	if err != nil {
+		t.Errorf("getUrl shuldn't return erro but %s", err.Error())
+		t.FailNow()
+	}
+
+	task = a.Tasks[0]
+	url, err = cmd.getUrl(task)
+	outputString = err.Error()
+	correctString = fmt.Sprintf("There is no url in task:\n%s", task.String(true))
+	if correctString != outputString {
+		t.Errorf("if task haven't :url attribute and task name is url, getUrl shuld return error %s, but %s", correctString, outputString)
+		t.FailNow()
+	}
+}
