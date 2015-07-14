@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -1028,6 +1029,80 @@ func TestOpenCommand(t *testing.T) {
 	correctString = fmt.Sprintf("There is no url in task:\n%s", task.String(true))
 	if correctString != outputString {
 		t.Errorf("if task haven't :url attribute and task name is url, getUrl shuld return error %s, but %s", correctString, outputString)
+		t.FailNow()
+	}
+}
+
+func TestNiceCommand(t *testing.T) {
+	cmd := NewNiceCommand()
+
+	cmds := make(map[string]Command)
+	cmds["reload"] = NewReloadCommand()
+	cmds["task"] = NewAddTaskCommand()
+	cmds["nice"] = cmd
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
+	a.Execute("reload")
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+
+	evernoteUrl := "https://www.evernote.com/shard/s1/nl/111111/abfdef-ght1234567890"
+	a.Execute("task test :url " + evernoteUrl)
+	buf.Reset()
+
+	_, task := GetTask(a.MaxTaskId, a.Tasks)
+	if evernoteUrl != task.Attributes["url"] {
+		t.Errorf(":url attribute shuld be %s, but %s, test data invalid", evernoteUrl, task.Attributes["url"])
+		t.FailNow()
+	}
+
+	terminate := a.Execute(fmt.Sprintf("nice :id %d", task.Id))
+
+	outputString := buf.String()
+	correctString := fmt.Sprintf("nice hit\nDone nice\nevernote url change 1 tasks\n")
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	if terminate {
+		t.Errorf("shud be return false")
+		t.FailNow()
+	}
+
+	if !strings.HasPrefix(task.Attributes["url"], "evernote:///view/") {
+		t.Errorf(":url shuld have prefix '%s', but '%s'", "evernote:///view/", task.Attributes["url"])
+		t.FailNow()
+	}
+
+	// if there is / in bottom
+	task.Attributes["url"] = evernoteUrl + "/"
+	// if sub task
+	a.Tasks[0].SubTasks[0].Attributes["url"] = evernoteUrl
+
+	a.Execute(fmt.Sprintf("nice"))
+	outputString = buf.String()
+	correctString = fmt.Sprintf("nice hit\nDone nice\nevernote url change 2 tasks\n")
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	if !strings.HasPrefix(task.Attributes["url"], "evernote:///view/") {
+		t.Errorf(":url shuld have prefix '%s', but '%s'", "evernote:///view/", task.Attributes["url"])
+		t.FailNow()
+	}
+
+	if !strings.HasPrefix(a.Tasks[0].SubTasks[0].Attributes["url"], "evernote:///view/") {
+		t.Errorf(":url shuld have prefix '%s', but '%s'", "evernote:///view/", a.Tasks[0].Attributes["url"])
+		t.FailNow()
+	}
+
+	if a.Tasks[1].SubTasks[0].Attributes["url"] != "http://ota42y.com" {
+		t.Errorf("if :url isn't evernote url, nice command not chenga, but change to %s", a.Tasks[1].SubTasks[0].Attributes["url"])
 		t.FailNow()
 	}
 }

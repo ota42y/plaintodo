@@ -19,6 +19,7 @@ func main() {
 	cmds["postpone"] = NewPostponeCommand()
 	cmds["move"] = NewMoveCommand()
 	cmds["open"] = NewOpenCommand()
+	cmds["nice"] = NewNiceCommand()
 
 	config := readConfig("config.toml")
 	config.Writer = os.Stdout
