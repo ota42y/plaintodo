@@ -328,6 +328,16 @@ open: http://ota42y.com
 # Probably your computer open this url by web browser
 ```
 
+#### nice
+Do nice.
+If you don't select task, this command do all tasks.
+
+This command execute these
+
+- convert https://www.evernote.com/shard/... to evernote:///view/... in :url attribute
+- convert Today to YYYY-MM-DD in :start attribute (sorry, not implemented)
+
+
 #### exit
 Exit this application.
 This command don't save task.
