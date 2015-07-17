@@ -774,7 +774,7 @@ func TestPostponeCommand(t *testing.T) {
 
 	a.Execute("postpone :id 5 :postpone 1 month")
 	outputString := buf.String()
-	correctString := fmt.Sprintln("postpone hit\ntask :id", task.Id, "haven't start attribute")
+	correctString := fmt.Sprintln("postpone hit\ntask :id", task.Id, "haven't start attribute, so postpone not work")
 	if outputString != correctString {
 		t.Errorf("shuld return '%s', but '%s'", correctString, outputString)
 		t.FailNow()
@@ -784,16 +784,15 @@ func TestPostponeCommand(t *testing.T) {
 	task.Attributes["start"] = "test"
 	a.Execute("postpone :id 5 :postpone 1 month")
 	outputString = buf.String()
-	correctString = fmt.Sprintln("postpone hit\ntest is invalid format")
+	correctString = fmt.Sprintln("postpone hit\ntest is invalid format, so postpone not work")
 	if outputString != correctString {
 		t.Errorf("shuld return '%s', but '%s'", correctString, outputString)
 		t.FailNow()
 	}
 	buf.Reset()
 
-	// set start now
-	a.Execute("start :id 5")
-	buf.Reset()
+	// set start 0 time
+	task.Attributes["start"] = time.Unix(0, 0).Format(dateTimeFormat)
 
 	// invalid case
 	a.Execute("postpone :id 5 :postpone 1")

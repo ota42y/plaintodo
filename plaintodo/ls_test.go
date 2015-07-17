@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"fmt"
 	"time"
 )
 
@@ -303,7 +304,7 @@ func TestGetQuery(t *testing.T) {
 	taskData := tasks[1].SubTasks[0]
 	postpone := NewPostponeCommand()
 	op := make(map[string]string)
-	op["postpone"] = "3 day"
+	op["postpone"] = "1 day"
 	postpone.postpone(taskData, op)
 
 	showTasks = ExecuteQuery(" :overdue 2015-02-02", tasks)
@@ -312,7 +313,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	showTasks = ExecuteQuery(" :overdue 2015-02-05", tasks)
+	showTasks = ExecuteQuery(fmt.Sprintf(" :overdue %s", time.Now().AddDate(0, 0, 2).Format(dateFormat)), tasks)
 	if len(showTasks) != 2 {
 		t.Errorf("when task ovordue in postpone time but return %d", len(showTasks))
 		t.FailNow()
