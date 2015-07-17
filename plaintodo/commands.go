@@ -439,12 +439,12 @@ func (c *PostponeCommand) postpone(task *Task, optionMap map[string]string) erro
 	// get start time
 	startString, ok := task.Attributes["start"]
 	if !ok {
-		return errors.New(fmt.Sprint("task :id ", task.Id, " haven't start attribute"))
+		return errors.New(fmt.Sprint("task :id ", task.Id, " haven't start attribute, so postpone not work"))
 	}
 
-	startTime, ok := ParseTime(startString)
+	_, ok = ParseTime(startString)
 	if !ok {
-		return errors.New(fmt.Sprint(startString, " is invalid format"))
+		return errors.New(fmt.Sprint(startString, " is invalid format, so postpone not work"))
 	}
 
 	// :postpone 1 hour
@@ -453,7 +453,7 @@ func (c *PostponeCommand) postpone(task *Task, optionMap map[string]string) erro
 		return errors.New(fmt.Sprint(optionMap["postpone"], " is invalid format"))
 	}
 
-	postponeTime := AddDuration(startTime, postponeData[0], postponeData[1])
+	postponeTime := AddDuration(time.Now(), postponeData[0], postponeData[1])
 	optionMap["postpone"] = postponeTime.Format(dateTimeFormat)
 
 	c.setAttribute(task, optionMap)
