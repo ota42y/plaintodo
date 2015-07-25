@@ -3,18 +3,20 @@ package main
 import (
 	"strconv"
 	"time"
+
+	"./task"
 )
 
 type ShowTask struct {
-	Task     *Task
+	Task     *task.Task
 	SubTasks []*ShowTask
 }
 
-func Ls(tasks []*Task, query Query) []*ShowTask {
+func Ls(tasks []*task.Task, query Query) []*ShowTask {
 	return filterRoot(tasks, query)
 }
 
-func filterRoot(tasks []*Task, query Query) []*ShowTask {
+func filterRoot(tasks []*task.Task, query Query) []*ShowTask {
 	showTasks := make([]*ShowTask, 0)
 
 	for _, task := range tasks {
@@ -27,7 +29,7 @@ func filterRoot(tasks []*Task, query Query) []*ShowTask {
 	return showTasks
 }
 
-func filter(task *Task, query Query) *ShowTask {
+func filter(task *task.Task, query Query) *ShowTask {
 	subTasks := make([]*ShowTask, 0)
 	for _, task := range task.SubTasks {
 		subTask := filter(task, query)
@@ -112,7 +114,7 @@ func showSubTasks(task *ShowTask) {
 }
 
 func getQuery(queryString string) (query Query, queryMap map[string]string) {
-	queryMap = ParseOptions(queryString)
+	queryMap = task.ParseOptions(queryString)
 	parent := NewQueryBase(make([]Query, 0), make([]Query, 0))
 
 	for key, value := range queryMap {
@@ -129,7 +131,7 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 			{
 				num, err := strconv.Atoi(value)
 				if err == nil {
-					parent.and = append(parent.and, NewIdQuery(num, make([]Query, 0), make([]Query, 0)))
+					parent.and = append(parent.and, NewIDQuery(num, make([]Query, 0), make([]Query, 0)))
 				}
 			}
 
@@ -158,7 +160,7 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 	return parent, queryMap
 }
 
-func ExecuteQuery(queryString string, tasks []*Task) []*ShowTask {
+func ExecuteQuery(queryString string, tasks []*task.Task) []*ShowTask {
 	if queryString == "" {
 		// default query
 		queryString = " :overdue " + time.Now().Format(dateTimeFormat)

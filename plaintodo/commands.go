@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"./task"
 )
 
 func GetIntAttribute(name string, attributes map[string]string) (int, error) {
@@ -80,7 +82,7 @@ type ReloadCommand struct {
 }
 
 func (t *ReloadCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	automaton.Tasks, automaton.MaxTaskId = ReadTasks(automaton.Config.Paths.Task)
+	automaton.Tasks, automaton.MaxTaskID = task.ReadTasks(automaton.Config.Paths.Task)
 	return false
 }
 
@@ -122,7 +124,7 @@ func NewLsAllCommand(w io.Writer) *LsAllCommand {
 type SaveCommand struct {
 }
 
-func (t *SaveCommand) collectCompleteDay(tasks []*Task, times *map[string]bool) {
+func (t *SaveCommand) collectCompleteDay(tasks []*task.Task, times *map[string]bool) {
 	for _, task := range tasks {
 		completeDateString, ok := task.Attributes["complete"]
 		if ok {
@@ -137,7 +139,7 @@ func (t *SaveCommand) collectCompleteDay(tasks []*Task, times *map[string]bool) 
 	}
 }
 
-func (t *SaveCommand) getCompleteDayList(tasks []*Task) []time.Time {
+func (t *SaveCommand) getCompleteDayList(tasks []*task.Task) []time.Time {
 	allTimes := make(map[string]bool)
 	t.collectCompleteDay(tasks, &allTimes)
 
@@ -200,7 +202,7 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 	query := NewSameDayQuery("complete", time.Now(), make([]Query, 0), orQuery)
 	t.writeFile(automaton.Config.Paths.Task, Ls(automaton.Tasks, query)) // write today's complete or no complete task
 
-	automaton.Tasks, automaton.MaxTaskId = ReadTasks(automaton.Config.Paths.Task)
+	automaton.Tasks, automaton.MaxTaskID = task.ReadTasks(automaton.Config.Paths.Task)
 	return false
 }
 
@@ -209,10 +211,10 @@ func NewSaveCommand() *SaveCommand {
 }
 
 type CompleteCommand struct {
-	MaxTaskId int
+	MaxTaskID int
 }
 
-func (t *CompleteCommand) setNewRepeat(baseTime time.Time, task *Task) {
+func (t *CompleteCommand) setNewRepeat(baseTime time.Time, task *task.Task) {
 	repeatString, ok := task.Attributes["repeat"]
 	if !ok {
 		return
@@ -239,40 +241,40 @@ func (t *CompleteCommand) setNewRepeat(baseTime time.Time, task *Task) {
 	task.Attributes["start"] = newTime.Format(dateTimeFormat)
 }
 
-func (t *CompleteCommand) completeAllSubTask(completeDate time.Time, task *Task) (repeatTask *Task, completeNum int) {
+func (c *CompleteCommand) completeAllSubTask(completeDate time.Time, t *task.Task) (repeatTask *task.Task, completeNum int) {
 	n := 0
-	newSubTasks := make([]*Task, 0)
+	newSubTasks := make([]*(task.Task), 0)
 
-	for _, subTask := range task.SubTasks {
-		repeatSubTask, num := t.completeAllSubTask(completeDate, subTask)
+	for _, subTask := range t.SubTasks {
+		repeatSubTask, num := c.completeAllSubTask(completeDate, subTask)
 		n += num
 		if repeatSubTask != nil {
 			newSubTasks = append(newSubTasks, repeatSubTask)
 		}
 	}
 
-	_, ok := task.Attributes["repeat"]
+	_, ok := t.Attributes["repeat"]
 	if len(newSubTasks) != 0 || ok {
-		repeatTask = task.Copy(t.MaxTaskId+1, false)
+		repeatTask = t.Copy(c.MaxTaskID+1, false)
 		delete(repeatTask.Attributes, "postpone")
 		repeatTask.SubTasks = newSubTasks
-		t.setNewRepeat(completeDate, repeatTask)
-		t.MaxTaskId += 1
+		c.setNewRepeat(completeDate, repeatTask)
+		c.MaxTaskID += 1
 	}
 
-	_, ok = task.Attributes["complete"]
+	_, ok = t.Attributes["complete"]
 	if !ok {
 		// if not completed, set complete date
-		task.Attributes["complete"] = completeDate.Format(dateTimeFormat)
+		t.Attributes["complete"] = completeDate.Format(dateTimeFormat)
 		n += 1
 	}
 
 	return repeatTask, n
 }
 
-func (t *CompleteCommand) completeTask(taskId int, tasks []*Task) (completeTask *Task, newTasks []*Task, completeNum int) {
+func (t *CompleteCommand) completeTask(taskID int, tasks []*task.Task) (completeTask *task.Task, newTasks []*task.Task, completeNum int) {
 	for _, task := range tasks {
-		if task.Id == taskId {
+		if task.ID == taskID {
 			repeatTask, n := t.completeAllSubTask(time.Now(), task)
 			if repeatTask != nil {
 				tasks = append(tasks, repeatTask)
@@ -280,7 +282,7 @@ func (t *CompleteCommand) completeTask(taskId int, tasks []*Task) (completeTask 
 
 			return task, tasks, n
 		}
-		completeTask, newTasks, n := t.completeTask(taskId, task.SubTasks)
+		completeTask, newTasks, n := t.completeTask(taskID, task.SubTasks)
 		if completeTask != nil {
 			task.SubTasks = newTasks
 			return completeTask, tasks, n
@@ -290,19 +292,19 @@ func (t *CompleteCommand) completeTask(taskId int, tasks []*Task) (completeTask 
 }
 
 func (t *CompleteCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	t.MaxTaskId = automaton.MaxTaskId
+	t.MaxTaskID = automaton.MaxTaskID
 
-	taskId, err := strconv.Atoi(option)
+	taskID, err := strconv.Atoi(option)
 	if err != nil {
 		automaton.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 
-	task, newTasks, n := t.completeTask(taskId, automaton.Tasks)
+	task, newTasks, n := t.completeTask(taskID, automaton.Tasks)
 	automaton.Tasks = newTasks
-	automaton.MaxTaskId = t.MaxTaskId
+	automaton.MaxTaskID = t.MaxTaskID
 	if task == nil {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", taskId)))
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", taskID)))
 		return false
 	}
 
@@ -318,14 +320,14 @@ type AddTaskCommand struct {
 }
 
 func (t *AddTaskCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	nowTask, err := NewTask(option, automaton.MaxTaskId+1)
+	nowTask, err := task.NewTask(option, automaton.MaxTaskID+1)
 	if err != nil {
 		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
 		return false
 	}
 
 	automaton.Tasks = append(automaton.Tasks, nowTask)
-	automaton.MaxTaskId = nowTask.Id
+	automaton.MaxTaskID = nowTask.ID
 	automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task: %s\n", nowTask.String(true))))
 	return false
 }
@@ -339,14 +341,14 @@ var subTaskRegexp, _ = regexp.Compile("^([0-9]+) (.+)$")
 type AddSubTaskCommand struct {
 }
 
-func (t *AddSubTaskCommand) addSubTask(taskId int, addTask *Task, tasks []*Task) (parent *Task, success bool) {
+func (t *AddSubTaskCommand) addSubTask(taskID int, addTask *task.Task, tasks []*task.Task) (parent *task.Task, success bool) {
 	for _, task := range tasks {
-		if task.Id == taskId {
+		if task.ID == taskID {
 			addTask.Level = task.Level + 1
 			task.SubTasks = append(task.SubTasks, addTask)
 			return task, true
 		}
-		parent, success = t.addSubTask(taskId, addTask, task.SubTasks)
+		parent, success = t.addSubTask(taskID, addTask, task.SubTasks)
 		if success {
 			return parent, success
 		}
@@ -361,19 +363,19 @@ func (t *AddSubTaskCommand) Execute(option string, automaton *Automaton) (termin
 		return false
 	}
 
-	nowTask, err := NewTask(string(match[2]), automaton.MaxTaskId+1)
+	nowTask, err := task.NewTask(string(match[2]), automaton.MaxTaskID+1)
 	if err != nil {
 		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
 		return false
 	}
 
-	parentTaskId, _ := strconv.Atoi(string(match[1]))
-	parent, success := t.addSubTask(parentTaskId, nowTask, automaton.Tasks)
+	parentTaskID, _ := strconv.Atoi(string(match[1]))
+	parent, success := t.addSubTask(parentTaskID, nowTask, automaton.Tasks)
 	if success {
-		automaton.MaxTaskId = nowTask.Id
+		automaton.MaxTaskID = nowTask.ID
 		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask:\nParent: %s\nSubTask: %s\n", parent.String(true), nowTask.String(true))))
 	} else {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask error: thee is no task which have :id %d\n", parentTaskId)))
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask error: thee is no task which have :id %d\n", parentTaskID)))
 	}
 
 	return false
@@ -386,14 +388,14 @@ func NewAddSubTaskCommand() *AddSubTaskCommand {
 type SetAttributeCommand struct {
 }
 
-func (c *SetAttributeCommand) setAttribute(task *Task, attributes map[string]string) {
+func (c *SetAttributeCommand) setAttribute(task *task.Task, attributes map[string]string) {
 	for key, value := range attributes {
 		task.Attributes[key] = value
 	}
 }
 
 func (c *SetAttributeCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	optionMap := ParseOptions(" " + option)
+	optionMap := task.ParseOptions(" " + option)
 
 	id, err := GetIntAttribute("id", optionMap)
 	if err != nil {
@@ -402,7 +404,7 @@ func (c *SetAttributeCommand) Execute(option string, automaton *Automaton) (term
 	}
 	delete(optionMap, "id")
 
-	_, task := GetTask(id, automaton.Tasks)
+	_, task := task.GetTask(id, automaton.Tasks)
 	if task != nil {
 		c.setAttribute(task, optionMap)
 		automaton.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
@@ -435,11 +437,11 @@ type PostponeCommand struct {
 	*SetAttributeCommand
 }
 
-func (c *PostponeCommand) postpone(task *Task, optionMap map[string]string) error {
+func (c *PostponeCommand) postpone(task *task.Task, optionMap map[string]string) error {
 	// get start time
 	startString, ok := task.Attributes["start"]
 	if !ok {
-		return errors.New(fmt.Sprint("task :id ", task.Id, " haven't start attribute, so postpone not work"))
+		return errors.New(fmt.Sprint("task :id ", task.ID, " haven't start attribute, so postpone not work"))
 	}
 
 	_, ok = ParseTime(startString)
@@ -461,7 +463,7 @@ func (c *PostponeCommand) postpone(task *Task, optionMap map[string]string) erro
 }
 
 func (c *PostponeCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	optionMap := ParseOptions(" " + option)
+	optionMap := task.ParseOptions(" " + option)
 
 	id, err := GetIntAttribute("id", optionMap)
 	if err != nil {
@@ -470,7 +472,7 @@ func (c *PostponeCommand) Execute(option string, automaton *Automaton) (terminat
 	}
 	delete(optionMap, "id")
 
-	_, task := GetTask(id, automaton.Tasks)
+	_, task := task.GetTask(id, automaton.Tasks)
 	if task == nil {
 		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
 		return false
@@ -496,7 +498,7 @@ func NewPostponeCommand() *PostponeCommand {
 type MoveCommand struct {
 }
 
-func (c *MoveCommand) updateTaskLevel(level int, t *Task) {
+func (c *MoveCommand) updateTaskLevel(level int, t *task.Task) {
 	t.Level = level
 	for _, subTask := range t.SubTasks {
 		c.updateTaskLevel(level+1, subTask)
@@ -504,33 +506,33 @@ func (c *MoveCommand) updateTaskLevel(level int, t *Task) {
 }
 
 func (c *MoveCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	m := ParseOptions(" " + option)
+	m := task.ParseOptions(" " + option)
 
-	taskId, err := GetIntAttribute("from", m)
+	taskID, err := GetIntAttribute("from", m)
 	if err != nil {
 		automaton.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 
-	toId, err := GetIntAttribute("to", m)
+	toID, err := GetIntAttribute("to", m)
 	if err != nil {
 		automaton.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 
-	from, t := GetTask(taskId, automaton.Tasks)
+	from, t := task.GetTask(taskID, automaton.Tasks)
 	if t == nil {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", taskId)))
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", taskID)))
 		return false
 	}
 
-	_, toTask := GetTask(toId, automaton.Tasks)
-	if toTask == nil && toId != 0 {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", toId)))
+	_, toTask := task.GetTask(toID, automaton.Tasks)
+	if toTask == nil && toID != 0 {
+		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", toID)))
 		return false
 	}
 
-	from.RemoveSubTask(t.Id)
+	from.RemoveSubTask(t.ID)
 	if toTask != nil {
 		c.updateTaskLevel(toTask.Level+1, t)
 		toTask.SubTasks = append(toTask.SubTasks, t)
@@ -551,7 +553,7 @@ func NewMoveCommand() *MoveCommand {
 type OpenCommand struct {
 }
 
-func (c *OpenCommand) getUrl(task *Task) (string, error) {
+func (c *OpenCommand) getUrl(task *task.Task) (string, error) {
 	urlString, ok := task.Attributes["url"]
 	if !ok {
 		return "", errors.New(fmt.Sprintf("There is no url in task:\n%s", task.String(true)))
@@ -563,14 +565,14 @@ func (c *OpenCommand) getUrl(task *Task) (string, error) {
 func (c *OpenCommand) Execute(option string, automaton *Automaton) (terminate bool) {
 	// There is no url in task:rss :id 8
 
-	optionMap := ParseOptions(" " + option)
+	optionMap := task.ParseOptions(" " + option)
 	id, err := GetIntAttribute("id", optionMap)
 	if err != nil {
 		fmt.Fprintf(automaton.Config.Writer, "%s", err.Error())
 		return false
 	}
 
-	_, task := GetTask(id, automaton.Tasks)
+	_, task := task.GetTask(id, automaton.Tasks)
 	if task == nil {
 		fmt.Fprintf(automaton.Config.Writer, "There is no such task :id %d\n", id)
 		return false
@@ -597,7 +599,7 @@ var evernoteRegexp, _ = regexp.Compile("^https://www.evernote.com/shard/(.+)/nl/
 type NiceCommand struct {
 }
 
-func (c *NiceCommand) fixEvernoteUrl(tasks []*Task) int {
+func (c *NiceCommand) fixEvernoteUrl(tasks []*task.Task) int {
 	count := 0
 	for _, task := range tasks {
 		match := evernoteRegexp.FindSubmatch([]byte(task.Attributes["url"]))
@@ -611,18 +613,18 @@ func (c *NiceCommand) fixEvernoteUrl(tasks []*Task) int {
 }
 
 func (c *NiceCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	var tasks []*Task
+	var tasks []*task.Task
 
-	optionMap := ParseOptions(" " + option)
+	optionMap := task.ParseOptions(" " + option)
 	id, err := GetIntAttribute("id", optionMap)
 	if err != nil {
 		// do all tasks
 		tasks = automaton.Tasks
 	} else {
 		// do selected task
-		_, task := GetTask(id, automaton.Tasks)
-		tasks = make([]*Task, 1)
-		tasks[0] = task
+		_, t := task.GetTask(id, automaton.Tasks)
+		tasks = make([]*task.Task, 1)
+		tasks[0] = t
 	}
 
 	fmt.Fprintf(automaton.Config.Writer, "Done nice\n")

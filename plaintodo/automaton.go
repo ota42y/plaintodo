@@ -2,6 +2,8 @@ package main
 
 import (
 	"strings"
+
+	"./task"
 )
 
 var optionSplit = " "
@@ -11,15 +13,15 @@ type Command interface {
 }
 
 type Automaton struct {
-	Tasks     []*Task
-	MaxTaskId int
+	Tasks     []*task.Task
+	MaxTaskID int
 	Commands  map[string]Command
 	Config    *Config // config.go
 }
 
 func NewAutomaton(config *Config, commands map[string]Command) *Automaton {
 	return &Automaton{
-		Tasks:    make([]*Task, 0),
+		Tasks:    make([]*task.Task, 0),
 		Commands: commands,
 		Config:   config,
 	}

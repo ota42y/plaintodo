@@ -75,8 +75,8 @@ func TestShowSubTasks(t *testing.T) {
 		t.FailNow()
 	}
 
-	if showTasks[0].SubTasks[0].SubTasks[0].Task.Id != 3 {
-		t.Errorf("shuld return :id 3 task, but %d", showTasks[0].SubTasks[0].SubTasks[0].Task.Id)
+	if showTasks[0].SubTasks[0].SubTasks[0].Task.ID != 3 {
+		t.Errorf("shuld return :id 3 task, but %d", showTasks[0].SubTasks[0].SubTasks[0].Task.ID)
 		t.FailNow()
 	}
 
@@ -121,7 +121,7 @@ func TestGetQuery(t *testing.T) {
 	base = query.(*QueryBase)
 
 	if len(base.and) == 0 {
-		t.Errorf("IdQuery dosen't created")
+		t.Errorf("IDQuery dosen't created")
 		t.FailNow()
 	}
 
@@ -131,7 +131,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	if showTasks[0].Task.Id != 1 {
+	if showTasks[0].Task.ID != 1 {
 		t.Errorf("shuld return task id = 1, but $v task", showTasks[0].Task)
 		t.FailNow()
 	}
@@ -142,8 +142,8 @@ func TestGetQuery(t *testing.T) {
 	}
 
 	task := showTasks[0].SubTasks[0]
-	if task.Task.Id != 2 {
-		t.Errorf("Task.Id shuld be 2 but %d", task.Task.Id)
+	if task.Task.ID != 2 {
+		t.Errorf("Task.ID shuld be 2 but %d", task.Task.ID)
 		t.FailNow()
 	}
 
@@ -158,8 +158,8 @@ func TestGetQuery(t *testing.T) {
 	}
 
 	subTask := task.SubTasks[0]
-	if subTask.Task.Id != 3 {
-		t.Errorf("Get :id 3 task, but %d", subTask.Task.Id)
+	if subTask.Task.ID != 3 {
+		t.Errorf("Get :id 3 task, but %d", subTask.Task.ID)
 		t.FailNow()
 	}
 
@@ -174,7 +174,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	if showTasks[0].Task.Id != 1 {
+	if showTasks[0].Task.ID != 1 {
 		t.Errorf("shuld return task id = 1, but $v task", showTasks[0].Task)
 		t.FailNow()
 	}
@@ -185,8 +185,8 @@ func TestGetQuery(t *testing.T) {
 	}
 
 	task = showTasks[0].SubTasks[0]
-	if task.Task.Id != 2 {
-		t.Errorf("Task.Id shuld be 2 but %d", task.Task.Id)
+	if task.Task.ID != 2 {
+		t.Errorf("Task.ID shuld be 2 but %d", task.Task.ID)
 		t.FailNow()
 	}
 
@@ -204,7 +204,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	if showTasks[0].Task.Id != 1 {
+	if showTasks[0].Task.ID != 1 {
 		t.Errorf("shuld return task id = 1, but $v task", showTasks[0].Task)
 		t.FailNow()
 	}
@@ -215,8 +215,8 @@ func TestGetQuery(t *testing.T) {
 	}
 
 	task = showTasks[0].SubTasks[0]
-	if task.Task.Id != 2 {
-		t.Errorf("Task.Id shuld be 2 but %d", task.Task.Id)
+	if task.Task.ID != 2 {
+		t.Errorf("Task.ID shuld be 2 but %d", task.Task.ID)
 		t.FailNow()
 	}
 
@@ -226,7 +226,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	if showTasks[0].Task.Id != 1 {
+	if showTasks[0].Task.ID != 1 {
 		t.Errorf("shuld return task id = 1, but $v task", showTasks[0].Task)
 		t.FailNow()
 	}
@@ -237,8 +237,8 @@ func TestGetQuery(t *testing.T) {
 	}
 
 	task = showTasks[0].SubTasks[0]
-	if task.Task.Id != 4 {
-		t.Errorf("Task.Id shuld be 4 but %d", task.Task.Id)
+	if task.Task.ID != 4 {
+		t.Errorf("Task.ID shuld be 4 but %d", task.Task.ID)
 		t.FailNow()
 	}
 
@@ -255,7 +255,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	if showTasks[0].Task.Id != 1 {
+	if showTasks[0].Task.ID != 1 {
 		t.Errorf("shuld return task id = 1, but $v task", showTasks[0].Task)
 		t.FailNow()
 	}
@@ -266,8 +266,8 @@ func TestGetQuery(t *testing.T) {
 	}
 
 	task = showTasks[0].SubTasks[0]
-	if task.Task.Id != 4 {
-		t.Errorf("Task.Id shuld be 4 but %d", task.Task.Id)
+	if task.Task.ID != 4 {
+		t.Errorf("Task.ID shuld be 4 but %d", task.Task.ID)
 		t.FailNow()
 	}
 

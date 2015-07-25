@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"./task"
 )
 
 func TestGetIntAttribute(t *testing.T) {
@@ -56,9 +58,9 @@ func TestReloadCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	id := a.Tasks[1].SubTasks[0].Id
-	if a.MaxTaskId != id {
-		t.Errorf("Save max task id %d, but %d", id, a.MaxTaskId)
+	id := a.Tasks[1].SubTasks[0].ID
+	if a.MaxTaskID != id {
+		t.Errorf("Save max task id %d, but %d", id, a.MaxTaskID)
 		t.FailNow()
 	}
 }
@@ -178,7 +180,7 @@ func TestCompleteCommand(t *testing.T) {
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 
-	terminate := a.Execute(fmt.Sprintf("complete %d", task.Id))
+	terminate := a.Execute(fmt.Sprintf("complete %d", task.ID))
 	if terminate {
 		t.Errorf("CompleteCommand.Execute shud be return false")
 		t.FailNow()
@@ -198,13 +200,13 @@ func TestCompleteCommand(t *testing.T) {
 	}
 }
 
-func isAllCompleted(task *Task) bool {
-	_, ok := task.Attributes["complete"]
+func isAllCompleted(t *task.Task) bool {
+	_, ok := t.Attributes["complete"]
 	if !ok {
 		return false
 	}
 
-	for _, subTask := range task.SubTasks {
+	for _, subTask := range t.SubTasks {
 		if !isAllCompleted(subTask) {
 			return false
 		}
@@ -215,87 +217,87 @@ func isAllCompleted(task *Task) bool {
 
 func TestSetNewRepeat(t *testing.T) {
 	cmd := NewCompleteCommand()
-	task := &Task{
+	tk := &task.Task{
 		Attributes: make(map[string]string),
 	}
 
 	now := time.Now()
 	base := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.Local)
-	task.Attributes["start"] = base.Format(dateTimeFormat)
+	tk.Attributes["start"] = base.Format(dateTimeFormat)
 
-	task.Attributes["repeat"] = "every 1 day"
-	cmd.setNewRepeat(now, task)
+	tk.Attributes["repeat"] = "every 1 day"
+	cmd.setNewRepeat(now, tk)
 	correct := base.AddDate(0, 0, 1)
 	correctString := correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["start"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
+	if correctString != tk.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, tk.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["start"] = base.Format(dateTimeFormat)
-	task.Attributes["repeat"] = "every 1 month"
-	cmd.setNewRepeat(now, task)
+	tk.Attributes["start"] = base.Format(dateTimeFormat)
+	tk.Attributes["repeat"] = "every 1 month"
+	cmd.setNewRepeat(now, tk)
 	correct = base.AddDate(0, 1, 0)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["start"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
+	if correctString != tk.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, tk.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["start"] = base.Format(dateTimeFormat)
-	task.Attributes["repeat"] = "every 1 year"
-	cmd.setNewRepeat(now, task)
+	tk.Attributes["start"] = base.Format(dateTimeFormat)
+	tk.Attributes["repeat"] = "every 1 year"
+	cmd.setNewRepeat(now, tk)
 	correct = base.AddDate(1, 0, 0)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["start"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
+	if correctString != tk.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, tk.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["start"] = base.Format(dateTimeFormat)
-	task.Attributes["repeat"] = "every 2 week"
-	cmd.setNewRepeat(now, task)
+	tk.Attributes["start"] = base.Format(dateTimeFormat)
+	tk.Attributes["repeat"] = "every 2 week"
+	cmd.setNewRepeat(now, tk)
 	correct = base.AddDate(0, 0, 14)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["start"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
+	if correctString != tk.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, tk.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["start"] = base.Format(dateTimeFormat)
-	task.Attributes["repeat"] = "every 30 minutes"
-	cmd.setNewRepeat(now, task)
+	tk.Attributes["start"] = base.Format(dateTimeFormat)
+	tk.Attributes["repeat"] = "every 30 minutes"
+	cmd.setNewRepeat(now, tk)
 	correct = base.Add(30 * time.Minute)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["start"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
+	if correctString != tk.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, tk.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["start"] = base.Format(dateTimeFormat)
-	task.Attributes["repeat"] = "every 2 hour"
-	cmd.setNewRepeat(now, task)
+	tk.Attributes["start"] = base.Format(dateTimeFormat)
+	tk.Attributes["repeat"] = "every 2 hour"
+	cmd.setNewRepeat(now, tk)
 	correct = base.Add(2 * time.Hour)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["start"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
+	if correctString != tk.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, tk.Attributes["start"])
 		t.FailNow()
 	}
 
-	task.Attributes["start"] = base.Format(dateTimeFormat)
-	task.Attributes["repeat"] = "after 4 day"
-	cmd.setNewRepeat(now, task)
+	tk.Attributes["start"] = base.Format(dateTimeFormat)
+	tk.Attributes["repeat"] = "after 4 day"
+	cmd.setNewRepeat(now, tk)
 	correct = now.AddDate(0, 0, 4)
 	correctString = correct.Format(dateTimeFormat)
 
-	if correctString != task.Attributes["start"] {
-		t.Errorf("Time shuld be %v but %v", correctString, task.Attributes["start"])
+	if correctString != tk.Attributes["start"] {
+		t.Errorf("Time shuld be %v but %v", correctString, tk.Attributes["start"])
 		t.FailNow()
 	}
 }
@@ -312,12 +314,12 @@ func TestCompleteRepeatTask(t *testing.T) {
 	cmd := NewCompleteCommand()
 	completeTask, newTasks, n := cmd.completeTask(8, tasks)
 	if completeTask == nil {
-		t.Errorf("If there is task with taskId, completeTask shuld return complete task, but nil")
+		t.Errorf("If there is task with taskID, completeTask shuld return complete task, but nil")
 		t.FailNow()
 	}
 
 	if n != 2 {
-		t.Errorf("If there is task with taskId, completeTask shuld return complete subtask num (2) but %d", n)
+		t.Errorf("If there is task with taskID, completeTask shuld return complete subtask num (2) but %d", n)
 		t.FailNow()
 	}
 
@@ -366,7 +368,7 @@ func TestCompleteTask(t *testing.T) {
 
 	completeTask, tasks, n := cmd.completeTask(0, tasks)
 	if completeTask != nil {
-		t.Errorf("If there is no task with taskId, completeTask shuld return nil, but %v", completeTask)
+		t.Errorf("If there is no task with taskID, completeTask shuld return nil, but %v", completeTask)
 		t.FailNow()
 	}
 
@@ -376,7 +378,7 @@ func TestCompleteTask(t *testing.T) {
 	}
 
 	if n != 0 {
-		t.Errorf("If there is no task with taskId, completeTask shuld return complete 0 subtask, but %d", n)
+		t.Errorf("If there is no task with taskID, completeTask shuld return complete 0 subtask, but %d", n)
 		t.FailNow()
 	}
 
@@ -385,7 +387,7 @@ func TestCompleteTask(t *testing.T) {
 
 	completeTask, tasks, n = cmd.completeTask(4, tasks)
 	if completeTask == nil {
-		t.Errorf("If there is task with taskId, completeTask shuld return complete task, but nil")
+		t.Errorf("If there is task with taskID, completeTask shuld return complete task, but nil")
 		t.FailNow()
 	}
 
@@ -395,7 +397,7 @@ func TestCompleteTask(t *testing.T) {
 	}
 
 	if n != 3 {
-		t.Errorf("If there is task with taskId, completeTask shuld return complete subtask num (4) but %d", n)
+		t.Errorf("If there is task with taskID, completeTask shuld return complete subtask num (4) but %d", n)
 		t.FailNow()
 	}
 
@@ -501,8 +503,8 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if a.MaxTaskId != task.Id {
-		t.Errorf("Automaton.MaxTaskId shuld be %d, but %d", a.MaxTaskId, task.Id)
+	if a.MaxTaskID != task.ID {
+		t.Errorf("Automaton.MaxTaskID shuld be %d, but %d", a.MaxTaskID, task.ID)
 		t.FailNow()
 	}
 
@@ -513,7 +515,7 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	taskId := a.MaxTaskId
+	taskID := a.MaxTaskID
 
 	buf = &bytes.Buffer{}
 	config.Writer = buf
@@ -526,8 +528,8 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if a.MaxTaskId != taskId {
-		t.Errorf("When error occerd, Automaton.MaxTaskId shuldn't change but %d", taskId)
+	if a.MaxTaskID != taskID {
+		t.Errorf("When error occerd, Automaton.MaxTaskID shuldn't change but %d", taskID)
 		t.FailNow()
 	}
 }
@@ -548,7 +550,7 @@ func TestAddSubTaskCommand(t *testing.T) {
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 
-	taskId := a.MaxTaskId
+	taskID := a.MaxTaskID
 
 	input := "subtask 6 " + taskName + " :start " + taskStart
 	terminate := a.Execute(input)
@@ -581,16 +583,16 @@ func TestAddSubTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if taskId+1 != task.Id {
-		t.Errorf("Task's id shud be %d but %d", taskId+1, task.Id)
+	if taskID+1 != task.ID {
+		t.Errorf("Task's id shud be %d but %d", taskID+1, task.ID)
 		t.FailNow()
 	}
 
-	if a.MaxTaskId != task.Id {
-		t.Errorf("Automaton.MaxTaskId shuld be %d, but %d", a.MaxTaskId, task.Id)
+	if a.MaxTaskID != task.ID {
+		t.Errorf("Automaton.MaxTaskID shuld be %d, but %d", a.MaxTaskID, task.ID)
 		t.FailNow()
 	}
-	taskId = a.MaxTaskId
+	taskID = a.MaxTaskID
 
 	outputString := buf.String()
 	correctString := "subtask hit\nCreate SubTask:\nParent: " + parent.String(true) + "\nSubTask: " + task.String(true) + "\n"
@@ -621,8 +623,8 @@ func TestAddSubTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if a.MaxTaskId != taskId {
-		t.Errorf("When error occerd, Automaton.MaxTaskId shuldn't change but %d", taskId)
+	if a.MaxTaskID != taskID {
+		t.Errorf("When error occerd, Automaton.MaxTaskID shuldn't change but %d", taskID)
 		t.FailNow()
 	}
 
@@ -766,22 +768,22 @@ func TestPostponeCommand(t *testing.T) {
 	config.Writer = buf
 	now := time.Now()
 
-	task := a.Tasks[0].SubTasks[1].SubTasks[0]
-	if _, ok := task.Attributes["postpone"]; ok {
-		t.Errorf("task already set postpone attribute, test data is invalid %v", task)
+	tk := a.Tasks[0].SubTasks[1].SubTasks[0]
+	if _, ok := tk.Attributes["postpone"]; ok {
+		t.Errorf("task already set postpone attribute, test data is invalid %v", tk)
 		t.FailNow()
 	}
 
 	a.Execute("postpone :id 5 :postpone 1 month")
 	outputString := buf.String()
-	correctString := fmt.Sprintln("postpone hit\ntask :id", task.Id, "haven't start attribute, so postpone not work")
+	correctString := fmt.Sprintln("postpone hit\ntask :id", tk.ID, "haven't start attribute, so postpone not work")
 	if outputString != correctString {
 		t.Errorf("shuld return '%s', but '%s'", correctString, outputString)
 		t.FailNow()
 	}
 	buf.Reset()
 
-	task.Attributes["start"] = "test"
+	tk.Attributes["start"] = "test"
 	a.Execute("postpone :id 5 :postpone 1 month")
 	outputString = buf.String()
 	correctString = fmt.Sprintln("postpone hit\ntest is invalid format, so postpone not work")
@@ -792,7 +794,7 @@ func TestPostponeCommand(t *testing.T) {
 	buf.Reset()
 
 	// set start 0 time
-	task.Attributes["start"] = time.Unix(0, 0).Format(dateTimeFormat)
+	tk.Attributes["start"] = time.Unix(0, 0).Format(dateTimeFormat)
 
 	// invalid case
 	a.Execute("postpone :id 5 :postpone 1")
@@ -809,9 +811,9 @@ func TestPostponeCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	value, ok := task.Attributes["postpone"]
+	value, ok := tk.Attributes["postpone"]
 	if !ok {
-		t.Errorf("postpone attribute not set %v", task)
+		t.Errorf("postpone attribute not set %v", tk)
 		t.FailNow()
 	}
 
@@ -841,8 +843,8 @@ func TestMoveCommand(t *testing.T) {
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 
-	fromTask, moveTask := GetTask(4, a.Tasks)
-	_, toTask := GetTask(8, a.Tasks)
+	fromTask, moveTask := task.GetTask(4, a.Tasks)
+	_, toTask := task.GetTask(8, a.Tasks)
 
 	fromNum := len(fromTask.SubTasks)
 	toNum := len(toTask.SubTasks)
@@ -883,12 +885,12 @@ func TestMoveCommand(t *testing.T) {
 	}
 	buf.Reset()
 
-	movedParent, movedTask := GetTask(4, a.Tasks)
+	movedParent, movedTask := task.GetTask(4, a.Tasks)
 	if movedParent == nil {
 		t.Errorf("when not meved task, parent shuldn't be change from %v but %v", toTask, movedParent)
 		t.FailNow()
 	}
-	if movedParent.Id != fromTask.Id {
+	if movedParent.ID != fromTask.ID {
 		t.Errorf("when not meved task, parent shuldn't be change from %v but %v", fromTask, movedParent)
 		t.FailNow()
 	}
@@ -916,9 +918,9 @@ func TestMoveCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	movedParent, movedTask = GetTask(4, a.Tasks)
-	if toTask.Id != movedParent.Id {
-		t.Errorf("move %d task's sub task, but %d task's subtask", toTask.Id, movedParent.Id)
+	movedParent, movedTask = task.GetTask(4, a.Tasks)
+	if toTask.ID != movedParent.ID {
+		t.Errorf("move %d task's sub task, but %d task's subtask", toTask.ID, movedParent.ID)
 		t.FailNow()
 	}
 
@@ -948,7 +950,7 @@ func TestMoveCommand(t *testing.T) {
 	}
 	buf.Reset()
 
-	movedParent, movedTask = GetTask(4, a.Tasks)
+	movedParent, movedTask = task.GetTask(4, a.Tasks)
 	if movedParent != nil {
 		t.Errorf("if task moved top level task, parent shuld be nil but %v", movedParent)
 		t.FailNow()
@@ -983,9 +985,9 @@ func TestOpenCommand(t *testing.T) {
 	config.Writer = buf
 
 	a.Execute("open :id 8")
-	_, task := GetTask(8, a.Tasks)
+	_, tk := task.GetTask(8, a.Tasks)
 	outputString := buf.String()
-	correctString := fmt.Sprintf("open hit\nThere is no url in task:\n%s\n", task.String(true))
+	correctString := fmt.Sprintf("open hit\nThere is no url in task:\n%s\n", tk.String(true))
 	if outputString != correctString {
 		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
 		t.FailNow()
@@ -1010,10 +1012,10 @@ func TestOpenCommand(t *testing.T) {
 	}
 	buf.Reset()
 
-	_, task = GetTask(9, a.Tasks)
-	url, err := cmd.getUrl(task)
-	if task.Attributes["url"] != url {
-		t.Errorf("getUrl shuld return %s, but %s", task.Attributes["url"], url)
+	_, tk = task.GetTask(9, a.Tasks)
+	url, err := cmd.getUrl(tk)
+	if tk.Attributes["url"] != url {
+		t.Errorf("getUrl shuld return %s, but %s", tk.Attributes["url"], url)
 		t.FailNow()
 	}
 
@@ -1022,10 +1024,10 @@ func TestOpenCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	task = a.Tasks[0]
-	url, err = cmd.getUrl(task)
+	tk = a.Tasks[0]
+	url, err = cmd.getUrl(tk)
 	outputString = err.Error()
-	correctString = fmt.Sprintf("There is no url in task:\n%s", task.String(true))
+	correctString = fmt.Sprintf("There is no url in task:\n%s", tk.String(true))
 	if correctString != outputString {
 		t.Errorf("if task haven't :url attribute and task name is url, getUrl shuld return error %s, but %s", correctString, outputString)
 		t.FailNow()
@@ -1050,13 +1052,13 @@ func TestNiceCommand(t *testing.T) {
 	a.Execute("task test :url " + evernoteUrl)
 	buf.Reset()
 
-	_, task := GetTask(a.MaxTaskId, a.Tasks)
+	_, task := task.GetTask(a.MaxTaskID, a.Tasks)
 	if evernoteUrl != task.Attributes["url"] {
 		t.Errorf(":url attribute shuld be %s, but %s, test data invalid", evernoteUrl, task.Attributes["url"])
 		t.FailNow()
 	}
 
-	terminate := a.Execute(fmt.Sprintf("nice :id %d", task.Id))
+	terminate := a.Execute(fmt.Sprintf("nice :id %d", task.ID))
 
 	outputString := buf.String()
 	correctString := fmt.Sprintf("nice hit\nDone nice\nevernote url change 1 tasks\n")
