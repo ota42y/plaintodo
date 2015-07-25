@@ -2,11 +2,13 @@ package main
 
 import (
 	"testing"
+
+	"./task"
 )
 
-func ReadTestTasks() []*Task {
+func ReadTestTasks() []*task.Task {
 	filename := "test_task.txt"
-	tasks, _ := ReadTasks(filename)
+	tasks, _ := task.ReadTasks(filename)
 	return tasks
 }
 

@@ -2,6 +2,8 @@ package main
 
 import (
 	"time"
+
+	"./task"
 )
 
 var dateTimeFormat = "2006-01-02 15:04"
@@ -22,7 +24,7 @@ func ParseTime(dateString string) (time.Time, bool) {
 }
 
 type Query interface {
-	Check(task *Task) bool
+	Check(task *task.Task) bool
 }
 
 type QueryBase struct {
@@ -30,7 +32,7 @@ type QueryBase struct {
 	or  []Query
 }
 
-func (query *QueryBase) checkSubQuery(task *Task, isShow bool) bool {
+func (query *QueryBase) checkSubQuery(task *task.Task, isShow bool) bool {
 	// If this query return true, check all and query
 	// (Even if or query exist, we don't need check these.
 	if isShow {
@@ -52,7 +54,7 @@ func (query *QueryBase) checkSubQuery(task *Task, isShow bool) bool {
 	}
 }
 
-func (query *QueryBase) Check(task *Task) bool {
+func (query *QueryBase) Check(task *task.Task) bool {
 	// do nothing
 	return query.checkSubQuery(task, true)
 }
@@ -71,7 +73,7 @@ type KeyValueQuery struct {
 	value string
 }
 
-func (query *KeyValueQuery) Check(task *Task) bool {
+func (query *KeyValueQuery) Check(task *task.Task) bool {
 	if task == nil {
 		return false
 	}
@@ -96,7 +98,7 @@ type NoKeyQuery struct {
 	key string
 }
 
-func (query *NoKeyQuery) Check(task *Task) bool {
+func (query *NoKeyQuery) Check(task *task.Task) bool {
 	if task == nil {
 		return false
 	}
@@ -133,7 +135,7 @@ func NewBeforeDateQuery(key string, value time.Time, and []Query, or []Query) *B
 	}
 }
 
-func (query *BeforeDateQuery) Check(task *Task) bool {
+func (query *BeforeDateQuery) Check(task *task.Task) bool {
 	if task == nil {
 		return false
 	}
@@ -166,7 +168,7 @@ func NewAfterDateQuery(key string, value time.Time, and []Query, or []Query) *Af
 	}
 }
 
-func (query *AfterDateQuery) Check(task *Task) bool {
+func (query *AfterDateQuery) Check(task *task.Task) bool {
 	if task == nil {
 		return false
 	}
@@ -199,7 +201,7 @@ func NewSameDayQuery(key string, value time.Time, and []Query, or []Query) *Same
 	}
 }
 
-func (query *SameDayQuery) Check(task *Task) bool {
+func (query *SameDayQuery) Check(task *task.Task) bool {
 	if task == nil {
 		return false
 	}
@@ -235,7 +237,7 @@ func NewMaxLevelQuery(level int, and []Query, or []Query) *MaxLevelQuery {
 	}
 }
 
-func (query *MaxLevelQuery) Check(task *Task) bool {
+func (query *MaxLevelQuery) Check(task *task.Task) bool {
 	if task == nil {
 		return false
 	}
@@ -243,13 +245,13 @@ func (query *MaxLevelQuery) Check(task *Task) bool {
 	return query.checkSubQuery(task, task.Level < query.level)
 }
 
-type IdQuery struct {
+type IDQuery struct {
 	*QueryBase
 	id int
 }
 
-func NewIdQuery(id int, and []Query, or []Query) *IdQuery {
-	return &IdQuery{
+func NewIDQuery(id int, and []Query, or []Query) *IDQuery {
+	return &IDQuery{
 		QueryBase: &QueryBase{
 			and: and,
 			or:  or,
@@ -258,10 +260,10 @@ func NewIdQuery(id int, and []Query, or []Query) *IdQuery {
 	}
 }
 
-func (query *IdQuery) Check(task *Task) bool {
+func (query *IDQuery) Check(task *task.Task) bool {
 	if task == nil {
 		return false
 	}
 
-	return query.checkSubQuery(task, task.Id == query.id)
+	return query.checkSubQuery(task, task.ID == query.id)
 }
