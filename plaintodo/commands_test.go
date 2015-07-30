@@ -1107,3 +1107,57 @@ func TestNiceCommand(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestAliasCommand(t *testing.T) {
+	cmds := make(map[string]Command)
+	cmds["alias"] = NewAliasCommand()
+	config := ReadTestConfig()
+	a := NewAutomaton(config, cmds)
+
+	buf := &bytes.Buffer{}
+	config.Writer = buf
+
+	terminate := a.Execute("alias")
+
+	outputString := buf.String()
+	correctString := fmt.Sprintf("alias hit\nlsalltest = ls :level 1\npt = postpone :postpone 1 day :id\n")
+	if outputString != correctString {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+
+	if terminate {
+		t.Errorf("shud be return false")
+		t.FailNow()
+	}
+
+	cmd := &CommandTest{
+		T:         t,
+		Option:    ":postpone 1 day :id 1",
+		Called:    false,
+		Terminate: false,
+	}
+
+	cmds["postpone"] = cmd
+	// postpone tomorrow
+	terminate = a.Execute("pt 1")
+
+	if terminate != cmd.Terminate {
+		t.Errorf("Automation.Execute shud be return %v but %v", terminate, cmd.Terminate)
+		t.FailNow()
+	}
+
+	if !cmd.Called {
+		t.Errorf("command not called")
+		t.FailNow()
+	}
+
+	outputString = buf.String()
+	correctString = fmt.Sprintf("alias pt = postpone :postpone 1 day :id\ncommand: postpone :postpone 1 day :id 1\npostpone hit")
+	if !strings.HasPrefix(outputString, correctString) {
+		t.Errorf("output shuld be '%s', but '%s'", correctString, outputString)
+		t.FailNow()
+	}
+	buf.Reset()
+}

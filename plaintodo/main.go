@@ -20,6 +20,7 @@ func main() {
 	cmds["move"] = NewMoveCommand()
 	cmds["open"] = NewOpenCommand()
 	cmds["nice"] = NewNiceCommand()
+	cmds["alias"] = NewAliasCommand()
 
 	config := readConfig("config.toml")
 	config.Writer = os.Stdout

@@ -146,7 +146,6 @@ type LoadResult struct {
 	FailLines []string
 }
 
-
 // ParseOptions convert option string to map
 // Option string linke ' :key1 value1 :key2 value2' (need first space)
 func ParseOptions(raw string) map[string]string {

@@ -69,7 +69,7 @@ directory = "archives"
 nameFormat = "2006-01-02"
 ```
 
-### commands
+## commands
 
 ### task
 Create new task.
@@ -337,7 +337,40 @@ This command execute these
 - convert https://www.evernote.com/shard/... to evernote:///view/... in :url attribute
 - convert Today to YYYY-MM-DD in :start attribute (sorry, not implemented)
 
+#### alias
+Show command aliases
+See command alias example.
+
+```
+> alias
+alias hit
+lsalltest = ls :level 1 :no-sub-tasks
+pt = postpone :postpone 1 day :id
+```
 
 #### exit
 Exit this application.
 This command don't save task.
+
+
+## command alias
+You can create other name with option for command.
+
+For example, you can create `all` command, which execute `ls ;level 1`. 
+Alias data write to config.toml like this.
+
+```
+[command]
+
+[[command.aliases]]
+name = "lsalltest"
+command = "ls :level 1 :no-sub-tasks"
+
+[[command.aliases]]
+name = "pt"
+command = "postpone :postpone 1 day :id"
+```
+
+When this case, if you type `lsalltest`, it will replace `ls :level 1 :no-sub-tasks`
+Alias setting replace command word, so if you set option, it's not change.
+So, if you type `pt 42`, it will replace `postpone :postpone 1 day :id 42`

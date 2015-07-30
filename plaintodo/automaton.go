@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"./task"
@@ -13,17 +14,27 @@ type Command interface {
 }
 
 type Automaton struct {
-	Tasks     []*task.Task
-	MaxTaskID int
-	Commands  map[string]Command
-	Config    *Config // config.go
+	Tasks          []*task.Task
+	MaxTaskID      int
+	Commands       map[string]Command
+	CommandAliases map[string]string
+	Config         *Config // config.go
 }
 
 func NewAutomaton(config *Config, commands map[string]Command) *Automaton {
+	aliases := make(map[string]string)
+
+	if config != nil {
+		for _, alias := range config.Command.Aliases {
+			aliases[alias.Name] = alias.Command
+		}
+	}
+
 	return &Automaton{
-		Tasks:    make([]*task.Task, 0),
-		Commands: commands,
-		Config:   config,
+		Tasks:          make([]*task.Task, 0),
+		Commands:       commands,
+		CommandAliases: aliases,
+		Config:         config,
 	}
 }
 
@@ -42,8 +53,16 @@ func (a *Automaton) Execute(command string) (terminate bool) {
 		option = strings.TrimSpace(splits[1])
 	}
 
-	value, ok := a.Commands[cmd]
+	alias, ok := a.CommandAliases[cmd]
+	if ok {
+		newCommand := alias + " " + option
+		fmt.Fprintf(a.Config.Writer, "alias %s = %s\n", cmd, alias)
+		fmt.Fprintf(a.Config.Writer, "command: %s\n", newCommand)
 
+		return a.Execute(newCommand)
+	}
+
+	value, ok := a.Commands[cmd]
 	if a.Config != nil && a.Config.Writer != nil {
 		if ok {
 			a.Config.Writer.Write([]byte(cmd + " hit\n"))

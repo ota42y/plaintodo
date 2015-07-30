@@ -9,6 +9,16 @@ type Config struct {
 	Archive ArchiveConfig
 	Paths   PathConfig
 	Writer  io.Writer
+	Command CommandConfig
+}
+
+type Alias struct {
+	Name    string
+	Command string
+}
+
+type CommandConfig struct {
+	Aliases []Alias
 }
 
 type PathConfig struct {
