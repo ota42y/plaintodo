@@ -4,3 +4,13 @@ task = "./test_task.txt"
 [archive]
 directory = "archives"
 nameFormat = "2006-01-02"
+
+[command]
+
+[[command.aliases]]
+name = "lsalltest"
+command = "ls :level 1"
+
+[[command.aliases]]
+name = "pt"
+command = "postpone :postpone 1 day :id"

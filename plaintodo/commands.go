@@ -638,3 +638,26 @@ func (c *NiceCommand) Execute(option string, automaton *Automaton) (terminate bo
 func NewNiceCommand() *NiceCommand {
 	return &NiceCommand{}
 }
+
+type AliasCommand struct {
+}
+
+func (c *AliasCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+	keyArray := make([]string, len(automaton.CommandAliases))
+	i := 0
+	for k := range automaton.CommandAliases {
+		keyArray[i] = k
+		i++
+	}
+	sort.Strings(keyArray)
+
+	for _, key := range keyArray {
+		fmt.Fprintf(automaton.Config.Writer, "%s = %s\n", key, automaton.CommandAliases[key])
+	}
+
+	return false
+}
+
+func NewAliasCommand() *AliasCommand {
+	return &AliasCommand{}
+}

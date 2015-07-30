@@ -4,6 +4,12 @@ import (
 	"testing"
 )
 
+func ReadTestTasks() []*Task {
+	filename := "../test_task.txt"
+	tasks, _ := ReadTasks(filename)
+	return tasks
+}
+
 func TestReadTasks(t *testing.T) {
 	tasks := ReadTestTasks()
 
@@ -17,7 +23,7 @@ func TestReadTasks(t *testing.T) {
 		t.FailNow()
 	}
 
-	if tasks[0].Id != 1 {
+	if tasks[0].ID != 1 {
 		t.Errorf("first task's task id shuld be 1")
 		t.FailNow()
 	}
@@ -26,7 +32,7 @@ func TestReadTasks(t *testing.T) {
 func TestCopyTasks(t *testing.T) {
 	task := &Task{
 		Level:      1,
-		Id:         1,
+		ID:         1,
 		Name:       "name",
 		Attributes: make(map[string]string),
 		SubTasks:   make([]*Task, 0),
@@ -35,7 +41,7 @@ func TestCopyTasks(t *testing.T) {
 
 	subTask := &Task{
 		Level:      2,
-		Id:         2,
+		ID:         2,
 		Name:       "subtask",
 		Attributes: make(map[string]string),
 		SubTasks:   make([]*Task, 0),
@@ -61,7 +67,7 @@ func TestCopyTasks(t *testing.T) {
 func TestEqualTasks(t *testing.T) {
 	task := &Task{
 		Level:      1,
-		Id:         1,
+		ID:         1,
 		Name:       "name",
 		Attributes: make(map[string]string),
 		SubTasks:   make([]*Task, 0),
@@ -70,7 +76,7 @@ func TestEqualTasks(t *testing.T) {
 
 	subTask := &Task{
 		Level:      2,
-		Id:         2,
+		ID:         2,
 		Name:       "subtask",
 		Attributes: make(map[string]string),
 		SubTasks:   make([]*Task, 0),
@@ -80,7 +86,7 @@ func TestEqualTasks(t *testing.T) {
 
 	eqTask := &Task{
 		Level:      1,
-		Id:         3,
+		ID:         3,
 		Name:       "name",
 		Attributes: make(map[string]string),
 		SubTasks:   make([]*Task, 0),
@@ -89,7 +95,7 @@ func TestEqualTasks(t *testing.T) {
 
 	eqSubTask := &Task{
 		Level:      2,
-		Id:         4,
+		ID:         4,
 		Name:       "subtask",
 		Attributes: make(map[string]string),
 		SubTasks:   make([]*Task, 0),
@@ -172,8 +178,8 @@ func TestCreateSubTasks(t *testing.T) {
 		t.FailNow()
 	}
 
-	if subTask.Id != 4 {
-		t.Errorf("%s's id shuld be 4 but %d", subTask.Name, subTask.Id)
+	if subTask.ID != 4 {
+		t.Errorf("%s's id shuld be 4 but %d", subTask.Name, subTask.ID)
 		t.FailNow()
 	}
 
@@ -188,8 +194,8 @@ func TestCreateSubTasks(t *testing.T) {
 		t.FailNow()
 	}
 
-	if subSubTask.Id != 5 {
-		t.Errorf("%s's id shuld be 5 but %d", subSubTask.Name, subSubTask.Id)
+	if subSubTask.ID != 5 {
+		t.Errorf("%s's id shuld be 5 but %d", subSubTask.Name, subSubTask.ID)
 		t.FailNow()
 	}
 }
@@ -213,8 +219,8 @@ func TestNewTask(t *testing.T) {
 		t.FailNow()
 	}
 
-	if task.Id != 1 {
-		t.Errorf("task.Id shuold be 1 but %d", task.Id)
+	if task.ID != 1 {
+		t.Errorf("task.ID shuold be 1 but %d", task.ID)
 		t.FailNow()
 	}
 
@@ -266,8 +272,8 @@ func TestNewTaskWithAttributes(t *testing.T) {
 		t.FailNow()
 	}
 
-	if task.Id != 1 {
-		t.Errorf("task.Id shuold be 1 but %d", task.Id)
+	if task.ID != 1 {
+		t.Errorf("task.ID shuold be 1 but %d", task.ID)
 		t.FailNow()
 	}
 
@@ -336,12 +342,12 @@ func TestGetTask(t *testing.T) {
 
 	parent, task := GetTask(6, tasks)
 	if task == nil {
-		t.Errorf("GetTask shuld return Task.Id = 6 task, but nil")
+		t.Errorf("GetTask shuld return Task.ID = 6 task, but nil")
 		t.FailNow()
 	}
 
-	if task.Id != 6 {
-		t.Errorf("GetTask shuld return Task.Id = 6 task, but other task return")
+	if task.ID != 6 {
+		t.Errorf("GetTask shuld return Task.ID = 6 task, but other task return")
 		t.FailNow()
 	}
 
@@ -350,7 +356,7 @@ func TestGetTask(t *testing.T) {
 		t.FailNow()
 	}
 
-	if parent.Id != 4 {
+	if parent.ID != 4 {
 		t.Errorf("shuld return parent task, but %v", parent)
 		t.FailNow()
 	}
@@ -385,7 +391,7 @@ func TestRemoveSubTask(t *testing.T) {
 		t.FailNow()
 	}
 
-	success = parent.RemoveSubTask(task.Id)
+	success = parent.RemoveSubTask(task.ID)
 	if !success {
 		t.Errorf("If task exist, RemoveSubTask return true, but false")
 		t.FailNow()
