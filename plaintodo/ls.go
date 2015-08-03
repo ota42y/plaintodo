@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"./query"
 	"./task"
 )
 
@@ -12,15 +13,15 @@ type ShowTask struct {
 	SubTasks []*ShowTask
 }
 
-func Ls(tasks []*task.Task, query Query) []*ShowTask {
-	return filterRoot(tasks, query)
+func Ls(tasks []*task.Task, q query.Query) []*ShowTask {
+	return filterRoot(tasks, q)
 }
 
-func filterRoot(tasks []*task.Task, query Query) []*ShowTask {
+func filterRoot(tasks []*task.Task, q query.Query) []*ShowTask {
 	showTasks := make([]*ShowTask, 0)
 
 	for _, task := range tasks {
-		showTask := filter(task, query)
+		showTask := filter(task, q)
 		if showTask != nil {
 			showTasks = append(showTasks, showTask)
 		}
@@ -29,7 +30,7 @@ func filterRoot(tasks []*task.Task, query Query) []*ShowTask {
 	return showTasks
 }
 
-func filter(task *task.Task, query Query) *ShowTask {
+func filter(task *task.Task, query query.Query) *ShowTask {
 	subTasks := make([]*ShowTask, 0)
 	for _, task := range task.SubTasks {
 		subTask := filter(task, query)
@@ -113,9 +114,9 @@ func showSubTasks(task *ShowTask) {
 	return
 }
 
-func getQuery(queryString string) (query Query, queryMap map[string]string) {
-	queryMap = task.ParseOptions(queryString)
-	parent := NewQueryBase(make([]Query, 0), make([]Query, 0))
+func getQuery(queryString string) (query.Query, map[string]string) {
+	queryMap := task.ParseOptions(queryString)
+	parent := query.NewBase(make([]query.Query, 0), make([]query.Query, 0))
 
 	for key, value := range queryMap {
 		switch {
@@ -123,7 +124,7 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 			{
 				num, err := strconv.Atoi(value)
 				if err == nil {
-					parent.and = append(parent.and, NewMaxLevelQuery(num, make([]Query, 0), make([]Query, 0)))
+					parent.And = append(parent.And, NewMaxLevelQuery(num, make([]query.Query, 0), make([]query.Query, 0)))
 				}
 			}
 
@@ -131,7 +132,7 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 			{
 				num, err := strconv.Atoi(value)
 				if err == nil {
-					parent.and = append(parent.and, NewIDQuery(num, make([]Query, 0), make([]Query, 0)))
+					parent.And = append(parent.And, NewIDQuery(num, make([]query.Query, 0), make([]query.Query, 0)))
 				}
 			}
 
@@ -139,13 +140,13 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 			{
 				t, ok := ParseTime(value)
 				if ok {
-					noPostpone := NewNoKeyQuery("postpone", make([]Query, 0), make([]Query, 0))
-					noPostpone.and = append(noPostpone.and, NewBeforeDateQuery("start", t, make([]Query, 0), make([]Query, 0)))
+					noPostpone := NewNoKeyQuery("postpone", make([]query.Query, 0), make([]query.Query, 0))
+					noPostpone.And = append(noPostpone.And, NewBeforeDateQuery("start", t, make([]query.Query, 0), make([]query.Query, 0)))
 
-					overduePostpone := NewBeforeDateQuery("postpone", t, make([]Query, 0), make([]Query, 0))
-					overduePostpone.or = append(overduePostpone.or, noPostpone)
+					overduePostpone := NewBeforeDateQuery("postpone", t, make([]query.Query, 0), make([]query.Query, 0))
+					overduePostpone.Or = append(overduePostpone.Or, noPostpone)
 
-					parent.and = append(parent.and, overduePostpone)
+					parent.And = append(parent.And, overduePostpone)
 				}
 			}
 		}
@@ -154,7 +155,7 @@ func getQuery(queryString string) (query Query, queryMap map[string]string) {
 	// if not complete show
 	_, isCompleteShow := queryMap["complete"]
 	if !isCompleteShow {
-		parent.and = append(parent.and, NewNoKeyQuery("complete", make([]Query, 0), make([]Query, 0)))
+		parent.And = append(parent.And, NewNoKeyQuery("complete", make([]query.Query, 0), make([]query.Query, 0)))
 	}
 
 	return parent, queryMap
