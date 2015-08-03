@@ -1,8 +1,11 @@
 package main
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
+
+	"./query"
 )
 
 /*
@@ -11,41 +14,42 @@ get first task and one subtask
 func TestKeyValueQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	query := NewKeyValueQuery("start", "2015-01-31", make([]Query, 0), make([]Query, 0))
-	showTask := filter(tasks[0], query)
-	if showTask == nil {
-		t.Errorf("filter is nil")
-		t.FailNow()
-	}
+	Convey("correct", t, func() {
+		q := query.NewKeyValue("start", "2015-01-31", query.CreateBlankQueryArray(), query.CreateBlankQueryArray())
+		showTask := filter(tasks[0], q)
 
-	if showTask.Task.Name != tasks[0].Name {
-		t.Errorf("filter isn't valid")
-		t.FailNow()
-	}
+		So(showTask, ShouldNotBeNil)
 
-	if len(showTask.SubTasks) != 1 {
-		t.Errorf("SubTasks num isn't 1")
-		t.FailNow()
-	}
+		Convey("top level task", func() {
+			topLevelTask := showTask.Task
+			So(topLevelTask.Name, ShouldEqual, tasks[0].Name)
+		})
 
-	subTask := showTask.SubTasks[0]
-	if subTask.Task.Name != tasks[0].SubTasks[0].Name {
-		t.Errorf("SubTasks isn't correct")
-		t.FailNow()
-	}
+		Convey("sub task", func() {
+			So(len(showTask.SubTasks), ShouldEqual, 1)
 
-	showTask = filter(tasks[1], query)
-	if showTask != nil {
-		t.Errorf("if not match any query, get nil but get %v", showTask)
-		t.FailNow()
-	}
+			subTask := showTask.SubTasks[0]
+			So(subTask.Task.Name, ShouldEqual, tasks[0].SubTasks[0].Name)
+		})
+
+		Convey("sub task name valid", nil)
+
+	})
+
+	Convey("error", t, func() {
+		Convey("no hit", func() {
+			q := query.NewKeyValue("start", "2015-01-31", query.CreateBlankQueryArray(), query.CreateBlankQueryArray())
+			showTask := filter(tasks[1], q)
+			So(showTask, ShouldBeNil)
+		})
+	})
 }
 
 func TestNoKeyQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	query := NewNoKeyQuery("start", make([]Query, 0), make([]Query, 0))
-	showTasks := Ls(tasks, query)
+	q := NewNoKeyQuery("start", make([]query.Query, 0), make([]query.Query, 0))
+	showTasks := Ls(tasks, q)
 
 	if showTasks == nil {
 		t.Errorf("filter is nil")
@@ -84,8 +88,8 @@ func TestBeforeDateQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	query := NewBeforeDateQuery(key, value, make([]Query, 0), make([]Query, 0))
-	showTasks := Ls(tasks, query)
+	q := NewBeforeDateQuery(key, value, make([]query.Query, 0), make([]query.Query, 0))
+	showTasks := Ls(tasks, q)
 
 	if len(showTasks) == 0 {
 		t.Errorf("return no tasks")
@@ -117,8 +121,8 @@ func TestBeforeDateQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	query = NewBeforeDateQuery(key, value, make([]Query, 0), make([]Query, 0))
-	showTasks = Ls(tasks, query)
+	q = NewBeforeDateQuery(key, value, make([]query.Query, 0), make([]query.Query, 0))
+	showTasks = Ls(tasks, q)
 	if len(showTasks) != 2 {
 		t.Errorf("return 2 tasks but %d", len(showTasks))
 		t.FailNow()
@@ -141,8 +145,8 @@ func TestAfterDateQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	query := NewAfterDateQuery(key, value, make([]Query, 0), make([]Query, 0))
-	showTasks := Ls(tasks, query)
+	q := NewAfterDateQuery(key, value, make([]query.Query, 0), make([]query.Query, 0))
+	showTasks := Ls(tasks, q)
 
 	if len(showTasks) == 0 {
 		t.Errorf("return no tasks")
@@ -167,9 +171,9 @@ func TestAfterDateQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	orQuery := make([]Query, 0)
-	orQuery = append(orQuery, query)
-	noCompleteOrTodayCompleteQuery := NewNoKeyQuery("start", make([]Query, 0), orQuery)
+	orQuery := make([]query.Query, 0)
+	orQuery = append(orQuery, q)
+	noCompleteOrTodayCompleteQuery := NewNoKeyQuery("start", make([]query.Query, 0), orQuery)
 	showTasks = Ls(tasks, noCompleteOrTodayCompleteQuery)
 
 	if len(showTasks) != 2 {
@@ -183,9 +187,9 @@ func TestAfterDateQuery(t *testing.T) {
 	}
 
 	// or query can reverse
-	orQuery = make([]Query, 0)
-	orQuery = append(orQuery, NewNoKeyQuery("start", make([]Query, 0), make([]Query, 0)))
-	reverseOrQuery := NewAfterDateQuery(key, value, make([]Query, 0), orQuery)
+	orQuery = make([]query.Query, 0)
+	orQuery = append(orQuery, NewNoKeyQuery("start", make([]query.Query, 0), make([]query.Query, 0)))
+	reverseOrQuery := NewAfterDateQuery(key, value, make([]query.Query, 0), orQuery)
 	showTasks = Ls(tasks, reverseOrQuery)
 
 	if len(showTasks) != 2 {
@@ -215,8 +219,8 @@ func TestSameDayQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	query := NewSameDayQuery(key, value, make([]Query, 0), make([]Query, 0))
-	showTasks := Ls(tasks, query)
+	q := NewSameDayQuery(key, value, make([]query.Query, 0), make([]query.Query, 0))
+	showTasks := Ls(tasks, q)
 
 	if len(showTasks) == 0 {
 		t.Errorf("return no tasks")

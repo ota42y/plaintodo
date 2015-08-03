@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"./query"
 	"./task"
 )
 
@@ -191,15 +192,15 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 			fileName := value.Format(automaton.Config.Archive.NameFormat) + ".txt"
 			p := path.Join(automaton.Config.Archive.Directory, fileName)
 
-			query := NewSameDayQuery("complete", value, make([]Query, 0), make([]Query, 0))
+			query := NewSameDayQuery("complete", value, make([]query.Query, 0), make([]query.Query, 0))
 			t.appendFile(p, Ls(automaton.Tasks, query))
 			automaton.Config.Writer.Write([]byte("append tasks to " + p + "\n"))
 		}
 	}
 
-	orQuery := make([]Query, 0)
-	orQuery = append(orQuery, NewNoKeyQuery("complete", make([]Query, 0), make([]Query, 0)))
-	query := NewSameDayQuery("complete", time.Now(), make([]Query, 0), orQuery)
+	orQuery := make([]query.Query, 0)
+	orQuery = append(orQuery, NewNoKeyQuery("complete", make([]query.Query, 0), make([]query.Query, 0)))
+	query := NewSameDayQuery("complete", time.Now(), make([]query.Query, 0), orQuery)
 	t.writeFile(automaton.Config.Paths.Task, Ls(automaton.Tasks, query)) // write today's complete or no complete task
 
 	automaton.Tasks, automaton.MaxTaskID = task.ReadTasks(automaton.Config.Paths.Task)

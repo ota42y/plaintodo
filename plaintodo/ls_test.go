@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"./query"
 )
 
 func TestLs(t *testing.T) {
@@ -85,15 +87,15 @@ func TestShowSubTasks(t *testing.T) {
 func TestGetQuery(t *testing.T) {
 	tasks := ReadTestTasks()
 
-	query, _ := getQuery(" :level 2")
-	base := query.(*QueryBase)
+	q, _ := getQuery(" :level 2")
+	base := q.(*query.Base)
 
-	if len(base.and) == 0 {
+	if len(base.And) == 0 {
 		t.Errorf("MaxLevelQuery dosen't created")
 		t.FailNow()
 	}
 
-	showTasks := Ls(tasks, query)
+	showTasks := Ls(tasks, q)
 
 	if len(showTasks) == 0 {
 		t.Errorf("return no tasks")
@@ -117,10 +119,10 @@ func TestGetQuery(t *testing.T) {
 		}
 	}
 
-	query, _ = getQuery(" :id 2")
-	base = query.(*QueryBase)
+	q, _ = getQuery(" :id 2")
+	base = q.(*query.Base)
 
-	if len(base.and) == 0 {
+	if len(base.And) == 0 {
 		t.Errorf("IDQuery dosen't created")
 		t.FailNow()
 	}
