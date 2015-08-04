@@ -178,6 +178,28 @@ func (t *SaveCommand) writeFile(filePath string, tasks []*ShowTask) (terminate b
 	return true, nil
 }
 
+func (t *SaveCommand) archiveTasks(tasks []*task.Task, today time.Time, saveFolder string, filenameFormat string, w io.Writer) {
+	// save old task to task file
+	times := t.getCompleteDayList(tasks)
+	for _, value := range times {
+		if value != today {
+			fileName := value.Format(filenameFormat) + ".txt"
+			p := path.Join(saveFolder, fileName)
+
+			query := NewSameDayQuery("complete", value, make([]query.Query, 0), make([]query.Query, 0))
+			t.appendFile(p, Ls(tasks, query))
+			w.Write([]byte("append tasks to " + p + "\n"))
+		}
+	}
+}
+
+func (t *SaveCommand) saveToFile(tasks []*task.Task, saveFolder string) {
+	orQuery := make([]query.Query, 0)
+	orQuery = append(orQuery, NewNoKeyQuery("complete", make([]query.Query, 0), make([]query.Query, 0)))
+	query := NewSameDayQuery("complete", time.Now(), make([]query.Query, 0), orQuery)
+	t.writeFile(saveFolder, Ls(tasks, query)) // write today's complete or no complete task
+}
+
 func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bool) {
 	today, ok := ParseTime(time.Now().Format(dateFormat))
 	if !ok {
@@ -185,25 +207,8 @@ func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bo
 		return false
 	}
 
-	// save old task to task file
-	times := t.getCompleteDayList(automaton.Tasks)
-	for _, value := range times {
-		if value != today {
-			fileName := value.Format(automaton.Config.Archive.NameFormat) + ".txt"
-			p := path.Join(automaton.Config.Archive.Directory, fileName)
-
-			query := NewSameDayQuery("complete", value, make([]query.Query, 0), make([]query.Query, 0))
-			t.appendFile(p, Ls(automaton.Tasks, query))
-			automaton.Config.Writer.Write([]byte("append tasks to " + p + "\n"))
-		}
-	}
-
-	orQuery := make([]query.Query, 0)
-	orQuery = append(orQuery, NewNoKeyQuery("complete", make([]query.Query, 0), make([]query.Query, 0)))
-	query := NewSameDayQuery("complete", time.Now(), make([]query.Query, 0), orQuery)
-	t.writeFile(automaton.Config.Paths.Task, Ls(automaton.Tasks, query)) // write today's complete or no complete task
-
-	automaton.Tasks, automaton.MaxTaskID = task.ReadTasks(automaton.Config.Paths.Task)
+	t.archiveTasks(automaton.Tasks, today, automaton.Config.Archive.Directory, automaton.Config.Archive.NameFormat, automaton.Config.Writer)
+	t.saveToFile(automaton.Tasks, automaton.Config.Paths.Task)
 	return false
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	. "github.com/smartystreets/goconvey/convey"
 	"strings"
 	"testing"
 	"time"
@@ -1160,4 +1161,22 @@ func TestAliasCommand(t *testing.T) {
 		t.FailNow()
 	}
 	buf.Reset()
+}
+
+func TestSaveCommand(t *testing.T) {
+	Convey("correct", t, func() {
+		Convey("save tasks", func() {
+			cmd := NewSaveCommand()
+			emptyTasks := make([]*task.Task, 0)
+			cmd.saveToFile(emptyTasks, "../result/savetest.txt")
+
+			tasks := ReadTestTasks()
+			tasks[0].SubTasks = emptyTasks
+			cmd.saveToFile(tasks, "../result/savetest.txt")
+
+			loadTasks, _ := task.ReadTasks("../result/savetest.txt")
+			So(len(loadTasks), ShouldEqual, len(tasks))
+			So(len(loadTasks[0].SubTasks), ShouldEqual, len(tasks[0].SubTasks))
+		})
+	})
 }
