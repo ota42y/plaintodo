@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	"./config"
 	"./task"
 )
 
@@ -12,8 +13,8 @@ func ReadTestTasks() []*task.Task {
 	return tasks
 }
 
-func ReadTestConfig() *Config {
-	return readConfig("test_config.toml")
+func ReadTestConfig() *config.Config {
+	return config.ReadConfig("test_config.toml")
 }
 
 func TestReadConfig(t *testing.T) {
@@ -27,7 +28,7 @@ func TestReadConfig(t *testing.T) {
 }
 
 func TestReadConfigError(t *testing.T) {
-	config := readConfig("nothing")
+	config := config.ReadConfig("nothing")
 
 	if config != nil {
 		t.Errorf("if no file exist, return nil but return %v", config)
