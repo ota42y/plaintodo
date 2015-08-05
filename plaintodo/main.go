@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./config"
 	"os"
 )
 
@@ -22,10 +23,10 @@ func main() {
 	cmds["nice"] = NewNiceCommand()
 	cmds["alias"] = NewAliasCommand()
 
-	config := readConfig("config.toml")
-	config.Writer = os.Stdout
-	if config != nil {
-		l := NewLiner(config, cmds)
+	c := config.ReadConfig("config.toml")
+	c.Writer = os.Stdout
+	if c != nil {
+		l := NewLiner(c, cmds)
 		l.automaton.Execute("reload")
 		l.Start()
 	}

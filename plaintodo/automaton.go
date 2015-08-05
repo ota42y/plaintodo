@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"./config"
 	"./task"
 )
 
@@ -18,10 +19,10 @@ type Automaton struct {
 	MaxTaskID      int
 	Commands       map[string]Command
 	CommandAliases map[string]string
-	Config         *Config // config.go
+	Config         *config.Config // config.go
 }
 
-func NewAutomaton(config *Config, commands map[string]Command) *Automaton {
+func NewAutomaton(config *config.Config, commands map[string]Command) *Automaton {
 	aliases := make(map[string]string)
 
 	if config != nil {

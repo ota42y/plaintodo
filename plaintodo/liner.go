@@ -5,6 +5,8 @@ import (
 	"github.com/peterh/liner"
 	"io"
 	"os"
+
+	"./config"
 )
 
 type Liner struct {
@@ -12,7 +14,7 @@ type Liner struct {
 	automaton *Automaton
 }
 
-func NewLiner(config *Config, commands map[string]Command) *Liner {
+func NewLiner(config *config.Config, commands map[string]Command) *Liner {
 	s := liner.NewLiner()
 	a := NewAutomaton(config, commands)
 	return &Liner{
