@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"./task"
+	"./util"
 )
 
 func TestGetIntAttribute(t *testing.T) {
@@ -46,7 +47,7 @@ func TestReloadCommand(t *testing.T) {
 
 	cmds := make(map[string]Command)
 	cmds["reload"] = cmd
-	a := NewAutomaton(ReadTestConfig(), cmds)
+	a := NewAutomaton(util.ReadTestConfig(), cmds)
 
 	terminate := a.Execute("reload")
 	if terminate {
@@ -73,7 +74,7 @@ func TestLsCommand(t *testing.T) {
 	cmds := make(map[string]Command)
 	cmds["ls"] = cmd
 	cmds["reload"] = NewReloadCommand()
-	a := NewAutomaton(ReadTestConfig(), cmds)
+	a := NewAutomaton(util.ReadTestConfig(), cmds)
 
 	a.Execute("reload")
 	terminate := a.Execute("ls")
@@ -100,7 +101,7 @@ func TestLsAllCommand(t *testing.T) {
 	cmds["ls"] = cmd2
 
 	cmds["reload"] = NewReloadCommand()
-	a := NewAutomaton(ReadTestConfig(), cmds)
+	a := NewAutomaton(util.ReadTestConfig(), cmds)
 
 	a.Execute("reload")
 	terminate := a.Execute("lsall")
@@ -130,7 +131,7 @@ func TestCompleteCommandError(t *testing.T) {
 	cmds["complete"] = NewCompleteCommand()
 
 	cmds["reload"] = NewReloadCommand()
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 
@@ -168,7 +169,7 @@ func TestCompleteCommand(t *testing.T) {
 
 	cmds["complete"] = NewCompleteCommand()
 	cmds["reload"] = NewReloadCommand()
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 	task := a.Tasks[0]
@@ -304,7 +305,7 @@ func TestSetNewRepeat(t *testing.T) {
 }
 
 func TestCompleteRepeatTask(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 	baseTask := tasks[1].SubTasks[0]
 
 	postponeCommand := NewPostponeCommand()
@@ -364,7 +365,7 @@ func TestCompleteRepeatTask(t *testing.T) {
 }
 
 func TestCompleteTask(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 	cmd := NewCompleteCommand()
 
 	completeTask, tasks, n := cmd.completeTask(0, tasks)
@@ -429,7 +430,7 @@ func TestCompleteTask(t *testing.T) {
 }
 
 func TestGetCompleteDayList(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 	cmd := NewSaveCommand()
 
 	testTimeList := [...]string{"2015-01-31 10:42", "2015-01-29", "2015-01-30 10:42", "2015-01-30"}
@@ -474,7 +475,7 @@ func TestAddTaskCommand(t *testing.T) {
 	cmds["task"] = NewAddTaskCommand()
 	cmds["reload"] = NewReloadCommand()
 
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 
@@ -544,7 +545,7 @@ func TestAddSubTaskCommand(t *testing.T) {
 	cmds["subtask"] = NewAddSubTaskCommand()
 	cmds["reload"] = NewReloadCommand()
 
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 
@@ -645,7 +646,7 @@ func TestSetAttributeCommand(t *testing.T) {
 	cmds := make(map[string]Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["set"] = cmd
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 
@@ -711,7 +712,7 @@ func TestStartCommand(t *testing.T) {
 	cmds := make(map[string]Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["start"] = cmd
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 
@@ -761,7 +762,7 @@ func TestPostponeCommand(t *testing.T) {
 	cmds["reload"] = NewReloadCommand()
 	cmds["start"] = NewStartCommand()
 	cmds["postpone"] = cmd
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 
@@ -837,7 +838,7 @@ func TestMoveCommand(t *testing.T) {
 	cmds := make(map[string]Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["move"] = cmd
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 
@@ -978,7 +979,7 @@ func TestOpenCommand(t *testing.T) {
 	cmds := make(map[string]Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["open"] = cmd
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 
@@ -1042,7 +1043,7 @@ func TestNiceCommand(t *testing.T) {
 	cmds["reload"] = NewReloadCommand()
 	cmds["task"] = NewAddTaskCommand()
 	cmds["nice"] = cmd
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 	a.Execute("reload")
 
@@ -1112,7 +1113,7 @@ func TestNiceCommand(t *testing.T) {
 func TestAliasCommand(t *testing.T) {
 	cmds := make(map[string]Command)
 	cmds["alias"] = NewAliasCommand()
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	a := NewAutomaton(config, cmds)
 
 	buf := &bytes.Buffer{}
@@ -1170,7 +1171,7 @@ func TestSaveCommand(t *testing.T) {
 			emptyTasks := make([]*task.Task, 0)
 			cmd.saveToFile(emptyTasks, "../result/savetest.txt")
 
-			tasks := ReadTestTasks()
+			tasks := util.ReadTestTasks()
 			tasks[0].SubTasks = emptyTasks
 			cmd.saveToFile(tasks, "../result/savetest.txt")
 

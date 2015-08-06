@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"./query"
+	"./util"
 )
 
 func TestLs(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 
 	showTasks := Ls(tasks, nil)
 	if len(showTasks) != 2 {
@@ -31,7 +32,7 @@ func TestLs(t *testing.T) {
 }
 
 func TestShowSubTasks(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 
 	query, _ := getQuery(" :id 2")
 	showTasks := Ls(tasks, query)
@@ -85,7 +86,7 @@ func TestShowSubTasks(t *testing.T) {
 }
 
 func TestGetQuery(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 
 	q, _ := getQuery(" :level 2")
 	base := q.(*query.Base)
@@ -278,7 +279,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	tasks = ReadTestTasks()
+	tasks = util.ReadTestTasks()
 	cmd.completeTask(8, tasks)
 	showTasks = ExecuteQuery("", tasks)
 	if len(showTasks) != 1 {
@@ -286,7 +287,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	tasks = ReadTestTasks()
+	tasks = util.ReadTestTasks()
 	delete(tasks[0].Attributes, "start")
 	cmd.completeTask(2, tasks)
 	cmd.completeTask(4, tasks)
@@ -296,7 +297,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	tasks = ReadTestTasks()
+	tasks = util.ReadTestTasks()
 	showTasks = ExecuteQuery(" :overdue 2015-02-02", tasks)
 	if len(showTasks) != 2 {
 		t.Errorf("When start option set, return 2 tasks, but %d", len(showTasks))

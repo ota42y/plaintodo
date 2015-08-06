@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"./query"
+	"./util"
 )
 
 /*
 get first task and one subtask
 */
 func TestKeyValueQuery(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 
 	Convey("correct", t, func() {
 		q := query.NewKeyValue("start", "2015-01-31", query.CreateBlankQueryArray(), query.CreateBlankQueryArray())
@@ -46,7 +47,7 @@ func TestKeyValueQuery(t *testing.T) {
 }
 
 func TestNoKeyQuery(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 
 	q := NewNoKeyQuery("start", make([]query.Query, 0), make([]query.Query, 0))
 	showTasks := Ls(tasks, q)
@@ -76,7 +77,7 @@ func TestNoKeyQuery(t *testing.T) {
 get second task and one subtask
 */
 func TestBeforeDateQuery(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 
 	key := "start"
 	startTime := "2015-02-01 10:42"
@@ -130,7 +131,7 @@ func TestBeforeDateQuery(t *testing.T) {
 }
 
 func TestAfterDateQuery(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 
 	tasks[0].SubTasks[0].Attributes["complete"] = "2015-01-31 10:42"
 	tasks[1].SubTasks[0].Attributes["complete"] = "2015-02-02 10:42"
@@ -204,7 +205,7 @@ func TestAfterDateQuery(t *testing.T) {
 }
 
 func TestSameDayQuery(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 
 	tasks[0].SubTasks[0].Attributes["complete"] = "2015-02-01 10:42"
 	tasks[0].SubTasks[1].Attributes["complete"] = "2015-02-01 20:42"

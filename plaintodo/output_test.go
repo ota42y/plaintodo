@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"./util"
 )
 
 func TestPrint(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 	showTasks := Ls(tasks, nil)
 
 	// show first task
@@ -45,7 +47,7 @@ func TestPrint(t *testing.T) {
 }
 
 func TestAllTask(t *testing.T) {
-	tasks := ReadTestTasks()
+	tasks := util.ReadTestTasks()
 	showTasks := Ls(tasks, nil)
 
 	// show all task
