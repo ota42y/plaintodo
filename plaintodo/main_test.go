@@ -4,21 +4,11 @@ import (
 	"testing"
 
 	"./config"
-	"./task"
+	"./util"
 )
 
-func ReadTestTasks() []*task.Task {
-	filename := "test_task.txt"
-	tasks, _ := task.ReadTasks(filename)
-	return tasks
-}
-
-func ReadTestConfig() *config.Config {
-	return config.ReadConfig("test_config.toml")
-}
-
 func TestReadConfig(t *testing.T) {
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 
 	taskPath := "./test_task.txt"
 	if config.Paths.Task != taskPath {

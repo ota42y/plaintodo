@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"testing"
+
+	"./util"
 )
 
 type CommandTest struct {
@@ -36,7 +38,7 @@ func TestAutomatonWithOption(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	config.Writer = buf
 	a := NewAutomaton(config, cmds)
 
@@ -98,7 +100,7 @@ func TestAutomatonWithInvalidCommand(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 
-	config := ReadTestConfig()
+	config := util.ReadTestConfig()
 	config.Writer = buf
 	a := NewAutomaton(config, cmds)
 
