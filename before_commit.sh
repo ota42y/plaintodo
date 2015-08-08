@@ -8,4 +8,5 @@ golint plaintodo/task
 golint plaintodo/query
 golint plaintodo/config
 golint plaintodo/util
+golint plaintodo/executor
 # golint palintodo

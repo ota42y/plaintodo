@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"./executor"
 	"./query"
 	"./task"
 )
@@ -71,7 +72,7 @@ func (l timeList) Swap(i, j int) {
 type ExitCommand struct {
 }
 
-func (t *ExitCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+func (t *ExitCommand) Execute(option string, s *executor.State) (terminate bool) {
 	return true
 }
 
@@ -82,8 +83,8 @@ func NewExitCommand() *ExitCommand {
 type ReloadCommand struct {
 }
 
-func (t *ReloadCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	automaton.Tasks, automaton.MaxTaskID = task.ReadTasks(automaton.Config.Paths.Task)
+func (t *ReloadCommand) Execute(option string, s *executor.State) (terminate bool) {
+	s.Tasks, s.MaxTaskID = task.ReadTasks(s.Config.Paths.Task)
 	return false
 }
 
@@ -95,8 +96,8 @@ type LsCommand struct {
 	w io.Writer
 }
 
-func (t *LsCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	Output(t.w, ExecuteQuery(option, automaton.Tasks), true)
+func (t *LsCommand) Execute(option string, s *executor.State) (terminate bool) {
+	Output(t.w, ExecuteQuery(option, s.Tasks), true)
 	return false
 }
 
@@ -110,8 +111,8 @@ type LsAllCommand struct {
 	w io.Writer
 }
 
-func (t *LsAllCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	showTasks := Ls(automaton.Tasks, nil)
+func (t *LsAllCommand) Execute(option string, s *executor.State) (terminate bool) {
+	showTasks := Ls(s.Tasks, nil)
 	Output(t.w, showTasks, true)
 	return false
 }
@@ -200,15 +201,15 @@ func (t *SaveCommand) saveToFile(tasks []*task.Task, saveFolder string) {
 	t.writeFile(saveFolder, Ls(tasks, query)) // write today's complete or no complete task
 }
 
-func (t *SaveCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+func (t *SaveCommand) Execute(option string, s *executor.State) (terminate bool) {
 	today, ok := ParseTime(time.Now().Format(dateFormat))
 	if !ok {
-		automaton.Config.Writer.Write([]byte("time format error"))
+		s.Config.Writer.Write([]byte("time format error"))
 		return false
 	}
 
-	t.archiveTasks(automaton.Tasks, today, automaton.Config.Archive.Directory, automaton.Config.Archive.NameFormat, automaton.Config.Writer)
-	t.saveToFile(automaton.Tasks, automaton.Config.Paths.Task)
+	t.archiveTasks(s.Tasks, today, s.Config.Archive.Directory, s.Config.Archive.NameFormat, s.Config.Writer)
+	t.saveToFile(s.Tasks, s.Config.Paths.Task)
 	return false
 }
 
@@ -297,24 +298,24 @@ func (t *CompleteCommand) completeTask(taskID int, tasks []*task.Task) (complete
 	return nil, tasks, 0
 }
 
-func (t *CompleteCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	t.MaxTaskID = automaton.MaxTaskID
+func (t *CompleteCommand) Execute(option string, s *executor.State) (terminate bool) {
+	t.MaxTaskID = s.MaxTaskID
 
 	taskID, err := strconv.Atoi(option)
 	if err != nil {
-		automaton.Config.Writer.Write([]byte(err.Error()))
+		s.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 
-	task, newTasks, n := t.completeTask(taskID, automaton.Tasks)
-	automaton.Tasks = newTasks
-	automaton.MaxTaskID = t.MaxTaskID
+	task, newTasks, n := t.completeTask(taskID, s.Tasks)
+	s.Tasks = newTasks
+	s.MaxTaskID = t.MaxTaskID
 	if task == nil {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", taskID)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", taskID)))
 		return false
 	}
 
-	automaton.Config.Writer.Write([]byte(fmt.Sprintf("Complete %s and %d sub tasks\n", task.Name, n)))
+	s.Config.Writer.Write([]byte(fmt.Sprintf("Complete %s and %d sub tasks\n", task.Name, n)))
 	return false
 }
 
@@ -325,16 +326,16 @@ func NewCompleteCommand() *CompleteCommand {
 type AddTaskCommand struct {
 }
 
-func (t *AddTaskCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	nowTask, err := task.NewTask(option, automaton.MaxTaskID+1)
+func (t *AddTaskCommand) Execute(option string, s *executor.State) (terminate bool) {
+	nowTask, err := task.NewTask(option, s.MaxTaskID+1)
 	if err != nil {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
 		return false
 	}
 
-	automaton.Tasks = append(automaton.Tasks, nowTask)
-	automaton.MaxTaskID = nowTask.ID
-	automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task: %s\n", nowTask.String(true))))
+	s.Tasks = append(s.Tasks, nowTask)
+	s.MaxTaskID = nowTask.ID
+	s.Config.Writer.Write([]byte(fmt.Sprintf("Create task: %s\n", nowTask.String(true))))
 	return false
 }
 
@@ -362,26 +363,26 @@ func (t *AddSubTaskCommand) addSubTask(taskID int, addTask *task.Task, tasks []*
 	return nil, false
 }
 
-func (t *AddSubTaskCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+func (t *AddSubTaskCommand) Execute(option string, s *executor.State) (terminate bool) {
 	match := subTaskRegexp.FindSubmatch([]byte(option))
 	if len(match) < 3 {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create Subtask error: invalid format '%s'\n", option)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("Create Subtask error: invalid format '%s'\n", option)))
 		return false
 	}
 
-	nowTask, err := task.NewTask(string(match[2]), automaton.MaxTaskID+1)
+	nowTask, err := task.NewTask(string(match[2]), s.MaxTaskID+1)
 	if err != nil {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
 		return false
 	}
 
 	parentTaskID, _ := strconv.Atoi(string(match[1]))
-	parent, success := t.addSubTask(parentTaskID, nowTask, automaton.Tasks)
+	parent, success := t.addSubTask(parentTaskID, nowTask, s.Tasks)
 	if success {
-		automaton.MaxTaskID = nowTask.ID
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask:\nParent: %s\nSubTask: %s\n", parent.String(true), nowTask.String(true))))
+		s.MaxTaskID = nowTask.ID
+		s.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask:\nParent: %s\nSubTask: %s\n", parent.String(true), nowTask.String(true))))
 	} else {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask error: thee is no task which have :id %d\n", parentTaskID)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask error: thee is no task which have :id %d\n", parentTaskID)))
 	}
 
 	return false
@@ -400,22 +401,22 @@ func (c *SetAttributeCommand) setAttribute(task *task.Task, attributes map[strin
 	}
 }
 
-func (c *SetAttributeCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+func (c *SetAttributeCommand) Execute(option string, s *executor.State) (terminate bool) {
 	optionMap := task.ParseOptions(" " + option)
 
 	id, err := GetIntAttribute("id", optionMap)
 	if err != nil {
-		automaton.Config.Writer.Write([]byte(err.Error()))
+		s.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 	delete(optionMap, "id")
 
-	_, task := task.GetTask(id, automaton.Tasks)
+	_, task := task.GetTask(id, s.Tasks)
 	if task != nil {
 		c.setAttribute(task, optionMap)
-		automaton.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
+		s.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
 	} else {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
 	}
 	return false
 }
@@ -428,8 +429,8 @@ type StartCommand struct {
 	*SetAttributeCommand
 }
 
-func (c *StartCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	return c.SetAttributeCommand.Execute(option+" :start "+time.Now().Format(dateTimeFormat), automaton)
+func (c *StartCommand) Execute(option string, s *executor.State) (terminate bool) {
+	return c.SetAttributeCommand.Execute(option+" :start "+time.Now().Format(dateTimeFormat), s)
 }
 
 func NewStartCommand() *StartCommand {
@@ -468,27 +469,27 @@ func (c *PostponeCommand) postpone(task *task.Task, optionMap map[string]string)
 	return nil
 }
 
-func (c *PostponeCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+func (c *PostponeCommand) Execute(option string, s *executor.State) (terminate bool) {
 	optionMap := task.ParseOptions(" " + option)
 
 	id, err := GetIntAttribute("id", optionMap)
 	if err != nil {
-		automaton.Config.Writer.Write([]byte(err.Error()))
+		s.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 	delete(optionMap, "id")
 
-	_, task := task.GetTask(id, automaton.Tasks)
+	_, task := task.GetTask(id, s.Tasks)
 	if task == nil {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
 		return false
 	}
 
 	err = c.postpone(task, optionMap)
 	if err != nil {
-		fmt.Fprintln(automaton.Config.Writer, err)
+		fmt.Fprintln(s.Config.Writer, err)
 	} else {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
+		s.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
 	}
 
 	return false
@@ -511,30 +512,30 @@ func (c *MoveCommand) updateTaskLevel(level int, t *task.Task) {
 	}
 }
 
-func (c *MoveCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+func (c *MoveCommand) Execute(option string, s *executor.State) (terminate bool) {
 	m := task.ParseOptions(" " + option)
 
 	taskID, err := GetIntAttribute("from", m)
 	if err != nil {
-		automaton.Config.Writer.Write([]byte(err.Error()))
+		s.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 
 	toID, err := GetIntAttribute("to", m)
 	if err != nil {
-		automaton.Config.Writer.Write([]byte(err.Error()))
+		s.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 
-	from, t := task.GetTask(taskID, automaton.Tasks)
+	from, t := task.GetTask(taskID, s.Tasks)
 	if t == nil {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", taskID)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", taskID)))
 		return false
 	}
 
-	_, toTask := task.GetTask(toID, automaton.Tasks)
+	_, toTask := task.GetTask(toID, s.Tasks)
 	if toTask == nil && toID != 0 {
-		automaton.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", toID)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist %d task\n", toID)))
 		return false
 	}
 
@@ -542,11 +543,11 @@ func (c *MoveCommand) Execute(option string, automaton *Automaton) (terminate bo
 	if toTask != nil {
 		c.updateTaskLevel(toTask.Level+1, t)
 		toTask.SubTasks = append(toTask.SubTasks, t)
-		fmt.Fprintf(automaton.Config.Writer, "task moved to sub task\nparent: %s\n", toTask.String(true))
+		fmt.Fprintf(s.Config.Writer, "task moved to sub task\nparent: %s\n", toTask.String(true))
 	} else {
 		c.updateTaskLevel(0, t)
-		automaton.Tasks = append(automaton.Tasks, t)
-		fmt.Fprintf(automaton.Config.Writer, "task moved to top level task\n")
+		s.Tasks = append(s.Tasks, t)
+		fmt.Fprintf(s.Config.Writer, "task moved to top level task\n")
 	}
 
 	return false
@@ -568,30 +569,30 @@ func (c *OpenCommand) getUrl(task *task.Task) (string, error) {
 	return urlString, nil
 }
 
-func (c *OpenCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+func (c *OpenCommand) Execute(option string, s *executor.State) (terminate bool) {
 	// There is no url in task:rss :id 8
 
 	optionMap := task.ParseOptions(" " + option)
 	id, err := GetIntAttribute("id", optionMap)
 	if err != nil {
-		fmt.Fprintf(automaton.Config.Writer, "%s", err.Error())
+		fmt.Fprintf(s.Config.Writer, "%s", err.Error())
 		return false
 	}
 
-	_, task := task.GetTask(id, automaton.Tasks)
+	_, task := task.GetTask(id, s.Tasks)
 	if task == nil {
-		fmt.Fprintf(automaton.Config.Writer, "There is no such task :id %d\n", id)
+		fmt.Fprintf(s.Config.Writer, "There is no such task :id %d\n", id)
 		return false
 	}
 
 	url, err := c.getUrl(task)
 	if err != nil {
-		fmt.Fprintf(automaton.Config.Writer, "%s\n", err.Error())
+		fmt.Fprintf(s.Config.Writer, "%s\n", err.Error())
 		return false
 	}
 
 	open.Run(url)
-	fmt.Fprintf(automaton.Config.Writer, "open: %s\n", url)
+	fmt.Fprintf(s.Config.Writer, "open: %s\n", url)
 
 	return false
 }
@@ -618,25 +619,25 @@ func (c *NiceCommand) fixEvernoteUrl(tasks []*task.Task) int {
 	return count
 }
 
-func (c *NiceCommand) Execute(option string, automaton *Automaton) (terminate bool) {
+func (c *NiceCommand) Execute(option string, s *executor.State) (terminate bool) {
 	var tasks []*task.Task
 
 	optionMap := task.ParseOptions(" " + option)
 	id, err := GetIntAttribute("id", optionMap)
 	if err != nil {
 		// do all tasks
-		tasks = automaton.Tasks
+		tasks = s.Tasks
 	} else {
 		// do selected task
-		_, t := task.GetTask(id, automaton.Tasks)
+		_, t := task.GetTask(id, s.Tasks)
 		tasks = make([]*task.Task, 1)
 		tasks[0] = t
 	}
 
-	fmt.Fprintf(automaton.Config.Writer, "Done nice\n")
+	fmt.Fprintf(s.Config.Writer, "Done nice\n")
 
 	num := c.fixEvernoteUrl(tasks)
-	fmt.Fprintf(automaton.Config.Writer, "evernote url change %d tasks\n", num)
+	fmt.Fprintf(s.Config.Writer, "evernote url change %d tasks\n", num)
 
 	return false
 }
@@ -648,17 +649,17 @@ func NewNiceCommand() *NiceCommand {
 type AliasCommand struct {
 }
 
-func (c *AliasCommand) Execute(option string, automaton *Automaton) (terminate bool) {
-	keyArray := make([]string, len(automaton.CommandAliases))
+func (c *AliasCommand) Execute(option string, s *executor.State) (terminate bool) {
+	keyArray := make([]string, len(s.CommandAliases))
 	i := 0
-	for k := range automaton.CommandAliases {
+	for k := range s.CommandAliases {
 		keyArray[i] = k
 		i++
 	}
 	sort.Strings(keyArray)
 
 	for _, key := range keyArray {
-		fmt.Fprintf(automaton.Config.Writer, "%s = %s\n", key, automaton.CommandAliases[key])
+		fmt.Fprintf(s.Config.Writer, "%s = %s\n", key, s.CommandAliases[key])
 	}
 
 	return false
