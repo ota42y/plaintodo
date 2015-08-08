@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"./executor"
 	"./task"
 	"./util"
 )
@@ -31,9 +32,9 @@ func TestGetIntAttribute(t *testing.T) {
 func TestExitCommand(t *testing.T) {
 	cmd := NewExitCommand()
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["exit"] = cmd
-	a := NewAutomaton(nil, cmds)
+	a := executor.NewExecutor(nil, cmds)
 
 	terminate := a.Execute("exit")
 	if !terminate {
@@ -45,9 +46,9 @@ func TestExitCommand(t *testing.T) {
 func TestReloadCommand(t *testing.T) {
 	cmd := NewReloadCommand()
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["reload"] = cmd
-	a := NewAutomaton(util.ReadTestConfig(), cmds)
+	a := executor.NewExecutor(util.ReadTestConfig(), cmds)
 
 	terminate := a.Execute("reload")
 	if terminate {
@@ -55,14 +56,14 @@ func TestReloadCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if len(a.Tasks) == 0 {
+	if len(a.S.Tasks) == 0 {
 		t.Errorf("Task num shuldn't be 0")
 		t.FailNow()
 	}
 
-	id := a.Tasks[1].SubTasks[0].ID
-	if a.MaxTaskID != id {
-		t.Errorf("Save max task id %d, but %d", id, a.MaxTaskID)
+	id := a.S.Tasks[1].SubTasks[0].ID
+	if a.S.MaxTaskID != id {
+		t.Errorf("Save max task id %d, but %d", id, a.S.MaxTaskID)
 		t.FailNow()
 	}
 }
@@ -71,10 +72,10 @@ func TestLsCommand(t *testing.T) {
 	buf := &bytes.Buffer{}
 	cmd := NewLsCommand(buf)
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["ls"] = cmd
 	cmds["reload"] = NewReloadCommand()
-	a := NewAutomaton(util.ReadTestConfig(), cmds)
+	a := executor.NewExecutor(util.ReadTestConfig(), cmds)
 
 	a.Execute("reload")
 	terminate := a.Execute("ls")
@@ -90,7 +91,7 @@ func TestLsCommand(t *testing.T) {
 }
 
 func TestLsAllCommand(t *testing.T) {
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 
 	buf := &bytes.Buffer{}
 	cmd := NewLsAllCommand(buf)
@@ -101,7 +102,7 @@ func TestLsAllCommand(t *testing.T) {
 	cmds["ls"] = cmd2
 
 	cmds["reload"] = NewReloadCommand()
-	a := NewAutomaton(util.ReadTestConfig(), cmds)
+	a := executor.NewExecutor(util.ReadTestConfig(), cmds)
 
 	a.Execute("reload")
 	terminate := a.Execute("lsall")
@@ -126,13 +127,13 @@ func TestLsAllCommand(t *testing.T) {
 }
 
 func TestCompleteCommandError(t *testing.T) {
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 
 	cmds["complete"] = NewCompleteCommand()
 
 	cmds["reload"] = NewReloadCommand()
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
 
 	buf := &bytes.Buffer{}
@@ -165,14 +166,14 @@ func TestCompleteCommandError(t *testing.T) {
 }
 
 func TestCompleteCommand(t *testing.T) {
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 
 	cmds["complete"] = NewCompleteCommand()
 	cmds["reload"] = NewReloadCommand()
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
-	task := a.Tasks[0]
+	task := a.S.Tasks[0]
 
 	if task.Attributes["complete"] != "" {
 		t.Errorf("Task[\"complete\"} isn't blank")
@@ -471,7 +472,7 @@ func TestAddTaskCommand(t *testing.T) {
 	taskName := "create new task"
 	taskStart := "2015-02-01"
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["task"] = NewAddTaskCommand()
 	cmds["reload"] = NewReloadCommand()
 
@@ -479,7 +480,7 @@ func TestAddTaskCommand(t *testing.T) {
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 
 	input := "task " + taskName + " :start " + taskStart
 	terminate := a.Execute(input)
@@ -489,12 +490,12 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if len(a.Tasks) == 0 {
+	if len(a.S.Tasks) == 0 {
 		t.Errorf("Task not add")
 		t.FailNow()
 	}
 
-	task := a.Tasks[0]
+	task := a.S.Tasks[0]
 	if task.Name != taskName {
 		t.Errorf("Task name shud %s, but %s", taskName, task.Name)
 		t.FailNow()
@@ -505,8 +506,8 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if a.MaxTaskID != task.ID {
-		t.Errorf("Automaton.MaxTaskID shuld be %d, but %d", a.MaxTaskID, task.ID)
+	if a.S.MaxTaskID != task.ID {
+		t.Errorf("Automaton.MaxTaskID shuld be %d, but %d", a.S.MaxTaskID, task.ID)
 		t.FailNow()
 	}
 
@@ -517,7 +518,7 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	taskID := a.MaxTaskID
+	taskID := a.S.MaxTaskID
 
 	buf = &bytes.Buffer{}
 	config.Writer = buf
@@ -530,7 +531,7 @@ func TestAddTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if a.MaxTaskID != taskID {
+	if a.S.MaxTaskID != taskID {
 		t.Errorf("When error occerd, Automaton.MaxTaskID shuldn't change but %d", taskID)
 		t.FailNow()
 	}
@@ -540,19 +541,19 @@ func TestAddSubTaskCommand(t *testing.T) {
 	taskName := "create sub task"
 	taskStart := "2015-02-01"
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["task"] = NewAddTaskCommand()
 	cmds["subtask"] = NewAddSubTaskCommand()
 	cmds["reload"] = NewReloadCommand()
 
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
 
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 
-	taskID := a.MaxTaskID
+	taskID := a.S.MaxTaskID
 
 	input := "subtask 6 " + taskName + " :start " + taskStart
 	terminate := a.Execute(input)
@@ -562,7 +563,7 @@ func TestAddSubTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	parent := a.Tasks[0].SubTasks[1].SubTasks[1]
+	parent := a.S.Tasks[0].SubTasks[1].SubTasks[1]
 
 	if len(parent.SubTasks) == 0 {
 		t.Errorf("SubTask not add")
@@ -590,11 +591,11 @@ func TestAddSubTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if a.MaxTaskID != task.ID {
-		t.Errorf("Automaton.MaxTaskID shuld be %d, but %d", a.MaxTaskID, task.ID)
+	if a.S.MaxTaskID != task.ID {
+		t.Errorf("Automaton.MaxTaskID shuld be %d, but %d", a.S.MaxTaskID, task.ID)
 		t.FailNow()
 	}
-	taskID = a.MaxTaskID
+	taskID = a.S.MaxTaskID
 
 	outputString := buf.String()
 	correctString := "subtask hit\nCreate SubTask:\nParent: " + parent.String(true) + "\nSubTask: " + task.String(true) + "\n"
@@ -625,7 +626,7 @@ func TestAddSubTaskCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if a.MaxTaskID != taskID {
+	if a.S.MaxTaskID != taskID {
 		t.Errorf("When error occerd, Automaton.MaxTaskID shuldn't change but %d", taskID)
 		t.FailNow()
 	}
@@ -633,7 +634,7 @@ func TestAddSubTaskCommand(t *testing.T) {
 	a.Execute("task test11")
 	a.Execute("task test12")
 	a.Execute("subtask 12 child in task12")
-	if len(a.Tasks[3].SubTasks) == 0 {
+	if len(a.S.Tasks[3].SubTasks) == 0 {
 		t.Errorf("Subtask isn't added by id=12 task's child")
 		t.FailNow()
 	}
@@ -643,11 +644,11 @@ func TestSetAttributeCommand(t *testing.T) {
 	cmd := NewSetAttributeCommand()
 	url := "http://example.com"
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["set"] = cmd
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
 
 	buf := &bytes.Buffer{}
@@ -666,7 +667,7 @@ func TestSetAttributeCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	task := a.Tasks[0].SubTasks[0].SubTasks[0]
+	task := a.S.Tasks[0].SubTasks[0].SubTasks[0]
 	task.Attributes["url"] = url
 	correctString = "set hit\nset attribute " + task.String(true) + "\n"
 	delete(task.Attributes, "url")
@@ -709,18 +710,18 @@ func TestSetAttributeCommand(t *testing.T) {
 func TestStartCommand(t *testing.T) {
 	cmd := NewStartCommand()
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["start"] = cmd
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
 
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 	now := time.Now()
 
-	task := a.Tasks[0].SubTasks[1].SubTasks[0]
+	task := a.S.Tasks[0].SubTasks[1].SubTasks[0]
 	if _, ok := task.Attributes["start"]; ok {
 		t.Errorf("task already set start attribute, test data is invalid %v", task)
 		t.FailNow()
@@ -758,19 +759,19 @@ func TestStartCommand(t *testing.T) {
 func TestPostponeCommand(t *testing.T) {
 	cmd := NewPostponeCommand()
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["start"] = NewStartCommand()
 	cmds["postpone"] = cmd
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
 
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 	now := time.Now()
 
-	tk := a.Tasks[0].SubTasks[1].SubTasks[0]
+	tk := a.S.Tasks[0].SubTasks[1].SubTasks[0]
 	if _, ok := tk.Attributes["postpone"]; ok {
 		t.Errorf("task already set postpone attribute, test data is invalid %v", tk)
 		t.FailNow()
@@ -835,18 +836,18 @@ func TestPostponeCommand(t *testing.T) {
 func TestMoveCommand(t *testing.T) {
 	cmd := NewMoveCommand()
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["move"] = cmd
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
 
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 
-	fromTask, moveTask := task.GetTask(4, a.Tasks)
-	_, toTask := task.GetTask(8, a.Tasks)
+	fromTask, moveTask := task.GetTask(4, a.S.Tasks)
+	_, toTask := task.GetTask(8, a.S.Tasks)
 
 	fromNum := len(fromTask.SubTasks)
 	toNum := len(toTask.SubTasks)
@@ -887,7 +888,7 @@ func TestMoveCommand(t *testing.T) {
 	}
 	buf.Reset()
 
-	movedParent, movedTask := task.GetTask(4, a.Tasks)
+	movedParent, movedTask := task.GetTask(4, a.S.Tasks)
 	if movedParent == nil {
 		t.Errorf("when not meved task, parent shuldn't be change from %v but %v", toTask, movedParent)
 		t.FailNow()
@@ -920,7 +921,7 @@ func TestMoveCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	movedParent, movedTask = task.GetTask(4, a.Tasks)
+	movedParent, movedTask = task.GetTask(4, a.S.Tasks)
 	if toTask.ID != movedParent.ID {
 		t.Errorf("move %d task's sub task, but %d task's subtask", toTask.ID, movedParent.ID)
 		t.FailNow()
@@ -952,13 +953,13 @@ func TestMoveCommand(t *testing.T) {
 	}
 	buf.Reset()
 
-	movedParent, movedTask = task.GetTask(4, a.Tasks)
+	movedParent, movedTask = task.GetTask(4, a.S.Tasks)
 	if movedParent != nil {
 		t.Errorf("if task moved top level task, parent shuld be nil but %v", movedParent)
 		t.FailNow()
 	}
-	if len(a.Tasks) != 3 {
-		t.Errorf("if task moved top level task, Automaton.Task shuld be %d tasks, but %d", 3, len(a.Tasks))
+	if len(a.S.Tasks) != 3 {
+		t.Errorf("if task moved top level task, Automaton.Task shuld be %d tasks, but %d", 3, len(a.S.Tasks))
 		t.FailNow()
 	}
 
@@ -976,18 +977,18 @@ func TestMoveCommand(t *testing.T) {
 func TestOpenCommand(t *testing.T) {
 	cmd := NewOpenCommand()
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["open"] = cmd
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
 
 	buf := &bytes.Buffer{}
 	config.Writer = buf
 
 	a.Execute("open :id 8")
-	_, tk := task.GetTask(8, a.Tasks)
+	_, tk := task.GetTask(8, a.S.Tasks)
 	outputString := buf.String()
 	correctString := fmt.Sprintf("open hit\nThere is no url in task:\n%s\n", tk.String(true))
 	if outputString != correctString {
@@ -1014,7 +1015,7 @@ func TestOpenCommand(t *testing.T) {
 	}
 	buf.Reset()
 
-	_, tk = task.GetTask(9, a.Tasks)
+	_, tk = task.GetTask(9, a.S.Tasks)
 	url, err := cmd.getUrl(tk)
 	if tk.Attributes["url"] != url {
 		t.Errorf("getUrl shuld return %s, but %s", tk.Attributes["url"], url)
@@ -1026,7 +1027,7 @@ func TestOpenCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	tk = a.Tasks[0]
+	tk = a.S.Tasks[0]
 	url, err = cmd.getUrl(tk)
 	outputString = err.Error()
 	correctString = fmt.Sprintf("There is no url in task:\n%s", tk.String(true))
@@ -1039,12 +1040,12 @@ func TestOpenCommand(t *testing.T) {
 func TestNiceCommand(t *testing.T) {
 	cmd := NewNiceCommand()
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["task"] = NewAddTaskCommand()
 	cmds["nice"] = cmd
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
 
 	buf := &bytes.Buffer{}
@@ -1054,7 +1055,7 @@ func TestNiceCommand(t *testing.T) {
 	a.Execute("task test :url " + evernoteUrl)
 	buf.Reset()
 
-	_, task := task.GetTask(a.MaxTaskID, a.Tasks)
+	_, task := task.GetTask(a.S.MaxTaskID, a.S.Tasks)
 	if evernoteUrl != task.Attributes["url"] {
 		t.Errorf(":url attribute shuld be %s, but %s, test data invalid", evernoteUrl, task.Attributes["url"])
 		t.FailNow()
@@ -1083,7 +1084,7 @@ func TestNiceCommand(t *testing.T) {
 	// if there is / in bottom
 	task.Attributes["url"] = evernoteUrl + "/"
 	// if sub task
-	a.Tasks[0].SubTasks[0].Attributes["url"] = evernoteUrl
+	a.S.Tasks[0].SubTasks[0].Attributes["url"] = evernoteUrl
 
 	a.Execute(fmt.Sprintf("nice"))
 	outputString = buf.String()
@@ -1099,22 +1100,40 @@ func TestNiceCommand(t *testing.T) {
 		t.FailNow()
 	}
 
-	if !strings.HasPrefix(a.Tasks[0].SubTasks[0].Attributes["url"], "evernote:///view/") {
-		t.Errorf(":url shuld have prefix '%s', but '%s'", "evernote:///view/", a.Tasks[0].Attributes["url"])
+	if !strings.HasPrefix(a.S.Tasks[0].SubTasks[0].Attributes["url"], "evernote:///view/") {
+		t.Errorf(":url shuld have prefix '%s', but '%s'", "evernote:///view/", a.S.Tasks[0].Attributes["url"])
 		t.FailNow()
 	}
 
-	if a.Tasks[1].SubTasks[0].Attributes["url"] != "http://ota42y.com" {
-		t.Errorf("if :url isn't evernote url, nice command not chenga, but change to %s", a.Tasks[1].SubTasks[0].Attributes["url"])
+	if a.S.Tasks[1].SubTasks[0].Attributes["url"] != "http://ota42y.com" {
+		t.Errorf("if :url isn't evernote url, nice command not chenga, but change to %s", a.S.Tasks[1].SubTasks[0].Attributes["url"])
 		t.FailNow()
 	}
 }
 
+type CommandTest struct {
+	T         *testing.T
+	Option    string
+	Called    bool
+	Terminate bool
+}
+
+func (t *CommandTest) Execute(option string, s *executor.State) (terminate bool) {
+	t.Called = true
+
+	if option != t.Option {
+		t.T.Errorf("option shud be %s but %s", t.Option, option)
+		t.T.FailNow()
+	}
+
+	return t.Terminate
+}
+
 func TestAliasCommand(t *testing.T) {
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["alias"] = NewAliasCommand()
 	config := util.ReadTestConfig()
-	a := NewAutomaton(config, cmds)
+	a := executor.NewExecutor(config, cmds)
 
 	buf := &bytes.Buffer{}
 	config.Writer = buf

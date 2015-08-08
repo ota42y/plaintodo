@@ -1,10 +1,10 @@
-package main
+package executor
 
 import (
 	"bytes"
 	"testing"
 
-	"./util"
+	"../config"
 )
 
 type CommandTest struct {
@@ -14,7 +14,7 @@ type CommandTest struct {
 	Terminate bool
 }
 
-func (t *CommandTest) Execute(option string, automaton *Automaton) (terminate bool) {
+func (t *CommandTest) Execute(option string, s *State) (terminate bool) {
 	t.Called = true
 
 	if option != t.Option {
@@ -38,11 +38,11 @@ func TestAutomatonWithOption(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 
-	config := util.ReadTestConfig()
+	config := config.ReadConfig("../test_config.toml")
 	config.Writer = buf
-	a := NewAutomaton(config, cmds)
+	e := NewExecutor(config, cmds)
 
-	terminate := a.Execute("test " + cmd.Option)
+	terminate := e.Execute("test " + cmd.Option)
 
 	if !cmd.Called {
 		t.Errorf("command not called")
@@ -72,9 +72,9 @@ func TestAutomaton(t *testing.T) {
 	cmds := make(map[string]Command)
 	cmds["test"] = cmd
 
-	a := NewAutomaton(nil, cmds)
+	e := NewExecutor(nil, cmds)
 
-	terminate := a.Execute("test " + cmd.Option)
+	terminate := e.Execute("test " + cmd.Option)
 
 	if !cmd.Called {
 		t.Errorf("command not called")
@@ -100,11 +100,11 @@ func TestAutomatonWithInvalidCommand(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 
-	config := util.ReadTestConfig()
+	config := config.ReadConfig("../test_config.toml")
 	config.Writer = buf
-	a := NewAutomaton(config, cmds)
+	e := NewExecutor(config, cmds)
 
-	terminate := a.Execute("no " + cmd.Option)
+	terminate := e.Execute("no " + cmd.Option)
 
 	if cmd.Called {
 		t.Errorf("command called")

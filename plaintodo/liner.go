@@ -7,27 +7,28 @@ import (
 	"os"
 
 	"./config"
+	"./executor"
 )
 
 type Liner struct {
 	*liner.State
-	automaton *Automaton
+	e *executor.Executor
 }
 
-func NewLiner(config *config.Config, commands map[string]Command) *Liner {
+func NewLiner(config *config.Config, commands map[string]executor.Command) *Liner {
 	s := liner.NewLiner()
-	a := NewAutomaton(config, commands)
+	e := executor.NewExecutor(config, commands)
 	return &Liner{
-		State:     s,
-		automaton: a,
+		State: s,
+		e:     e,
 	}
 }
 
 func (l *Liner) Start() {
-	f, err := os.Open(l.automaton.Config.Paths.History)
+	f, err := os.Open(l.e.S.Config.Paths.History)
 	if err == nil {
 		n, _ := l.ReadHistory(f)
-		fmt.Fprintln(l.automaton.Config.Writer, "load", n, "history")
+		fmt.Fprintln(l.e.S.Config.Writer, "load", n, "history")
 		f.Close()
 	}
 
@@ -42,17 +43,17 @@ func (l *Liner) Start() {
 		}
 
 		l.AppendHistory(cmd)
-		if l.automaton.Execute(cmd) {
+		if l.e.Execute(cmd) {
 			break
 		}
 	}
 
-	f, err = os.Create(l.automaton.Config.Paths.History)
+	f, err = os.Create(l.e.S.Config.Paths.History)
 	if err == nil {
-		fmt.Fprintln(l.automaton.Config.Writer, "write history")
+		fmt.Fprintln(l.e.S.Config.Writer, "write history")
 		l.WriteHistory(f)
 		f.Close()
 	} else {
-		fmt.Fprintln(l.automaton.Config.Writer, "write history error:", err)
+		fmt.Fprintln(l.e.S.Config.Writer, "write history error:", err)
 	}
 }

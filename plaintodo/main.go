@@ -1,12 +1,14 @@
 package main
 
 import (
-	"./config"
 	"os"
+
+	"./config"
+	"./executor"
 )
 
 func main() {
-	cmds := make(map[string]Command)
+	cmds := make(map[string]executor.Command)
 	cmds["exit"] = NewExitCommand()
 	cmds["reload"] = NewReloadCommand()
 	cmds["ls"] = NewLsCommand(os.Stdout)
@@ -27,7 +29,7 @@ func main() {
 	c.Writer = os.Stdout
 	if c != nil {
 		l := NewLiner(c, cmds)
-		l.automaton.Execute("reload")
+		l.e.Execute("reload")
 		l.Start()
 	}
 }
