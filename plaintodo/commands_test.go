@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"./command"
 	"./executor"
 	"./task"
 	"./util"
@@ -32,7 +33,7 @@ func TestGetIntAttribute(t *testing.T) {
 func TestExitCommand(t *testing.T) {
 	cmd := NewExitCommand()
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["exit"] = cmd
 	a := executor.NewExecutor(nil, cmds)
 
@@ -46,7 +47,7 @@ func TestExitCommand(t *testing.T) {
 func TestReloadCommand(t *testing.T) {
 	cmd := NewReloadCommand()
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["reload"] = cmd
 	a := executor.NewExecutor(util.ReadTestConfig(), cmds)
 
@@ -72,7 +73,7 @@ func TestLsCommand(t *testing.T) {
 	buf := &bytes.Buffer{}
 	cmd := NewLsCommand(buf)
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["ls"] = cmd
 	cmds["reload"] = NewReloadCommand()
 	a := executor.NewExecutor(util.ReadTestConfig(), cmds)
@@ -91,7 +92,7 @@ func TestLsCommand(t *testing.T) {
 }
 
 func TestLsAllCommand(t *testing.T) {
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 
 	buf := &bytes.Buffer{}
 	cmd := NewLsAllCommand(buf)
@@ -127,7 +128,7 @@ func TestLsAllCommand(t *testing.T) {
 }
 
 func TestCompleteCommandError(t *testing.T) {
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 
 	cmds["complete"] = NewCompleteCommand()
 
@@ -166,7 +167,7 @@ func TestCompleteCommandError(t *testing.T) {
 }
 
 func TestCompleteCommand(t *testing.T) {
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 
 	cmds["complete"] = NewCompleteCommand()
 	cmds["reload"] = NewReloadCommand()
@@ -472,7 +473,7 @@ func TestAddTaskCommand(t *testing.T) {
 	taskName := "create new task"
 	taskStart := "2015-02-01"
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["task"] = NewAddTaskCommand()
 	cmds["reload"] = NewReloadCommand()
 
@@ -541,7 +542,7 @@ func TestAddSubTaskCommand(t *testing.T) {
 	taskName := "create sub task"
 	taskStart := "2015-02-01"
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["task"] = NewAddTaskCommand()
 	cmds["subtask"] = NewAddSubTaskCommand()
 	cmds["reload"] = NewReloadCommand()
@@ -644,7 +645,7 @@ func TestSetAttributeCommand(t *testing.T) {
 	cmd := NewSetAttributeCommand()
 	url := "http://example.com"
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["set"] = cmd
 	config := util.ReadTestConfig()
@@ -710,7 +711,7 @@ func TestSetAttributeCommand(t *testing.T) {
 func TestStartCommand(t *testing.T) {
 	cmd := NewStartCommand()
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["start"] = cmd
 	config := util.ReadTestConfig()
@@ -759,7 +760,7 @@ func TestStartCommand(t *testing.T) {
 func TestPostponeCommand(t *testing.T) {
 	cmd := NewPostponeCommand()
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["start"] = NewStartCommand()
 	cmds["postpone"] = cmd
@@ -836,7 +837,7 @@ func TestPostponeCommand(t *testing.T) {
 func TestMoveCommand(t *testing.T) {
 	cmd := NewMoveCommand()
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["move"] = cmd
 	config := util.ReadTestConfig()
@@ -977,7 +978,7 @@ func TestMoveCommand(t *testing.T) {
 func TestOpenCommand(t *testing.T) {
 	cmd := NewOpenCommand()
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["open"] = cmd
 	config := util.ReadTestConfig()
@@ -1040,7 +1041,7 @@ func TestOpenCommand(t *testing.T) {
 func TestNiceCommand(t *testing.T) {
 	cmd := NewNiceCommand()
 
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["reload"] = NewReloadCommand()
 	cmds["task"] = NewAddTaskCommand()
 	cmds["nice"] = cmd
@@ -1118,7 +1119,7 @@ type CommandTest struct {
 	Terminate bool
 }
 
-func (t *CommandTest) Execute(option string, s *executor.State) (terminate bool) {
+func (t *CommandTest) Execute(option string, s *command.State) (terminate bool) {
 	t.Called = true
 
 	if option != t.Option {
@@ -1130,7 +1131,7 @@ func (t *CommandTest) Execute(option string, s *executor.State) (terminate bool)
 }
 
 func TestAliasCommand(t *testing.T) {
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["alias"] = NewAliasCommand()
 	config := util.ReadTestConfig()
 	a := executor.NewExecutor(config, cmds)

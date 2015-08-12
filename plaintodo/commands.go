@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"./executor"
+	"./command"
 	"./query"
 	"./task"
 )
@@ -72,7 +72,7 @@ func (l timeList) Swap(i, j int) {
 type ExitCommand struct {
 }
 
-func (t *ExitCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *ExitCommand) Execute(option string, s *command.State) (terminate bool) {
 	return true
 }
 
@@ -83,7 +83,7 @@ func NewExitCommand() *ExitCommand {
 type ReloadCommand struct {
 }
 
-func (t *ReloadCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *ReloadCommand) Execute(option string, s *command.State) (terminate bool) {
 	s.Tasks, s.MaxTaskID = task.ReadTasks(s.Config.Paths.Task)
 	return false
 }
@@ -96,7 +96,7 @@ type LsCommand struct {
 	w io.Writer
 }
 
-func (t *LsCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *LsCommand) Execute(option string, s *command.State) (terminate bool) {
 	Output(t.w, ExecuteQuery(option, s.Tasks), true)
 	return false
 }
@@ -111,7 +111,7 @@ type LsAllCommand struct {
 	w io.Writer
 }
 
-func (t *LsAllCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *LsAllCommand) Execute(option string, s *command.State) (terminate bool) {
 	showTasks := Ls(s.Tasks, nil)
 	Output(t.w, showTasks, true)
 	return false
@@ -201,7 +201,7 @@ func (t *SaveCommand) saveToFile(tasks []*task.Task, saveFolder string) {
 	t.writeFile(saveFolder, Ls(tasks, query)) // write today's complete or no complete task
 }
 
-func (t *SaveCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *SaveCommand) Execute(option string, s *command.State) (terminate bool) {
 	today, ok := ParseTime(time.Now().Format(dateFormat))
 	if !ok {
 		s.Config.Writer.Write([]byte("time format error"))
@@ -298,7 +298,7 @@ func (t *CompleteCommand) completeTask(taskID int, tasks []*task.Task) (complete
 	return nil, tasks, 0
 }
 
-func (t *CompleteCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *CompleteCommand) Execute(option string, s *command.State) (terminate bool) {
 	t.MaxTaskID = s.MaxTaskID
 
 	taskID, err := strconv.Atoi(option)
@@ -326,7 +326,7 @@ func NewCompleteCommand() *CompleteCommand {
 type AddTaskCommand struct {
 }
 
-func (t *AddTaskCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *AddTaskCommand) Execute(option string, s *command.State) (terminate bool) {
 	nowTask, err := task.NewTask(option, s.MaxTaskID+1)
 	if err != nil {
 		s.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
@@ -363,7 +363,7 @@ func (t *AddSubTaskCommand) addSubTask(taskID int, addTask *task.Task, tasks []*
 	return nil, false
 }
 
-func (t *AddSubTaskCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *AddSubTaskCommand) Execute(option string, s *command.State) (terminate bool) {
 	match := subTaskRegexp.FindSubmatch([]byte(option))
 	if len(match) < 3 {
 		s.Config.Writer.Write([]byte(fmt.Sprintf("Create Subtask error: invalid format '%s'\n", option)))
@@ -401,7 +401,7 @@ func (c *SetAttributeCommand) setAttribute(task *task.Task, attributes map[strin
 	}
 }
 
-func (c *SetAttributeCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *SetAttributeCommand) Execute(option string, s *command.State) (terminate bool) {
 	optionMap := task.ParseOptions(" " + option)
 
 	id, err := GetIntAttribute("id", optionMap)
@@ -429,7 +429,7 @@ type StartCommand struct {
 	*SetAttributeCommand
 }
 
-func (c *StartCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *StartCommand) Execute(option string, s *command.State) (terminate bool) {
 	return c.SetAttributeCommand.Execute(option+" :start "+time.Now().Format(dateTimeFormat), s)
 }
 
@@ -469,7 +469,7 @@ func (c *PostponeCommand) postpone(task *task.Task, optionMap map[string]string)
 	return nil
 }
 
-func (c *PostponeCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *PostponeCommand) Execute(option string, s *command.State) (terminate bool) {
 	optionMap := task.ParseOptions(" " + option)
 
 	id, err := GetIntAttribute("id", optionMap)
@@ -512,7 +512,7 @@ func (c *MoveCommand) updateTaskLevel(level int, t *task.Task) {
 	}
 }
 
-func (c *MoveCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *MoveCommand) Execute(option string, s *command.State) (terminate bool) {
 	m := task.ParseOptions(" " + option)
 
 	taskID, err := GetIntAttribute("from", m)
@@ -569,7 +569,7 @@ func (c *OpenCommand) getUrl(task *task.Task) (string, error) {
 	return urlString, nil
 }
 
-func (c *OpenCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *OpenCommand) Execute(option string, s *command.State) (terminate bool) {
 	// There is no url in task:rss :id 8
 
 	optionMap := task.ParseOptions(" " + option)
@@ -619,7 +619,7 @@ func (c *NiceCommand) fixEvernoteUrl(tasks []*task.Task) int {
 	return count
 }
 
-func (c *NiceCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *NiceCommand) Execute(option string, s *command.State) (terminate bool) {
 	var tasks []*task.Task
 
 	optionMap := task.ParseOptions(" " + option)
@@ -649,7 +649,7 @@ func NewNiceCommand() *NiceCommand {
 type AliasCommand struct {
 }
 
-func (c *AliasCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *AliasCommand) Execute(option string, s *command.State) (terminate bool) {
 	keyArray := make([]string, len(s.CommandAliases))
 	i := 0
 	for k := range s.CommandAliases {

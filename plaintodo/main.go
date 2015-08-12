@@ -3,12 +3,12 @@ package main
 import (
 	"os"
 
+	"./command"
 	"./config"
-	"./executor"
 )
 
 func main() {
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["exit"] = NewExitCommand()
 	cmds["reload"] = NewReloadCommand()
 	cmds["ls"] = NewLsCommand(os.Stdout)
