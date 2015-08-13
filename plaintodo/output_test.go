@@ -5,15 +5,16 @@ import (
 	"strings"
 	"testing"
 
+	"./ls"
 	"./util"
 )
 
 func TestPrint(t *testing.T) {
 	tasks := util.ReadTestTasks()
-	showTasks := Ls(tasks, nil)
+	showTasks := ls.Ls(tasks, nil)
 
 	// show first task
-	outputTasks := make([]*ShowTask, 1)
+	outputTasks := make([]*ls.ShowTask, 1)
 	outputTasks[0] = showTasks[0]
 
 	buf := &bytes.Buffer{}
@@ -48,7 +49,7 @@ func TestPrint(t *testing.T) {
 
 func TestAllTask(t *testing.T) {
 	tasks := util.ReadTestTasks()
-	showTasks := Ls(tasks, nil)
+	showTasks := ls.Ls(tasks, nil)
 
 	// show all task
 	buf := &bytes.Buffer{}
