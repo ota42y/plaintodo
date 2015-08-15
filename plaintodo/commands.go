@@ -10,50 +10,14 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
-	"./executor"
+	"./command"
+	"./ls"
 	"./query"
 	"./task"
+	"./util"
 )
-
-func GetIntAttribute(name string, attributes map[string]string) (int, error) {
-	str, ok := attributes[name]
-	if !ok {
-		return -1, errors.New(fmt.Sprintf("not exist :%s\n", name))
-	}
-
-	num, err := strconv.Atoi(str)
-	if err != nil {
-		return -1, err
-	}
-
-	return num, nil
-}
-
-func AddDuration(base time.Time, num string, unit string) time.Time {
-	n, err := strconv.Atoi(num)
-	if err != nil {
-		return time.Unix(0, 0)
-	}
-	switch {
-	case unit == "minutes":
-		return base.Add(time.Duration(n) * time.Minute)
-	case unit == "hour":
-		return base.Add(time.Duration(n) * time.Hour)
-	case unit == "day":
-		return base.AddDate(0, 0, n)
-	case unit == "week":
-		return base.AddDate(0, 0, n*7)
-	case unit == "month":
-		return base.AddDate(0, n, 0)
-	case unit == "year":
-		return base.AddDate(n, 0, 0)
-	}
-
-	return time.Unix(0, 0)
-}
 
 type timeList []time.Time
 
@@ -72,7 +36,7 @@ func (l timeList) Swap(i, j int) {
 type ExitCommand struct {
 }
 
-func (t *ExitCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *ExitCommand) Execute(option string, s *command.State) (terminate bool) {
 	return true
 }
 
@@ -80,24 +44,12 @@ func NewExitCommand() *ExitCommand {
 	return &ExitCommand{}
 }
 
-type ReloadCommand struct {
-}
-
-func (t *ReloadCommand) Execute(option string, s *executor.State) (terminate bool) {
-	s.Tasks, s.MaxTaskID = task.ReadTasks(s.Config.Paths.Task)
-	return false
-}
-
-func NewReloadCommand() *ReloadCommand {
-	return &ReloadCommand{}
-}
-
 type LsCommand struct {
 	w io.Writer
 }
 
-func (t *LsCommand) Execute(option string, s *executor.State) (terminate bool) {
-	Output(t.w, ExecuteQuery(option, s.Tasks), true)
+func (t *LsCommand) Execute(option string, s *command.State) (terminate bool) {
+	Output(t.w, ls.ExecuteQuery(option, s.Tasks), true)
 	return false
 }
 
@@ -111,8 +63,8 @@ type LsAllCommand struct {
 	w io.Writer
 }
 
-func (t *LsAllCommand) Execute(option string, s *executor.State) (terminate bool) {
-	showTasks := Ls(s.Tasks, nil)
+func (t *LsAllCommand) Execute(option string, s *command.State) (terminate bool) {
+	showTasks := ls.Ls(s.Tasks, nil)
 	Output(t.w, showTasks, true)
 	return false
 }
@@ -130,9 +82,9 @@ func (t *SaveCommand) collectCompleteDay(tasks []*task.Task, times *map[string]b
 	for _, task := range tasks {
 		completeDateString, ok := task.Attributes["complete"]
 		if ok {
-			t, ok := ParseTime(completeDateString)
+			t, ok := util.ParseTime(completeDateString)
 			if ok {
-				str := t.Format(dateFormat)
+				str := t.Format(util.DateFormat)
 				(*times)[str] = true
 			}
 		}
@@ -147,7 +99,7 @@ func (t *SaveCommand) getCompleteDayList(tasks []*task.Task) []time.Time {
 
 	times := make(timeList, 0)
 	for key, _ := range allTimes {
-		t, ok := ParseTime(key)
+		t, ok := util.ParseTime(key)
 		if ok {
 			times = append(times, t)
 		}
@@ -157,7 +109,7 @@ func (t *SaveCommand) getCompleteDayList(tasks []*task.Task) []time.Time {
 	return times
 }
 
-func (t *SaveCommand) appendFile(filePath string, tasks []*ShowTask) (terminate bool, err error) {
+func (t *SaveCommand) appendFile(filePath string, tasks []*ls.ShowTask) (terminate bool, err error) {
 	fo, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		return false, err
@@ -168,7 +120,7 @@ func (t *SaveCommand) appendFile(filePath string, tasks []*ShowTask) (terminate 
 	return true, nil
 }
 
-func (t *SaveCommand) writeFile(filePath string, tasks []*ShowTask) (terminate bool, err error) {
+func (t *SaveCommand) writeFile(filePath string, tasks []*ls.ShowTask) (terminate bool, err error) {
 	fo, err := os.Create(filePath)
 	if err != nil {
 		return false, err
@@ -188,7 +140,7 @@ func (t *SaveCommand) archiveTasks(tasks []*task.Task, today time.Time, saveFold
 			p := path.Join(saveFolder, fileName)
 
 			query := NewSameDayQuery("complete", value, make([]query.Query, 0), make([]query.Query, 0))
-			t.appendFile(p, Ls(tasks, query))
+			t.appendFile(p, ls.Ls(tasks, query))
 			w.Write([]byte("append tasks to " + p + "\n"))
 		}
 	}
@@ -196,13 +148,13 @@ func (t *SaveCommand) archiveTasks(tasks []*task.Task, today time.Time, saveFold
 
 func (t *SaveCommand) saveToFile(tasks []*task.Task, saveFolder string) {
 	orQuery := make([]query.Query, 0)
-	orQuery = append(orQuery, NewNoKeyQuery("complete", make([]query.Query, 0), make([]query.Query, 0)))
+	orQuery = append(orQuery, query.NewNoKey("complete", make([]query.Query, 0), make([]query.Query, 0)))
 	query := NewSameDayQuery("complete", time.Now(), make([]query.Query, 0), orQuery)
-	t.writeFile(saveFolder, Ls(tasks, query)) // write today's complete or no complete task
+	t.writeFile(saveFolder, ls.Ls(tasks, query)) // write today's complete or no complete task
 }
 
-func (t *SaveCommand) Execute(option string, s *executor.State) (terminate bool) {
-	today, ok := ParseTime(time.Now().Format(dateFormat))
+func (t *SaveCommand) Execute(option string, s *command.State) (terminate bool) {
+	today, ok := util.ParseTime(time.Now().Format(util.DateFormat))
 	if !ok {
 		s.Config.Writer.Write([]byte("time format error"))
 		return false
@@ -217,116 +169,10 @@ func NewSaveCommand() *SaveCommand {
 	return &SaveCommand{}
 }
 
-type CompleteCommand struct {
-	MaxTaskID int
-}
-
-func (t *CompleteCommand) setNewRepeat(baseTime time.Time, task *task.Task) {
-	repeatString, ok := task.Attributes["repeat"]
-	if !ok {
-		return
-	}
-
-	// every 1 day
-	splits := strings.Split(repeatString, " ")
-	if len(splits) != 3 {
-		return
-	}
-
-	if splits[0] == "every" {
-		startString, ok := task.Attributes["start"]
-		if !ok {
-			return
-		}
-		baseTime, ok = ParseTime(startString)
-		if !ok {
-			return
-		}
-	}
-
-	newTime := AddDuration(baseTime, splits[1], splits[2])
-	task.Attributes["start"] = newTime.Format(dateTimeFormat)
-}
-
-func (c *CompleteCommand) completeAllSubTask(completeDate time.Time, t *task.Task) (repeatTask *task.Task, completeNum int) {
-	n := 0
-	newSubTasks := make([]*(task.Task), 0)
-
-	for _, subTask := range t.SubTasks {
-		repeatSubTask, num := c.completeAllSubTask(completeDate, subTask)
-		n += num
-		if repeatSubTask != nil {
-			newSubTasks = append(newSubTasks, repeatSubTask)
-		}
-	}
-
-	_, ok := t.Attributes["repeat"]
-	if len(newSubTasks) != 0 || ok {
-		repeatTask = t.Copy(c.MaxTaskID+1, false)
-		delete(repeatTask.Attributes, "postpone")
-		repeatTask.SubTasks = newSubTasks
-		c.setNewRepeat(completeDate, repeatTask)
-		c.MaxTaskID += 1
-	}
-
-	_, ok = t.Attributes["complete"]
-	if !ok {
-		// if not completed, set complete date
-		t.Attributes["complete"] = completeDate.Format(dateTimeFormat)
-		n += 1
-	}
-
-	return repeatTask, n
-}
-
-func (t *CompleteCommand) completeTask(taskID int, tasks []*task.Task) (completeTask *task.Task, newTasks []*task.Task, completeNum int) {
-	for _, task := range tasks {
-		if task.ID == taskID {
-			repeatTask, n := t.completeAllSubTask(time.Now(), task)
-			if repeatTask != nil {
-				tasks = append(tasks, repeatTask)
-			}
-
-			return task, tasks, n
-		}
-		completeTask, newTasks, n := t.completeTask(taskID, task.SubTasks)
-		if completeTask != nil {
-			task.SubTasks = newTasks
-			return completeTask, tasks, n
-		}
-	}
-	return nil, tasks, 0
-}
-
-func (t *CompleteCommand) Execute(option string, s *executor.State) (terminate bool) {
-	t.MaxTaskID = s.MaxTaskID
-
-	taskID, err := strconv.Atoi(option)
-	if err != nil {
-		s.Config.Writer.Write([]byte(err.Error()))
-		return false
-	}
-
-	task, newTasks, n := t.completeTask(taskID, s.Tasks)
-	s.Tasks = newTasks
-	s.MaxTaskID = t.MaxTaskID
-	if task == nil {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", taskID)))
-		return false
-	}
-
-	s.Config.Writer.Write([]byte(fmt.Sprintf("Complete %s and %d sub tasks\n", task.Name, n)))
-	return false
-}
-
-func NewCompleteCommand() *CompleteCommand {
-	return &CompleteCommand{}
-}
-
 type AddTaskCommand struct {
 }
 
-func (t *AddTaskCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *AddTaskCommand) Execute(option string, s *command.State) (terminate bool) {
 	nowTask, err := task.NewTask(option, s.MaxTaskID+1)
 	if err != nil {
 		s.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
@@ -363,7 +209,7 @@ func (t *AddSubTaskCommand) addSubTask(taskID int, addTask *task.Task, tasks []*
 	return nil, false
 }
 
-func (t *AddSubTaskCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (t *AddSubTaskCommand) Execute(option string, s *command.State) (terminate bool) {
 	match := subTaskRegexp.FindSubmatch([]byte(option))
 	if len(match) < 3 {
 		s.Config.Writer.Write([]byte(fmt.Sprintf("Create Subtask error: invalid format '%s'\n", option)))
@@ -392,112 +238,17 @@ func NewAddSubTaskCommand() *AddSubTaskCommand {
 	return &AddSubTaskCommand{}
 }
 
-type SetAttributeCommand struct {
-}
-
-func (c *SetAttributeCommand) setAttribute(task *task.Task, attributes map[string]string) {
-	for key, value := range attributes {
-		task.Attributes[key] = value
-	}
-}
-
-func (c *SetAttributeCommand) Execute(option string, s *executor.State) (terminate bool) {
-	optionMap := task.ParseOptions(" " + option)
-
-	id, err := GetIntAttribute("id", optionMap)
-	if err != nil {
-		s.Config.Writer.Write([]byte(err.Error()))
-		return false
-	}
-	delete(optionMap, "id")
-
-	_, task := task.GetTask(id, s.Tasks)
-	if task != nil {
-		c.setAttribute(task, optionMap)
-		s.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
-	} else {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
-	}
-	return false
-}
-
-func NewSetAttributeCommand() *SetAttributeCommand {
-	return &SetAttributeCommand{}
-}
-
 type StartCommand struct {
-	*SetAttributeCommand
+	*command.SetAttribute
 }
 
-func (c *StartCommand) Execute(option string, s *executor.State) (terminate bool) {
-	return c.SetAttributeCommand.Execute(option+" :start "+time.Now().Format(dateTimeFormat), s)
+func (c *StartCommand) Execute(option string, s *command.State) (terminate bool) {
+	return c.SetAttribute.Execute(option+" :start "+time.Now().Format(util.DateTimeFormat), s)
 }
 
 func NewStartCommand() *StartCommand {
 	return &StartCommand{
-		SetAttributeCommand: &SetAttributeCommand{},
-	}
-}
-
-// postpone :id 1 :postpone 5 hour
-type PostponeCommand struct {
-	*SetAttributeCommand
-}
-
-func (c *PostponeCommand) postpone(task *task.Task, optionMap map[string]string) error {
-	// get start time
-	startString, ok := task.Attributes["start"]
-	if !ok {
-		return errors.New(fmt.Sprint("task :id ", task.ID, " haven't start attribute, so postpone not work"))
-	}
-
-	_, ok = ParseTime(startString)
-	if !ok {
-		return errors.New(fmt.Sprint(startString, " is invalid format, so postpone not work"))
-	}
-
-	// :postpone 1 hour
-	postponeData := strings.Split(optionMap["postpone"], " ")
-	if len(postponeData) != 2 {
-		return errors.New(fmt.Sprint(optionMap["postpone"], " is invalid format"))
-	}
-
-	postponeTime := AddDuration(time.Now(), postponeData[0], postponeData[1])
-	optionMap["postpone"] = postponeTime.Format(dateTimeFormat)
-
-	c.setAttribute(task, optionMap)
-	return nil
-}
-
-func (c *PostponeCommand) Execute(option string, s *executor.State) (terminate bool) {
-	optionMap := task.ParseOptions(" " + option)
-
-	id, err := GetIntAttribute("id", optionMap)
-	if err != nil {
-		s.Config.Writer.Write([]byte(err.Error()))
-		return false
-	}
-	delete(optionMap, "id")
-
-	_, task := task.GetTask(id, s.Tasks)
-	if task == nil {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
-		return false
-	}
-
-	err = c.postpone(task, optionMap)
-	if err != nil {
-		fmt.Fprintln(s.Config.Writer, err)
-	} else {
-		s.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
-	}
-
-	return false
-}
-
-func NewPostponeCommand() *PostponeCommand {
-	return &PostponeCommand{
-		SetAttributeCommand: &SetAttributeCommand{},
+		SetAttribute: command.NewSetAttribute(),
 	}
 }
 
@@ -512,16 +263,16 @@ func (c *MoveCommand) updateTaskLevel(level int, t *task.Task) {
 	}
 }
 
-func (c *MoveCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *MoveCommand) Execute(option string, s *command.State) (terminate bool) {
 	m := task.ParseOptions(" " + option)
 
-	taskID, err := GetIntAttribute("from", m)
+	taskID, err := util.GetIntAttribute("from", m)
 	if err != nil {
 		s.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 
-	toID, err := GetIntAttribute("to", m)
+	toID, err := util.GetIntAttribute("to", m)
 	if err != nil {
 		s.Config.Writer.Write([]byte(err.Error()))
 		return false
@@ -569,11 +320,11 @@ func (c *OpenCommand) getUrl(task *task.Task) (string, error) {
 	return urlString, nil
 }
 
-func (c *OpenCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *OpenCommand) Execute(option string, s *command.State) (terminate bool) {
 	// There is no url in task:rss :id 8
 
 	optionMap := task.ParseOptions(" " + option)
-	id, err := GetIntAttribute("id", optionMap)
+	id, err := util.GetIntAttribute("id", optionMap)
 	if err != nil {
 		fmt.Fprintf(s.Config.Writer, "%s", err.Error())
 		return false
@@ -619,11 +370,11 @@ func (c *NiceCommand) fixEvernoteUrl(tasks []*task.Task) int {
 	return count
 }
 
-func (c *NiceCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *NiceCommand) Execute(option string, s *command.State) (terminate bool) {
 	var tasks []*task.Task
 
 	optionMap := task.ParseOptions(" " + option)
-	id, err := GetIntAttribute("id", optionMap)
+	id, err := util.GetIntAttribute("id", optionMap)
 	if err != nil {
 		// do all tasks
 		tasks = s.Tasks
@@ -649,7 +400,7 @@ func NewNiceCommand() *NiceCommand {
 type AliasCommand struct {
 }
 
-func (c *AliasCommand) Execute(option string, s *executor.State) (terminate bool) {
+func (c *AliasCommand) Execute(option string, s *command.State) (terminate bool) {
 	keyArray := make([]string, len(s.CommandAliases))
 	i := 0
 	for k := range s.CommandAliases {

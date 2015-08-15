@@ -4,24 +4,20 @@ import (
 	"fmt"
 	"strings"
 
+	"../command"
 	"../config"
 	"../task"
 )
 
 var optionSplit = " "
 
-// Command is command interface
-type Command interface {
-	Execute(option string, s *State) (terminate bool)
-}
-
 // Executor executor command
 type Executor struct {
-	S *State
+	S *command.State
 }
 
 // NewExecutor return Executor
-func NewExecutor(config *config.Config, commands map[string]Command) *Executor {
+func NewExecutor(config *config.Config, commands map[string]command.Command) *Executor {
 	aliases := make(map[string]string)
 
 	if config != nil {
@@ -30,7 +26,7 @@ func NewExecutor(config *config.Config, commands map[string]Command) *Executor {
 		}
 	}
 
-	s := &State{
+	s := &command.State{
 		Tasks:          make([]*task.Task, 0),
 		Config:         config,
 		Commands:       commands,

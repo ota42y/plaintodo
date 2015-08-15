@@ -3,23 +3,23 @@ package main
 import (
 	"os"
 
+	"./command"
 	"./config"
-	"./executor"
 )
 
 func main() {
-	cmds := make(map[string]executor.Command)
+	cmds := make(map[string]command.Command)
 	cmds["exit"] = NewExitCommand()
-	cmds["reload"] = NewReloadCommand()
+	cmds["reload"] = command.NewReload()
 	cmds["ls"] = NewLsCommand(os.Stdout)
 	cmds["lsall"] = NewLsAllCommand(os.Stdout)
 	cmds["save"] = NewSaveCommand()
-	cmds["complete"] = NewCompleteCommand()
+	cmds["complete"] = command.NewComplete()
 	cmds["task"] = NewAddTaskCommand()
 	cmds["subtask"] = NewAddSubTaskCommand()
-	cmds["set"] = NewSetAttributeCommand()
+	cmds["set"] = command.NewSetAttribute()
 	cmds["start"] = NewStartCommand()
-	cmds["postpone"] = NewPostponeCommand()
+	cmds["postpone"] = command.NewPostpone()
 	cmds["move"] = NewMoveCommand()
 	cmds["open"] = NewOpenCommand()
 	cmds["nice"] = NewNiceCommand()

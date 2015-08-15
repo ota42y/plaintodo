@@ -9,4 +9,6 @@ golint plaintodo/query
 golint plaintodo/config
 golint plaintodo/util
 golint plaintodo/executor
+golint plaintodo/command
+golint plaintodo/ls
 # golint palintodo

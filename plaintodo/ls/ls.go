@@ -1,27 +1,31 @@
-package main
+package ls
 
 import (
 	"strconv"
 	"time"
 
-	"./query"
-	"./task"
+	"../query"
+	"../task"
+	"../util"
 )
 
+// ShowTask is result of Ls function
+// If query select sub task, it's in the ShowTask.SubTasks
+// If query not select sub task, it's not in that but Task.SubTasks contain it.
 type ShowTask struct {
-	Task     *task.Task
+	Task     *task.Task // specific task
 	SubTasks []*ShowTask
 }
 
+// Ls return tasks which filter by query
 func Ls(tasks []*task.Task, q query.Query) []*ShowTask {
 	return filterRoot(tasks, q)
 }
 
 func filterRoot(tasks []*task.Task, q query.Query) []*ShowTask {
-	showTasks := make([]*ShowTask, 0)
-
+	var showTasks []*ShowTask
 	for _, task := range tasks {
-		showTask := filter(task, q)
+		showTask := Filter(task, q)
 		if showTask != nil {
 			showTasks = append(showTasks, showTask)
 		}
@@ -30,22 +34,24 @@ func filterRoot(tasks []*task.Task, q query.Query) []*ShowTask {
 	return showTasks
 }
 
-func filter(task *task.Task, query query.Query) *ShowTask {
-	subTasks := make([]*ShowTask, 0)
+// Filter filtering tasks by query
+// This should be private
+func Filter(task *task.Task, query query.Query) *ShowTask {
+	var subTasks []*ShowTask
 	for _, task := range task.SubTasks {
-		subTask := filter(task, query)
+		subTask := Filter(task, query)
 		if subTask != nil {
 			subTasks = append(subTasks, subTask)
 		}
 	}
 
 	// if SubTask exist, or query correct show parent task
-	is_show := true
+	isShow := true
 	if query != nil {
-		is_show = len(subTasks) != 0 || query.Check(task)
+		isShow = len(subTasks) != 0 || query.Check(task)
 	}
 
-	if is_show {
+	if isShow {
 		return &ShowTask{
 			Task:     task,
 			SubTasks: subTasks,
@@ -55,9 +61,9 @@ func filter(task *task.Task, query query.Query) *ShowTask {
 	return nil
 }
 
+// DeleteAllCompletedTasks delete all task which have complete attribute
 func DeleteAllCompletedTasks(showTasks []*ShowTask) []*ShowTask {
-	newSubTasks := make([]*ShowTask, 0)
-
+	var newSubTasks []*ShowTask
 	for _, task := range showTasks {
 		if deleteAllCompletedSubTasks(task) {
 			newSubTasks = append(newSubTasks, task)
@@ -67,7 +73,7 @@ func DeleteAllCompletedTasks(showTasks []*ShowTask) []*ShowTask {
 }
 func deleteAllCompletedSubTasks(task *ShowTask) bool {
 	// check all sub tasks
-	newSubTasks := make([]*ShowTask, 0)
+	var newSubTasks []*ShowTask
 	for _, subTask := range task.SubTasks {
 		if deleteAllCompletedSubTasks(subTask) {
 			newSubTasks = append(newSubTasks, subTask)
@@ -90,7 +96,7 @@ func deleteAllCompletedSubTasks(task *ShowTask) bool {
 	return true
 }
 
-// show all sub task in selected task
+// ShowAllChildSubTasks show all sub task in selected task
 func ShowAllChildSubTasks(showTasks []*ShowTask) {
 	for _, task := range showTasks {
 		showSubTasks(task)
@@ -104,7 +110,7 @@ func showSubTasks(task *ShowTask) {
 	}
 
 	// check all sub tasks
-	newSubTasks := make([]*ShowTask, 0)
+	var newSubTasks []*ShowTask
 	for _, subTask := range task.SubTasks {
 		showSubTasks(subTask)
 		newSubTasks = append(newSubTasks, subTask)
@@ -124,7 +130,7 @@ func getQuery(queryString string) (query.Query, map[string]string) {
 			{
 				num, err := strconv.Atoi(value)
 				if err == nil {
-					parent.And = append(parent.And, NewMaxLevelQuery(num, make([]query.Query, 0), make([]query.Query, 0)))
+					parent.And = append(parent.And, query.NewMaxLevel(num, make([]query.Query, 0), make([]query.Query, 0)))
 				}
 			}
 
@@ -132,18 +138,18 @@ func getQuery(queryString string) (query.Query, map[string]string) {
 			{
 				num, err := strconv.Atoi(value)
 				if err == nil {
-					parent.And = append(parent.And, NewIDQuery(num, make([]query.Query, 0), make([]query.Query, 0)))
+					parent.And = append(parent.And, query.NewID(num, make([]query.Query, 0), make([]query.Query, 0)))
 				}
 			}
 
 		case key == "overdue":
 			{
-				t, ok := ParseTime(value)
+				t, ok := util.ParseTime(value)
 				if ok {
-					noPostpone := NewNoKeyQuery("postpone", make([]query.Query, 0), make([]query.Query, 0))
-					noPostpone.And = append(noPostpone.And, NewBeforeDateQuery("start", t, make([]query.Query, 0), make([]query.Query, 0)))
+					noPostpone := query.NewNoKey("postpone", make([]query.Query, 0), make([]query.Query, 0))
+					noPostpone.And = append(noPostpone.And, query.NewBeforeDate("start", t, make([]query.Query, 0), make([]query.Query, 0)))
 
-					overduePostpone := NewBeforeDateQuery("postpone", t, make([]query.Query, 0), make([]query.Query, 0))
+					overduePostpone := query.NewBeforeDate("postpone", t, make([]query.Query, 0), make([]query.Query, 0))
 					overduePostpone.Or = append(overduePostpone.Or, noPostpone)
 
 					parent.And = append(parent.And, overduePostpone)
@@ -155,16 +161,17 @@ func getQuery(queryString string) (query.Query, map[string]string) {
 	// if not complete show
 	_, isCompleteShow := queryMap["complete"]
 	if !isCompleteShow {
-		parent.And = append(parent.And, NewNoKeyQuery("complete", make([]query.Query, 0), make([]query.Query, 0)))
+		parent.And = append(parent.And, query.NewNoKey("complete", make([]query.Query, 0), make([]query.Query, 0)))
 	}
 
 	return parent, queryMap
 }
 
+// ExecuteQuery execute query and return tasks
 func ExecuteQuery(queryString string, tasks []*task.Task) []*ShowTask {
 	if queryString == "" {
 		// default query
-		queryString = " :overdue " + time.Now().Format(dateTimeFormat)
+		queryString = " :overdue " + time.Now().Format(util.DateTimeFormat)
 	}
 
 	// GetCommand expected ' :key value :key value', but option give ':key value :key value'

@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"./command"
 	"./config"
 	"./executor"
 )
@@ -15,7 +16,7 @@ type Liner struct {
 	e *executor.Executor
 }
 
-func NewLiner(config *config.Config, commands map[string]executor.Command) *Liner {
+func NewLiner(config *config.Config, commands map[string]command.Command) *Liner {
 	s := liner.NewLiner()
 	e := executor.NewExecutor(config, commands)
 	return &Liner{
