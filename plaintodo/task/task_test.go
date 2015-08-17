@@ -6,7 +6,7 @@ import (
 
 func ReadTestTasks() []*Task {
 	filename := "../test_task.txt"
-	tasks, _ := ReadTasks(filename)
+	tasks, _, _ := ReadTasks(filename, 0)
 	return tasks
 }
 

@@ -1,16 +1,24 @@
 package config
 
 import (
-	"github.com/BurntSushi/toml"
 	"io"
+	"path"
+
+	"github.com/BurntSushi/toml"
 )
 
 // Config is config data struct
 type Config struct {
 	Archive ArchiveConfig
-	Paths   PathConfig
+	Task    TaskConfig
+	Liner   LinerConfig
 	Writer  io.Writer
 	Command CommandConfig
+}
+
+// LinerConfig is liner^s config
+type LinerConfig struct {
+	History string
 }
 
 // Alias is command alias data in config file
@@ -24,10 +32,20 @@ type CommandConfig struct {
 	Aliases []Alias
 }
 
-// PathConfig is path setting in config file
-type PathConfig struct {
-	Task    string
-	History string
+// TaskConfig is task setting file
+type TaskConfig struct {
+	TaskFolder      string
+	DefaultFilename string
+}
+
+// GetDefaultTaskFilepath return default task filepath set in config.toml
+func (c TaskConfig) GetDefaultTaskFilepath() string {
+	return c.GetTaskFilepath(c.DefaultFilename)
+}
+
+// GetTaskFilepath return selected task filepath in task folder
+func (c TaskConfig) GetTaskFilepath(filename string) string {
+	return path.Join(c.TaskFolder, filename)
 }
 
 // ArchiveConfig is Archive config in config file

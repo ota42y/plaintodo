@@ -36,10 +36,10 @@ func filterRoot(tasks []*task.Task, q query.Query) []*ShowTask {
 
 // Filter filtering tasks by query
 // This should be private
-func Filter(task *task.Task, query query.Query) *ShowTask {
+func Filter(task *task.Task, q query.Query) *ShowTask {
 	var subTasks []*ShowTask
 	for _, task := range task.SubTasks {
-		subTask := Filter(task, query)
+		subTask := Filter(task, q)
 		if subTask != nil {
 			subTasks = append(subTasks, subTask)
 		}
@@ -47,8 +47,8 @@ func Filter(task *task.Task, query query.Query) *ShowTask {
 
 	// if SubTask exist, or query correct show parent task
 	isShow := true
-	if query != nil {
-		isShow = len(subTasks) != 0 || query.Check(task)
+	if q != nil {
+		isShow = len(subTasks) != 0 || q.Check(task)
 	}
 
 	if isShow {
@@ -120,7 +120,8 @@ func showSubTasks(task *ShowTask) {
 	return
 }
 
-func getQuery(queryString string) (query.Query, map[string]string) {
+// GetQuery parse string to query
+func GetQuery(queryString string) (query.Query, map[string]string) {
 	queryMap := task.ParseOptions(queryString)
 	parent := query.NewBase(make([]query.Query, 0), make([]query.Query, 0))
 
@@ -176,7 +177,7 @@ func ExecuteQuery(queryString string, tasks []*task.Task) []*ShowTask {
 
 	// GetCommand expected ' :key value :key value', but option give ':key value :key value'
 	// so add space to first
-	query, queryMap := getQuery(" " + queryString)
+	query, queryMap := GetQuery(" " + queryString)
 	showTasks := Ls(tasks, query)
 
 	_, ok := queryMap["no-sub-tasks"]

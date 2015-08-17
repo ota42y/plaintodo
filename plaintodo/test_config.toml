@@ -1,5 +1,9 @@
-[paths]
-task = "./test_task.txt"
+[task]
+taskFolder = "."
+defaultFilename = "test_task.txt"
+
+[liner]
+history = "./history.txt"
 
 [archive]
 directory = "archives"

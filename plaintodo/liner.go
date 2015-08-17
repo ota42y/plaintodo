@@ -26,7 +26,7 @@ func NewLiner(config *config.Config, commands map[string]command.Command) *Liner
 }
 
 func (l *Liner) Start() {
-	f, err := os.Open(l.e.S.Config.Paths.History)
+	f, err := os.Open(l.e.S.Config.Liner.History)
 	if err == nil {
 		n, _ := l.ReadHistory(f)
 		fmt.Fprintln(l.e.S.Config.Writer, "load", n, "history")
@@ -49,7 +49,7 @@ func (l *Liner) Start() {
 		}
 	}
 
-	f, err = os.Create(l.e.S.Config.Paths.History)
+	f, err = os.Create(l.e.S.Config.Liner.History)
 	if err == nil {
 		fmt.Fprintln(l.e.S.Config.Writer, "write history")
 		l.WriteHistory(f)

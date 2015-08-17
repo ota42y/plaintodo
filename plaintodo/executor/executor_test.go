@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"../command"
 	"../config"
 )
 
@@ -14,7 +15,7 @@ type CommandTest struct {
 	Terminate bool
 }
 
-func (t *CommandTest) Execute(option string, s *State) (terminate bool) {
+func (t *CommandTest) Execute(option string, s *command.State) (terminate bool) {
 	t.Called = true
 
 	if option != t.Option {
@@ -33,7 +34,7 @@ func TestAutomatonWithOption(t *testing.T) {
 		Terminate: false,
 	}
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]command.Command)
 	cmds["test"] = cmd
 
 	buf := &bytes.Buffer{}
@@ -69,7 +70,7 @@ func TestAutomaton(t *testing.T) {
 		Terminate: true,
 	}
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]command.Command)
 	cmds["test"] = cmd
 
 	e := NewExecutor(nil, cmds)
@@ -95,7 +96,7 @@ func TestAutomatonWithInvalidCommand(t *testing.T) {
 		Terminate: true,
 	}
 
-	cmds := make(map[string]Command)
+	cmds := make(map[string]command.Command)
 	cmds["test"] = cmd
 
 	buf := &bytes.Buffer{}

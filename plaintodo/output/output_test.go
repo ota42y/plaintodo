@@ -1,16 +1,16 @@
-package main
+package output
 
 import (
 	"bytes"
 	"strings"
 	"testing"
 
-	"./ls"
-	"./util"
+	"../ls"
+	"../util"
 )
 
 func TestPrint(t *testing.T) {
-	tasks := util.ReadTestTasks()
+	tasks := util.ReadTestTaskRelativePath("..")
 	showTasks := ls.Ls(tasks, nil)
 
 	// show first task
@@ -48,7 +48,7 @@ func TestPrint(t *testing.T) {
 }
 
 func TestAllTask(t *testing.T) {
-	tasks := util.ReadTestTasks()
+	tasks := util.ReadTestTaskRelativePath("..")
 	showTasks := ls.Ls(tasks, nil)
 
 	// show all task

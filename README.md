@@ -42,6 +42,18 @@ task = <space><task name><attributes>
 ### :url
   related url
 
+### :subTaskFile
+  sub task file.
+  If this option set in a task, read task from specified file and set as a sub tasks 
+   
+```
+// ./tasks/home_tasks.txt have 3 tasks
+
+home :subTaskFile ./tasks/home_tasks.txt
+  task 1 in home_tasks.txt
+  task 2 in home_tasks.txt
+  task 3 in home_tasks.txt
+```
 
 ## Usage
 

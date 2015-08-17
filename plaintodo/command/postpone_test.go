@@ -1,7 +1,6 @@
 package command
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -12,11 +11,7 @@ import (
 func TestPostponeCommand(t *testing.T) {
 	cmd := NewPostpone()
 
-	config := util.ReadTestConfigRelativePath("../")
-
-	buf := &bytes.Buffer{}
-	config.Writer = buf
-
+	config, buf := util.ReadTestConfigRelativePath("../")
 	tasks := util.ReadTestTaskRelativePath("../")
 
 	s := &State{

@@ -11,4 +11,5 @@ golint plaintodo/util
 golint plaintodo/executor
 golint plaintodo/command
 golint plaintodo/ls
+golint plaintodo/output
 # golint palintodo
