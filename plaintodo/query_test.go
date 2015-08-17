@@ -221,7 +221,7 @@ func TestSameDayQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	q := NewSameDayQuery(key, value, make([]query.Query, 0), make([]query.Query, 0))
+	q := query.NewSameDay(key, value, make([]query.Query, 0), make([]query.Query, 0))
 	showTasks := ls.Ls(tasks, q)
 
 	if len(showTasks) == 0 {

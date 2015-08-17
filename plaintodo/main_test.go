@@ -8,11 +8,11 @@ import (
 )
 
 func TestReadConfig(t *testing.T) {
-	config := util.ReadTestConfig()
+	config, _ := util.ReadTestConfig()
 
-	taskPath := "./test_task.txt"
-	if config.Paths.Task != taskPath {
-		t.Errorf("config.Paths.Task shuld be %s, but %s", taskPath, config.Paths.Task)
+	taskPath := "test_task.txt"
+	if config.Task.DefaultFilename != taskPath {
+		t.Errorf("config.Paths.Task shuld be %s, but %s", taskPath, config.Task.DefaultFilename)
 		t.FailNow()
 	}
 }

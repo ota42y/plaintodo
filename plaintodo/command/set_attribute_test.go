@@ -1,7 +1,6 @@
 package command
 
 import (
-	"bytes"
 	"testing"
 
 	"../util"
@@ -11,10 +10,7 @@ func TestSetAttributeCommand(t *testing.T) {
 	cmd := NewSetAttribute()
 	url := "http://example.com"
 
-	config := util.ReadTestConfigRelativePath("../")
-
-	buf := &bytes.Buffer{}
-	config.Writer = buf
+	config, buf := util.ReadTestConfigRelativePath("../")
 
 	tasks := util.ReadTestTaskRelativePath("../")
 

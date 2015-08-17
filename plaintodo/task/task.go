@@ -257,9 +257,9 @@ func createSubTasks(level int, nowTaskID int, s *bufio.Scanner) (subTasks []*Tas
 	return subTasks, nowTask, maxTaskID, nil
 }
 
-func createTasks(s *bufio.Scanner) ([]*Task, int) {
-	taskID := 0
-	topLevelTasks, nextTask, maxTaskID, err := createSubTasks(0, taskID, s)
+// CreateTasks is create task from bufio.Scanner
+func CreateTasks(s *bufio.Scanner, nowTaskID int) ([]*Task, int) {
+	topLevelTasks, nextTask, maxTaskID, err := createSubTasks(0, nowTaskID, s)
 
 	if err != nil {
 		panic(err)
@@ -273,23 +273,23 @@ func createTasks(s *bufio.Scanner) ([]*Task, int) {
 }
 
 // ReadTasks read tasks from file.
-func ReadTasks(filename string) ([]*Task, int) {
+func ReadTasks(filename string, nowTaskID int) ([]*Task, int, error) {
 	var fp *os.File
 	var err error
 
 	fp, err = os.Open(filename)
 	if err != nil {
-		panic(err)
+		return make([]*Task, 0), nowTaskID, err
 	}
 	defer fp.Close()
 
 	scanner := bufio.NewScanner(fp)
-	tasks, maxTaskID := createTasks(scanner)
+	tasks, maxTaskID := CreateTasks(scanner, nowTaskID)
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		return make([]*Task, 0), nowTaskID, err
 	}
 
-	return tasks, maxTaskID
+	return tasks, maxTaskID, nil
 }
 
 // GetTask return specific id's task from task array

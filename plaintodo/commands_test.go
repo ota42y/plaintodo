@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	. "github.com/smartystreets/goconvey/convey"
 	"strings"
 	"testing"
 	"time"
@@ -44,39 +43,16 @@ func TestExitCommand(t *testing.T) {
 	}
 }
 
-func TestReloadCommand(t *testing.T) {
-	cmd := command.NewReload()
-
-	cmds := make(map[string]command.Command)
-	cmds["reload"] = cmd
-	a := executor.NewExecutor(util.ReadTestConfig(), cmds)
-
-	terminate := a.Execute("reload")
-	if terminate {
-		t.Errorf("ReloadCommand.Execute shud be return false")
-		t.FailNow()
-	}
-
-	if len(a.S.Tasks) == 0 {
-		t.Errorf("Task num shuldn't be 0")
-		t.FailNow()
-	}
-
-	id := a.S.Tasks[1].SubTasks[0].ID
-	if a.S.MaxTaskID != id {
-		t.Errorf("Save max task id %d, but %d", id, a.S.MaxTaskID)
-		t.FailNow()
-	}
-}
-
 func TestLsCommand(t *testing.T) {
 	buf := &bytes.Buffer{}
 	cmd := NewLsCommand(buf)
 
+	config, _ := util.ReadTestConfig()
+
 	cmds := make(map[string]command.Command)
 	cmds["ls"] = cmd
 	cmds["reload"] = command.NewReload()
-	a := executor.NewExecutor(util.ReadTestConfig(), cmds)
+	a := executor.NewExecutor(config, cmds)
 
 	a.Execute("reload")
 	terminate := a.Execute("ls")
@@ -103,7 +79,9 @@ func TestLsAllCommand(t *testing.T) {
 	cmds["ls"] = cmd2
 
 	cmds["reload"] = command.NewReload()
-	a := executor.NewExecutor(util.ReadTestConfig(), cmds)
+
+	config, _ := util.ReadTestConfig()
+	a := executor.NewExecutor(config, cmds)
 
 	a.Execute("reload")
 	terminate := a.Execute("lsall")
@@ -133,12 +111,10 @@ func TestCompleteCommandError(t *testing.T) {
 	cmds["complete"] = command.NewComplete()
 
 	cmds["reload"] = command.NewReload()
-	config := util.ReadTestConfig()
+	config, buf := util.ReadTestConfig()
 	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
-
-	buf := &bytes.Buffer{}
-	config.Writer = buf
+	buf.Reset()
 
 	terminate := a.Execute(fmt.Sprintf("complete %da", 1))
 	if terminate {
@@ -171,18 +147,17 @@ func TestCompleteCommand(t *testing.T) {
 
 	cmds["complete"] = command.NewComplete()
 	cmds["reload"] = command.NewReload()
-	config := util.ReadTestConfig()
+	config, buf := util.ReadTestConfig()
+
 	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
+	buf.Reset()
 	task := a.S.Tasks[0]
 
 	if task.Attributes["complete"] != "" {
 		t.Errorf("Task[\"complete\"} isn't blank")
 		t.FailNow()
 	}
-
-	buf := &bytes.Buffer{}
-	config.Writer = buf
 
 	terminate := a.Execute(fmt.Sprintf("complete %d", task.ID))
 	if terminate {
@@ -204,44 +179,6 @@ func TestCompleteCommand(t *testing.T) {
 	}
 }
 
-func TestGetCompleteDayList(t *testing.T) {
-	tasks := util.ReadTestTasks()
-	cmd := NewSaveCommand()
-
-	testTimeList := [...]string{"2015-01-31 10:42", "2015-01-29", "2015-01-30 10:42", "2015-01-30"}
-	tasks[0].Attributes["complete"] = testTimeList[0]
-	tasks[0].SubTasks[0].Attributes["complete"] = testTimeList[1]
-	tasks[0].SubTasks[1].Attributes["complete"] = testTimeList[2]
-	tasks[0].SubTasks[1].SubTasks[0].Attributes["complete"] = testTimeList[3]
-
-	correctTimeList := make([]time.Time, 3)
-	parseList := [...]int{1, 2, 0}
-	for index, value := range parseList {
-		timeData, ok := util.ParseTime(testTimeList[value])
-		if !ok {
-			t.Errorf("parse error %s", testTimeList[value])
-			t.FailNow()
-		}
-		correctTimeList[index] = timeData
-	}
-
-	timeList := cmd.getCompleteDayList(tasks)
-	if len(timeList) != len(correctTimeList) {
-		t.Errorf("shuld return %d items, but %d items %v", len(correctTimeList), len(timeList), timeList)
-		t.FailNow()
-	}
-
-	for index, item := range correctTimeList {
-		year, month, day := item.Date()
-		y, m, d := timeList[index].Date()
-
-		if (year != y) || (month != m) || (day != d) {
-			t.Errorf("shuld return %v but %v", item, timeList[index])
-			t.FailNow()
-		}
-	}
-}
-
 func TestAddTaskCommand(t *testing.T) {
 	taskName := "create new task"
 	taskStart := "2015-02-01"
@@ -250,10 +187,7 @@ func TestAddTaskCommand(t *testing.T) {
 	cmds["task"] = NewAddTaskCommand()
 	cmds["reload"] = command.NewReload()
 
-	config := util.ReadTestConfig()
-	buf := &bytes.Buffer{}
-	config.Writer = buf
-
+	config, buf := util.ReadTestConfig()
 	a := executor.NewExecutor(config, cmds)
 
 	input := "task " + taskName + " :start " + taskStart
@@ -320,12 +254,10 @@ func TestAddSubTaskCommand(t *testing.T) {
 	cmds["subtask"] = NewAddSubTaskCommand()
 	cmds["reload"] = command.NewReload()
 
-	config := util.ReadTestConfig()
+	config, buf := util.ReadTestConfig()
 	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
-
-	buf := &bytes.Buffer{}
-	config.Writer = buf
+	buf.Reset()
 
 	taskID := a.S.MaxTaskID
 
@@ -420,12 +352,10 @@ func TestStartCommand(t *testing.T) {
 	cmds := make(map[string]command.Command)
 	cmds["reload"] = command.NewReload()
 	cmds["start"] = cmd
-	config := util.ReadTestConfig()
+	config, _ := util.ReadTestConfig()
 	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
 
-	buf := &bytes.Buffer{}
-	config.Writer = buf
 	now := time.Now()
 
 	task := a.S.Tasks[0].SubTasks[1].SubTasks[0]
@@ -469,12 +399,10 @@ func TestMoveCommand(t *testing.T) {
 	cmds := make(map[string]command.Command)
 	cmds["reload"] = command.NewReload()
 	cmds["move"] = cmd
-	config := util.ReadTestConfig()
+	config, buf := util.ReadTestConfig()
 	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
-
-	buf := &bytes.Buffer{}
-	config.Writer = buf
+	buf.Reset()
 
 	fromTask, moveTask := task.GetTask(4, a.S.Tasks)
 	_, toTask := task.GetTask(8, a.S.Tasks)
@@ -610,12 +538,10 @@ func TestOpenCommand(t *testing.T) {
 	cmds := make(map[string]command.Command)
 	cmds["reload"] = command.NewReload()
 	cmds["open"] = cmd
-	config := util.ReadTestConfig()
+	config, buf := util.ReadTestConfig()
 	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
-
-	buf := &bytes.Buffer{}
-	config.Writer = buf
+	buf.Reset()
 
 	a.Execute("open :id 8")
 	_, tk := task.GetTask(8, a.S.Tasks)
@@ -674,12 +600,9 @@ func TestNiceCommand(t *testing.T) {
 	cmds["reload"] = command.NewReload()
 	cmds["task"] = NewAddTaskCommand()
 	cmds["nice"] = cmd
-	config := util.ReadTestConfig()
+	config, buf := util.ReadTestConfig()
 	a := executor.NewExecutor(config, cmds)
 	a.Execute("reload")
-
-	buf := &bytes.Buffer{}
-	config.Writer = buf
 
 	evernoteUrl := "https://www.evernote.com/shard/s1/nl/111111/abfdef-ght1234567890"
 	a.Execute("task test :url " + evernoteUrl)
@@ -762,11 +685,8 @@ func (t *CommandTest) Execute(option string, s *command.State) (terminate bool) 
 func TestAliasCommand(t *testing.T) {
 	cmds := make(map[string]command.Command)
 	cmds["alias"] = NewAliasCommand()
-	config := util.ReadTestConfig()
+	config, buf := util.ReadTestConfig()
 	a := executor.NewExecutor(config, cmds)
-
-	buf := &bytes.Buffer{}
-	config.Writer = buf
 
 	terminate := a.Execute("alias")
 
@@ -811,22 +731,4 @@ func TestAliasCommand(t *testing.T) {
 		t.FailNow()
 	}
 	buf.Reset()
-}
-
-func TestSaveCommand(t *testing.T) {
-	Convey("correct", t, func() {
-		Convey("save tasks", func() {
-			cmd := NewSaveCommand()
-			emptyTasks := make([]*task.Task, 0)
-			cmd.saveToFile(emptyTasks, "../result/savetest.txt")
-
-			tasks := util.ReadTestTasks()
-			tasks[0].SubTasks = emptyTasks
-			cmd.saveToFile(tasks, "../result/savetest.txt")
-
-			loadTasks, _ := task.ReadTasks("../result/savetest.txt")
-			So(len(loadTasks), ShouldEqual, len(tasks))
-			So(len(loadTasks[0].SubTasks), ShouldEqual, len(tasks[0].SubTasks))
-		})
-	})
 }

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"github.com/skratchdot/open-golang/open"
 	"io"
-	"os"
-	"path"
 	"regexp"
 	"sort"
 	"strconv"
@@ -14,24 +12,10 @@ import (
 
 	"./command"
 	"./ls"
-	"./query"
+	"./output"
 	"./task"
 	"./util"
 )
-
-type timeList []time.Time
-
-func (l timeList) Len() int {
-	return len(l)
-}
-
-func (l timeList) Less(i, j int) bool {
-	return l[i].Before(l[j])
-}
-
-func (l timeList) Swap(i, j int) {
-	l[i], l[j] = l[j], l[i]
-}
 
 type ExitCommand struct {
 }
@@ -49,7 +33,7 @@ type LsCommand struct {
 }
 
 func (t *LsCommand) Execute(option string, s *command.State) (terminate bool) {
-	Output(t.w, ls.ExecuteQuery(option, s.Tasks), true)
+	output.Output(t.w, ls.ExecuteQuery(option, s.Tasks), true)
 	return false
 }
 
@@ -65,7 +49,7 @@ type LsAllCommand struct {
 
 func (t *LsAllCommand) Execute(option string, s *command.State) (terminate bool) {
 	showTasks := ls.Ls(s.Tasks, nil)
-	Output(t.w, showTasks, true)
+	output.Output(t.w, showTasks, true)
 	return false
 }
 
@@ -73,100 +57,6 @@ func NewLsAllCommand(w io.Writer) *LsAllCommand {
 	return &LsAllCommand{
 		w: w,
 	}
-}
-
-type SaveCommand struct {
-}
-
-func (t *SaveCommand) collectCompleteDay(tasks []*task.Task, times *map[string]bool) {
-	for _, task := range tasks {
-		completeDateString, ok := task.Attributes["complete"]
-		if ok {
-			t, ok := util.ParseTime(completeDateString)
-			if ok {
-				str := t.Format(util.DateFormat)
-				(*times)[str] = true
-			}
-		}
-
-		t.collectCompleteDay(task.SubTasks, times)
-	}
-}
-
-func (t *SaveCommand) getCompleteDayList(tasks []*task.Task) []time.Time {
-	allTimes := make(map[string]bool)
-	t.collectCompleteDay(tasks, &allTimes)
-
-	times := make(timeList, 0)
-	for key, _ := range allTimes {
-		t, ok := util.ParseTime(key)
-		if ok {
-			times = append(times, t)
-		}
-	}
-
-	sort.Sort(times)
-	return times
-}
-
-func (t *SaveCommand) appendFile(filePath string, tasks []*ls.ShowTask) (terminate bool, err error) {
-	fo, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
-	if err != nil {
-		return false, err
-	}
-	defer fo.Close()
-
-	Output(fo, tasks, false)
-	return true, nil
-}
-
-func (t *SaveCommand) writeFile(filePath string, tasks []*ls.ShowTask) (terminate bool, err error) {
-	fo, err := os.Create(filePath)
-	if err != nil {
-		return false, err
-	}
-	defer fo.Close()
-
-	Output(fo, tasks, false)
-	return true, nil
-}
-
-func (t *SaveCommand) archiveTasks(tasks []*task.Task, today time.Time, saveFolder string, filenameFormat string, w io.Writer) {
-	// save old task to task file
-	times := t.getCompleteDayList(tasks)
-	for _, value := range times {
-		if value != today {
-			fileName := value.Format(filenameFormat) + ".txt"
-			p := path.Join(saveFolder, fileName)
-
-			query := NewSameDayQuery("complete", value, make([]query.Query, 0), make([]query.Query, 0))
-			t.appendFile(p, ls.Ls(tasks, query))
-			w.Write([]byte("append tasks to " + p + "\n"))
-		}
-	}
-}
-
-func (t *SaveCommand) saveToFile(tasks []*task.Task, saveFolder string) {
-	orQuery := make([]query.Query, 0)
-	orQuery = append(orQuery, query.NewNoKey("complete", make([]query.Query, 0), make([]query.Query, 0)))
-	query := NewSameDayQuery("complete", time.Now(), make([]query.Query, 0), orQuery)
-	t.writeFile(saveFolder, ls.Ls(tasks, query)) // write today's complete or no complete task
-}
-
-func (t *SaveCommand) Execute(option string, s *command.State) (terminate bool) {
-	today, ok := util.ParseTime(time.Now().Format(util.DateFormat))
-	if !ok {
-		s.Config.Writer.Write([]byte("time format error"))
-		return false
-	}
-
-	t.archiveTasks(s.Tasks, today, s.Config.Archive.Directory, s.Config.Archive.NameFormat, s.Config.Writer)
-	t.saveToFile(s.Tasks, s.Config.Paths.Task)
-	return false
-}
-
-func NewSaveCommand() *SaveCommand {
-	return &SaveCommand{}
 }
 
 type AddTaskCommand struct {
