@@ -14,6 +14,7 @@ func main() {
 	cmds["ls"] = NewLsCommand(os.Stdout)
 	cmds["lsall"] = NewLsAllCommand(os.Stdout)
 	cmds["save"] = command.NewSave()
+	cmds["archive"] = command.NewArchive()
 	cmds["complete"] = command.NewComplete()
 	cmds["task"] = NewAddTaskCommand()
 	cmds["subtask"] = NewAddSubTaskCommand()
