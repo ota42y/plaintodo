@@ -2,7 +2,6 @@ package command
 
 import (
 	"os"
-	"time"
 
 	"../ls"
 	"../output"
@@ -50,9 +49,7 @@ func (s *Save) addTaskToSaveTask(tasks []*ls.ShowTask, nowFilename string, list 
 }
 
 func (s *Save) getSaveTaskList(state *State) *saveList {
-	var orQuery []query.Query
-	orQuery = append(orQuery, query.NewNoKey("complete", make([]query.Query, 0), make([]query.Query, 0)))
-	q := query.NewSameDay("complete", time.Now(), make([]query.Query, 0), orQuery)
+	q := query.NewNoKey("complete", make([]query.Query, 0), make([]query.Query, 0))
 	showTasks := ls.Ls(state.Tasks, q)
 
 	var list saveList
