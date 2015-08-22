@@ -86,7 +86,7 @@ func (a *Archive) archiveTasks(s *State) {
 
 		query := query.NewSameDay("complete", value, make([]query.Query, 0), make([]query.Query, 0))
 		a.appendFile(p, ls.Ls(s.Tasks, query))
-		fmt.Fprint(s.Config.Writer, "append tasks to %s\n", p)
+		fmt.Fprintf(s.Config.Writer, "append tasks to %s\n", p)
 	}
 }
 

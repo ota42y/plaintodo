@@ -204,13 +204,65 @@ rss :id 8
 ```
 
 #### save
-Save tasks and reload.
-If a task which completed yesterday or before, it archive other file.
+Save tasks.
+This command disable by default.
+
+This is very dangerous, use update command.
+Because it save not completed tasks only.
+We well change to save all task.
 
 ```
 > complete 5
 > save
 save hit
+append tasks to archives/2015-02-01.txt
+> lsall
+lsall hit
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :start 2015-01-31 :important
+    add music to player :id 3 :start 2015-01-30
+  buy items :id 4
+    buy ultra orange :id 5
+    buy king blade :id 6
+
+rss :id 7
+  my site :id 8 :start 2015-01-31 :important :repeat every 1 day :url http://ota42y.com
+```
+
+### archive
+Archive task.
+If a task which completed, it archive other file.
+This command disable by default.
+
+This command not change task list.
+So, when this command execute, execute save command by after.
+But, it^s not good, update command will archive and save, so use this.
+
+```
+> complete 5
+> archive
+archive hit
+append tasks to archives/2015-02-01.txt
+> lsall
+lsall hit
+go to SSA :id 1 :start 2015-02-01
+  create a set list :id 2 :start 2015-01-31 :important
+    add music to player :id 3 :start 2015-01-30
+  buy items :id 4
+    buy battery :id 5 :complete 2015-02-01 00:00
+    buy ultra orange :id 6
+    buy king blade :id 7
+
+rss :id 8
+  my site :id 9 :start 2015-01-31 :important :repeat every 1 day :url http://ota42y.com
+```
+
+### update
+Archive, save and reload tasks.
+```
+> complete 5
+> update
+update hit
 append tasks to archives/2015-02-01.txt
 > lsall
 lsall hit
