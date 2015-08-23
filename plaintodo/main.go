@@ -24,7 +24,7 @@ func main() {
 	cmds["postpone"] = command.NewPostpone()
 	cmds["move"] = NewMoveCommand()
 	cmds["open"] = NewOpenCommand()
-	cmds["nice"] = NewNiceCommand()
+	cmds["nice"] = command.NewNice()
 	cmds["alias"] = NewAliasCommand()
 
 	c := config.ReadConfig("config.toml")

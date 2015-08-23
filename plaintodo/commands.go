@@ -242,51 +242,6 @@ func NewOpenCommand() *OpenCommand {
 	return &OpenCommand{}
 }
 
-var evernoteRegexp, _ = regexp.Compile("^https://www.evernote.com/shard/(.+)/nl/(.+)/(.+)/?")
-
-type NiceCommand struct {
-}
-
-func (c *NiceCommand) fixEvernoteUrl(tasks []*task.Task) int {
-	count := 0
-	for _, task := range tasks {
-		match := evernoteRegexp.FindSubmatch([]byte(task.Attributes["url"]))
-		if len(match) == 4 {
-			task.Attributes["url"] = fmt.Sprintf("evernote:///view/%s/%s/%s/%s/", match[2], match[1], match[3], match[3])
-			count += 1
-		}
-		count += c.fixEvernoteUrl(task.SubTasks)
-	}
-	return count
-}
-
-func (c *NiceCommand) Execute(option string, s *command.State) (terminate bool) {
-	var tasks []*task.Task
-
-	optionMap := task.ParseOptions(" " + option)
-	id, err := util.GetIntAttribute("id", optionMap)
-	if err != nil {
-		// do all tasks
-		tasks = s.Tasks
-	} else {
-		// do selected task
-		_, t := task.GetTask(id, s.Tasks)
-		tasks = make([]*task.Task, 1)
-		tasks[0] = t
-	}
-
-	fmt.Fprintf(s.Config.Writer, "Done nice\n")
-
-	num := c.fixEvernoteUrl(tasks)
-	fmt.Fprintf(s.Config.Writer, "evernote url change %d tasks\n", num)
-
-	return false
-}
-
-func NewNiceCommand() *NiceCommand {
-	return &NiceCommand{}
-}
-
 type AliasCommand struct {
 }
 
