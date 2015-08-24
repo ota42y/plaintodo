@@ -73,7 +73,7 @@ func (a *Archive) appendFile(filePath string, tasks []*ls.ShowTask) (terminate b
 	}
 	defer fo.Close()
 
-	output.Output(fo, tasks, false)
+	output.Output(fo, tasks, false, 0)
 	return true, nil
 }
 

@@ -89,7 +89,12 @@ func (t *Task) Copy(taskID int, copySubTask bool) *Task {
 }
 
 func (t *Task) String(showID bool) string {
-	spaces := strings.Repeat(" ", t.Level*spaceNum)
+	return t.StringWithTaskLevel(showID, t.Level)
+}
+
+// StringWithTaskLevel return to task as string which use taskLevel instead of task.Level
+func (t *Task) StringWithTaskLevel(showID bool, taskLevel int) string {
+	spaces := strings.Repeat(" ", taskLevel*spaceNum)
 
 	taskString := make([]string, 1)
 	taskString[0] = t.Name
