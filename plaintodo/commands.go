@@ -33,7 +33,7 @@ type LsCommand struct {
 }
 
 func (t *LsCommand) Execute(option string, s *command.State) (terminate bool) {
-	output.Output(t.w, ls.ExecuteQuery(option, s.Tasks), true)
+	output.Output(t.w, ls.ExecuteQuery(option, s.Tasks), true, 0)
 	return false
 }
 
@@ -49,7 +49,7 @@ type LsAllCommand struct {
 
 func (t *LsAllCommand) Execute(option string, s *command.State) (terminate bool) {
 	showTasks := ls.Ls(s.Tasks, nil)
-	output.Output(t.w, showTasks, true)
+	output.Output(t.w, showTasks, true, 0)
 	return false
 }
 
