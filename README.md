@@ -1,17 +1,17 @@
 # PlainTodo
 
 PlainTodo is plain text based todo list system inspired by [Todo.txt](http://todotxt.com/)  
-Now newest version is v0.1.1
+Now newest version is v0.1.2
 
 ## Feature
 
 - plain text task list
-- subtask support
+- sub task support
   - space num means subtask
 - other feature support as option
   - base format contains task name and subtask
 
-## Task Syntacks
+## Task Syntax
 
 A task composed by one line.
 
