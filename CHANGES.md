@@ -1,3 +1,22 @@
+# v0.1.2
+- [#80](https://github.com/.Repo.owner/.Repo.repository/pull/80) task.Level is in the subTaskFile start from 0
+- [#79](https://github.com/.Repo.owner/.Repo.repository/pull/79) fix evernote url bug
+- [#78](https://github.com/.Repo.owner/.Repo.repository/pull/78) add update command
+- [#77](https://github.com/.Repo.owner/.Repo.repository/pull/77) add archive command
+- [#76](https://github.com/.Repo.owner/.Repo.repository/pull/76) add sub file
+- [#75](https://github.com/.Repo.owner/.Repo.repository/pull/75) refactor
+- [#74](https://github.com/.Repo.owner/.Repo.repository/pull/74) create executor
+- [#73](https://github.com/.Repo.owner/.Repo.repository/pull/73) create test util package
+- [#72](https://github.com/.Repo.owner/.Repo.repository/pull/72) refactor config to package
+- [#71](https://github.com/.Repo.owner/.Repo.repository/pull/71) save command fix
+- [#70](https://github.com/.Repo.owner/.Repo.repository/pull/70) move query to package
+
+# v0.1.1
+- [#68](https://github.com/.Repo.owner/.Repo.repository/pull/68) add golint script
+- [#67](https://github.com/.Repo.owner/.Repo.repository/pull/67) add command alias
+- [#66](https://github.com/.Repo.owner/.Repo.repository/pull/66) refactoring: move Task struct to package
+- [#65](https://github.com/.Repo.owner/.Repo.repository/pull/65) postpone command set time from now
+
 # v0.1.0
 - [#63](https://github.com/.Repo.owner/.Repo.repository/pull/63) add release script
 - [#62](https://github.com/.Repo.owner/.Repo.repository/pull/62) add nice command
