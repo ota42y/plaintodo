@@ -3,6 +3,8 @@ package command
 import (
 	"fmt"
 	"regexp"
+	"strings"
+	"time"
 
 	"../task"
 	"../util"
@@ -12,6 +14,34 @@ var evernoteRegexp, _ = regexp.Compile("^https://www.evernote.com/shard/(.+)/nl/
 
 // Nice change some effect to task
 type Nice struct {
+}
+
+func (c *Nice) fixDateInKey(task *task.Task, key string, today time.Time) bool {
+	var isReplaced = false
+	if strings.Contains(task.Attributes[key], "now") {
+		task.Attributes[key] = strings.Replace(task.Attributes[key], "now", today.Format(util.DateTimeFormat), -1)
+		isReplaced = true
+	}
+
+	if strings.Contains(task.Attributes[key], "today") {
+		task.Attributes[key] = strings.Replace(task.Attributes[key], "today", today.Format(util.DateFormat), -1)
+		isReplaced = true
+	}
+
+	return isReplaced
+}
+
+func (c *Nice) fixDate(tasks []*task.Task) int {
+	today := time.Now()
+
+	count := 0
+	for _, task := range tasks {
+		if c.fixDateInKey(task, "start", today) || c.fixDateInKey(task, "postpone", today) {
+			count++
+		}
+		count += c.fixDate(task.SubTasks)
+	}
+	return count
 }
 
 func (c *Nice) fixEvernoteURL(tasks []*task.Task) int {
@@ -47,6 +77,9 @@ func (c *Nice) Execute(option string, s *State) (terminate bool) {
 
 	num := c.fixEvernoteURL(tasks)
 	fmt.Fprintf(s.Config.Writer, "evernote url change %d tasks\n", num)
+
+	num = c.fixDate(tasks)
+	fmt.Fprintf(s.Config.Writer, "change %d tasks date\n", num)
 
 	return false
 }
