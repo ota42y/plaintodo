@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -96,21 +95,23 @@ func (c *Complete) completeTask(taskID int, tasks []*task.Task) (completeTask *t
 func (c *Complete) Execute(option string, s *State) (terminate bool) {
 	c.MaxTaskID = s.MaxTaskID
 
-	taskID, err := strconv.Atoi(option)
+	optionMap := task.ParseOptions(" " + option)
+
+	id, err := util.GetIntAttribute("id", optionMap)
 	if err != nil {
 		s.Config.Writer.Write([]byte(err.Error()))
 		return false
 	}
 
-	task, newTasks, n := c.completeTask(taskID, s.Tasks)
+	task, newTasks, n := c.completeTask(id, s.Tasks)
 	s.Tasks = newTasks
 	s.MaxTaskID = c.MaxTaskID
 	if task == nil {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", taskID)))
+		s.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", id)))
 		return false
 	}
 
-	s.Config.Writer.Write([]byte(fmt.Sprintf("Complete %s and %d sub tasks\n", task.Name, n)))
+	s.Config.Writer.Write([]byte(fmt.Sprintf("Complete %s and %d sub tasks\n", task.Name, n-1)))
 	return false
 }
 

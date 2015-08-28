@@ -1,11 +1,13 @@
 package command
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
 
 	"../task"
 	"../util"
+	"fmt"
 )
 
 func isAllCompleted(t *task.Task) bool {
@@ -21,6 +23,44 @@ func isAllCompleted(t *task.Task) bool {
 	}
 
 	return true
+}
+
+func TestCompleteTaskExecute(t *testing.T) {
+	cmd := NewComplete()
+	config, buf := util.ReadTestConfigRelativePath("..")
+	s := &State{
+		Config: config,
+	}
+
+	Convey("correct", t, func() {
+		Convey("complete", func() {
+			s.Tasks = util.ReadTestTaskRelativePath("../")
+			option := ":id 1"
+
+			buf.Reset()
+			cmd.Execute(option, s)
+			_, ok := s.Tasks[0].Attributes["complete"]
+			So(ok, ShouldBeTrue)
+
+			correctString := fmt.Sprintf("Complete %s and %d sub tasks\n", s.Tasks[0].Name, 6)
+			So(correctString, ShouldEqual, buf.String())
+		})
+	})
+
+	Convey("incorrect", t, func() {
+		Convey("not set", func() {
+			s.Tasks = util.ReadTestTaskRelativePath("../")
+			option := ":id 42"
+
+			buf.Reset()
+			cmd.Execute(option, s)
+			_, no := s.Tasks[0].Attributes["complete"]
+			So(no, ShouldBeFalse)
+
+			correctString := fmt.Sprintf("There is no Task which have task id: %d\n", 42)
+			So(correctString, ShouldEqual, buf.String())
+		})
+	})
 }
 
 func TestCompleteTask(t *testing.T) {
