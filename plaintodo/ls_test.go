@@ -131,7 +131,7 @@ func TestGetQuery(t *testing.T) {
 	}
 
 	completeCommand := command.NewComplete()
-	completeCommand.Execute("2", &s)
+	completeCommand.Execute(":id 2", &s)
 
 	showTasks = ls.ExecuteQuery(" :id 1 :complete", s.Tasks)
 	if len(showTasks) != 1 {
@@ -213,7 +213,7 @@ func TestGetQuery(t *testing.T) {
 
 	s.Tasks = util.ReadTestTaskRelativePath(".")
 	delete(s.Tasks[1].SubTasks[0].Attributes, "repeat")
-	completeCommand.Execute("8", &s)
+	completeCommand.Execute(":id 8", &s)
 	showTasks = ls.ExecuteQuery("", s.Tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("if top level task completed, not show task, but %d task showed", len(showTasks))
@@ -222,8 +222,8 @@ func TestGetQuery(t *testing.T) {
 
 	s.Tasks = util.ReadTestTaskRelativePath(".")
 	delete(s.Tasks[0].Attributes, "start")
-	completeCommand.Execute("2", &s)
-	completeCommand.Execute("4", &s)
+	completeCommand.Execute(":id 2", &s)
+	completeCommand.Execute(":id 4", &s)
 	showTasks = ls.ExecuteQuery("", s.Tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("if specific task is completed, don't show all parent")
