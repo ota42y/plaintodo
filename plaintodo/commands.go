@@ -17,17 +17,6 @@ import (
 	"./util"
 )
 
-type ExitCommand struct {
-}
-
-func (t *ExitCommand) Execute(option string, s *command.State) (terminate bool) {
-	return true
-}
-
-func NewExitCommand() *ExitCommand {
-	return &ExitCommand{}
-}
-
 type LsCommand struct {
 	w io.Writer
 }
