@@ -29,20 +29,6 @@ func TestGetIntAttribute(t *testing.T) {
 	}
 }
 
-func TestExitCommand(t *testing.T) {
-	cmd := NewExitCommand()
-
-	cmds := make(map[string]command.Command)
-	cmds["exit"] = cmd
-	a := executor.NewExecutor(nil, cmds)
-
-	terminate := a.Execute("exit")
-	if !terminate {
-		t.Errorf("ExitCommand.Execute shud be return true")
-		t.FailNow()
-	}
-}
-
 func TestLsCommand(t *testing.T) {
 	buf := &bytes.Buffer{}
 	cmd := NewLsCommand(buf)
@@ -101,80 +87,6 @@ func TestLsAllCommand(t *testing.T) {
 
 	if length <= len(buf2.String()) {
 		t.Errorf("lsall output %d length, but it's shuld be more longer than ls command output length (%d)", length, len(buf2.String()))
-		t.FailNow()
-	}
-}
-
-func TestCompleteCommandError(t *testing.T) {
-	cmds := make(map[string]command.Command)
-
-	cmds["complete"] = command.NewComplete()
-
-	cmds["reload"] = command.NewReload()
-	config, buf := util.ReadTestConfig()
-	a := executor.NewExecutor(config, cmds)
-	a.Execute("reload")
-	buf.Reset()
-
-	terminate := a.Execute(fmt.Sprintf("complete %da", 1))
-	if terminate {
-		t.Errorf("CompleteCommand.Execute shud be return false")
-		t.FailNow()
-	}
-
-	outputString := buf.String()
-	if outputString != "complete hit\nstrconv.ParseInt: parsing \"1a\": invalid syntax" {
-		t.Errorf("CompleteCommand.Execute shuld write error, but %s", outputString)
-		t.FailNow()
-	}
-
-	buf.Reset()
-	terminate = a.Execute(fmt.Sprintf("complete %d", 100))
-	if terminate {
-		t.Errorf("CompleteCommand.Execute shud be return false")
-		t.FailNow()
-	}
-
-	outputString = buf.String()
-	if outputString != "complete hit\nThere is no Task which have task id: 100\n" {
-		t.Errorf("CompleteCommand.Execute shuld write no such task error, but %s", outputString)
-		t.FailNow()
-	}
-}
-
-func TestCompleteCommand(t *testing.T) {
-	cmds := make(map[string]command.Command)
-
-	cmds["complete"] = command.NewComplete()
-	cmds["reload"] = command.NewReload()
-	config, buf := util.ReadTestConfig()
-
-	a := executor.NewExecutor(config, cmds)
-	a.Execute("reload")
-	buf.Reset()
-	task := a.S.Tasks[0]
-
-	if task.Attributes["complete"] != "" {
-		t.Errorf("Task[\"complete\"} isn't blank")
-		t.FailNow()
-	}
-
-	terminate := a.Execute(fmt.Sprintf("complete %d", task.ID))
-	if terminate {
-		t.Errorf("CompleteCommand.Execute shud be return false")
-		t.FailNow()
-	}
-
-	_, err := time.Parse(util.DateTimeFormat, task.Attributes["complete"])
-	if err != nil {
-		t.Errorf("Task complete format invalid '%s'", task.Attributes["complete"])
-		t.FailNow()
-	}
-
-	outputString := buf.String()
-	correctString := fmt.Sprintf("complete hit\nComplete %s and %d sub tasks\n", task.Name, 7)
-	if outputString != correctString {
-		t.Errorf("CompleteCommand.Execute shuld write '%s', but '%s'", correctString, outputString)
 		t.FailNow()
 	}
 }

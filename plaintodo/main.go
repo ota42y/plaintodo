@@ -9,7 +9,7 @@ import (
 
 func main() {
 	cmds := make(map[string]command.Command)
-	cmds["exit"] = NewExitCommand()
+	cmds["exit"] = command.NewExit()
 	cmds["reload"] = command.NewReload()
 	cmds["ls"] = NewLsCommand(os.Stdout)
 	cmds["lsall"] = NewLsAllCommand(os.Stdout)
