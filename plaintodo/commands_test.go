@@ -91,78 +91,12 @@ func TestLsAllCommand(t *testing.T) {
 	}
 }
 
-func TestAddTaskCommand(t *testing.T) {
-	taskName := "create new task"
-	taskStart := "2015-02-01"
-
-	cmds := make(map[string]command.Command)
-	cmds["task"] = NewAddTaskCommand()
-	cmds["reload"] = command.NewReload()
-
-	config, buf := util.ReadTestConfig()
-	a := executor.NewExecutor(config, cmds)
-
-	input := "task " + taskName + " :start " + taskStart
-	terminate := a.Execute(input)
-
-	if terminate {
-		t.Errorf("AddTaskCommand terminate automaton")
-		t.FailNow()
-	}
-
-	if len(a.S.Tasks) == 0 {
-		t.Errorf("Task not add")
-		t.FailNow()
-	}
-
-	task := a.S.Tasks[0]
-	if task.Name != taskName {
-		t.Errorf("Task name shud %s, but %s", taskName, task.Name)
-		t.FailNow()
-	}
-
-	if task.Attributes["start"] != taskStart {
-		t.Errorf("Task start shud %s, but %s", taskStart, task.Attributes["start"])
-		t.FailNow()
-	}
-
-	if a.S.MaxTaskID != task.ID {
-		t.Errorf("Automaton.MaxTaskID shuld be %d, but %d", a.S.MaxTaskID, task.ID)
-		t.FailNow()
-	}
-
-	outputString := buf.String()
-	correctString := "task hit\nCreate task: " + taskName + " :id 1 :start " + taskStart + "\n"
-	if outputString != correctString {
-		t.Errorf("Output %s, but %s", correctString, outputString)
-		t.FailNow()
-	}
-
-	taskID := a.S.MaxTaskID
-
-	buf = &bytes.Buffer{}
-	config.Writer = buf
-	a.Execute("task ")
-
-	outputString = buf.String()
-	correctString = "task hit\nCreate task error: blank line\n"
-	if outputString != correctString {
-		t.Errorf("Output %s, but %s", correctString, outputString)
-		t.FailNow()
-	}
-
-	if a.S.MaxTaskID != taskID {
-		t.Errorf("When error occerd, Automaton.MaxTaskID shuldn't change but %d", taskID)
-		t.FailNow()
-	}
-}
-
 func TestAddSubTaskCommand(t *testing.T) {
 	taskName := "create sub task"
 	taskStart := "2015-02-01"
 
 	cmds := make(map[string]command.Command)
-	cmds["task"] = NewAddTaskCommand()
+	cmds["task"] = command.NewAddTask()
 	cmds["subtask"] = NewAddSubTaskCommand()
 	cmds["reload"] = command.NewReload()
 

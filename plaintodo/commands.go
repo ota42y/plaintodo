@@ -48,26 +48,6 @@ func NewLsAllCommand(w io.Writer) *LsAllCommand {
 	}
 }
 
-type AddTaskCommand struct {
-}
-
-func (t *AddTaskCommand) Execute(option string, s *command.State) (terminate bool) {
-	nowTask, err := task.NewTask(option, s.MaxTaskID+1)
-	if err != nil {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
-		return false
-	}
-
-	s.Tasks = append(s.Tasks, nowTask)
-	s.MaxTaskID = nowTask.ID
-	s.Config.Writer.Write([]byte(fmt.Sprintf("Create task: %s\n", nowTask.String(true))))
-	return false
-}
-
-func NewAddTaskCommand() *AddTaskCommand {
-	return &AddTaskCommand{}
-}
-
 var subTaskRegexp, _ = regexp.Compile("^([0-9]+) (.+)$")
 
 type AddSubTaskCommand struct {
