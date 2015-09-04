@@ -17,7 +17,7 @@ func main() {
 	//cmds["save"] = command.NewSave()
 	//cmds["archive"] = command.NewArchive()
 	cmds["complete"] = command.NewComplete()
-	cmds["task"] = NewAddTaskCommand()
+	cmds["task"] = command.NewAddTask()
 	cmds["subtask"] = NewAddSubTaskCommand()
 	cmds["set"] = command.NewSetAttribute()
 	cmds["start"] = NewStartCommand()
