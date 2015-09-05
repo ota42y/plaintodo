@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"github.com/skratchdot/open-golang/open"
 	"io"
-	"regexp"
 	"sort"
-	"strconv"
 	"time"
 
 	"./command"
@@ -46,55 +44,6 @@ func NewLsAllCommand(w io.Writer) *LsAllCommand {
 	return &LsAllCommand{
 		w: w,
 	}
-}
-
-var subTaskRegexp, _ = regexp.Compile("^([0-9]+) (.+)$")
-
-type AddSubTaskCommand struct {
-}
-
-func (t *AddSubTaskCommand) addSubTask(taskID int, addTask *task.Task, tasks []*task.Task) (parent *task.Task, success bool) {
-	for _, task := range tasks {
-		if task.ID == taskID {
-			addTask.Level = task.Level + 1
-			task.SubTasks = append(task.SubTasks, addTask)
-			return task, true
-		}
-		parent, success = t.addSubTask(taskID, addTask, task.SubTasks)
-		if success {
-			return parent, success
-		}
-	}
-	return nil, false
-}
-
-func (t *AddSubTaskCommand) Execute(option string, s *command.State) (terminate bool) {
-	match := subTaskRegexp.FindSubmatch([]byte(option))
-	if len(match) < 3 {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("Create Subtask error: invalid format '%s'\n", option)))
-		return false
-	}
-
-	nowTask, err := task.NewTask(string(match[2]), s.MaxTaskID+1)
-	if err != nil {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("Create task error: %s\n", err)))
-		return false
-	}
-
-	parentTaskID, _ := strconv.Atoi(string(match[1]))
-	parent, success := t.addSubTask(parentTaskID, nowTask, s.Tasks)
-	if success {
-		s.MaxTaskID = nowTask.ID
-		s.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask:\nParent: %s\nSubTask: %s\n", parent.String(true), nowTask.String(true))))
-	} else {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("Create SubTask error: thee is no task which have :id %d\n", parentTaskID)))
-	}
-
-	return false
-}
-
-func NewAddSubTaskCommand() *AddSubTaskCommand {
-	return &AddSubTaskCommand{}
 }
 
 type StartCommand struct {

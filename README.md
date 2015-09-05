@@ -124,7 +124,7 @@ go to SSA :id 1 :start 2015-02-01
 rss :id 8
   my site :id 9 :start 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
   
-> subtask 2 change volume
+> subtask change volume :id 2
 subtask hit
 Create SubTask:
 Parent: create a set list :id 2 :start 2015-01-31 :important
