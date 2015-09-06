@@ -60,6 +60,21 @@ func TestCompleteTaskExecute(t *testing.T) {
 			correctString := fmt.Sprintf("There is no Task which have task id: %d\n", 42)
 			So(correctString, ShouldEqual, buf.String())
 		})
+
+		Convey("lock task", func() {
+			s.Tasks = util.ReadTestTaskRelativePath("../")
+			s.Tasks[0].Attributes["lock"] = ""
+
+			option := ":id 1"
+
+			buf.Reset()
+			cmd.Execute(option, s)
+			_, no := s.Tasks[0].Attributes["complete"]
+			So(no, ShouldBeFalse)
+
+			correctString := fmt.Sprintf("task :id 1 is locked")
+			So(correctString, ShouldEqual, buf.String())
+		})
 	})
 }
 
@@ -67,27 +82,17 @@ func TestCompleteTask(t *testing.T) {
 	tasks := util.ReadTestTaskRelativePath("../")
 	cmd := NewComplete()
 
-	completeTask, tasks, n := cmd.completeTask(0, tasks)
-	if completeTask != nil {
-		t.Errorf("If there is no task with taskID, completeTask shuld return nil, but %v", completeTask)
-		t.FailNow()
-	}
-
-	if len(tasks) != 2 {
-		t.Errorf("task num shudn't change")
-		t.FailNow()
-	}
-
-	if n != 0 {
-		t.Errorf("If there is no task with taskID, completeTask shuld return complete 0 subtask, but %d", n)
+	result, err := cmd.completeTask(0, tasks)
+	if result != nil {
+		t.Errorf("If there is no task with taskID, completeTask shuld return nil, but %v", result.completeTask)
 		t.FailNow()
 	}
 
 	alreadyCompleted := "2014-01-01"
 	tasks[0].SubTasks[1].SubTasks[1].Attributes["complete"] = alreadyCompleted
 
-	completeTask, tasks, n = cmd.completeTask(4, tasks)
-	if completeTask == nil {
+	result, err = cmd.completeTask(4, tasks)
+	if result.completeTask == nil {
 		t.Errorf("If there is task with taskID, completeTask shuld return complete task, but nil")
 		t.FailNow()
 	}
@@ -97,8 +102,8 @@ func TestCompleteTask(t *testing.T) {
 		t.FailNow()
 	}
 
-	if n != 3 {
-		t.Errorf("If there is task with taskID, completeTask shuld return complete subtask num (4) but %d", n)
+	if result.completeNum != 3 {
+		t.Errorf("If there is task with taskID, completeTask shuld return complete subtask num (4) but %d", result.completeNum)
 		t.FailNow()
 	}
 
@@ -108,7 +113,7 @@ func TestCompleteTask(t *testing.T) {
 	}
 
 	completeString := tasks[0].SubTasks[1].Attributes["complete"]
-	_, err := time.Parse(util.DateTimeFormat, completeString)
+	_, err = time.Parse(util.DateTimeFormat, completeString)
 	if err != nil {
 		t.Errorf("Task complete format invalid '%s'", completeString)
 		t.FailNow()
@@ -225,17 +230,19 @@ func TestCompleteRepeatTask(t *testing.T) {
 	postponeCommand.Postpone(baseTask, optionMap)
 
 	cmd := NewComplete()
-	completeTask, newTasks, n := cmd.completeTask(8, tasks)
-	if completeTask == nil {
+
+	result, _ := cmd.completeTask(8, tasks)
+	if result.completeTask == nil {
 		t.Errorf("If there is task with taskID, completeTask shuld return complete task, but nil")
 		t.FailNow()
 	}
 
-	if n != 2 {
-		t.Errorf("If there is task with taskID, completeTask shuld return complete subtask num (2) but %d", n)
+	if result.completeNum != 2 {
+		t.Errorf("If there is task with taskID, completeTask shuld return complete subtask num (2) but %d", result.completeNum)
 		t.FailNow()
 	}
 
+	newTasks := result.newTasks
 	if len(newTasks) != 3 {
 		t.Errorf("If repeat task complete, task will copy")
 		t.FailNow()
