@@ -14,6 +14,12 @@ type Complete struct {
 	MaxTaskID int
 }
 
+type completeResult struct {
+	completeTask *task.Task
+	newTasks     []*task.Task
+	completeNum  int
+}
+
 func (c *Complete) setNewRepeat(baseTime time.Time, task *task.Task) {
 	repeatString, ok := task.Attributes["repeat"]
 	if !ok {
@@ -72,23 +78,37 @@ func (c *Complete) completeAllSubTask(completeDate time.Time, t *task.Task) (rep
 	return repeatTask, n
 }
 
-func (c *Complete) completeTask(taskID int, tasks []*task.Task) (completeTask *task.Task, newTasks []*task.Task, completeNum int) {
+func (c *Complete) completeTask(taskID int, tasks []*task.Task) (*completeResult, error) {
 	for _, task := range tasks {
 		if task.ID == taskID {
+			_, ok := task.Attributes["lock"]
+			if ok {
+				// if lock task, not change
+				return nil, fmt.Errorf("task :id %d is locked", taskID)
+			}
+
 			repeatTask, n := c.completeAllSubTask(time.Now(), task)
 			if repeatTask != nil {
 				tasks = append(tasks, repeatTask)
 			}
 
-			return task, tasks, n
+			result := &completeResult{
+				completeNum:  n,
+				completeTask: task,
+				newTasks:     tasks,
+			}
+
+			return result, nil
 		}
-		completeTask, newTasks, n := c.completeTask(taskID, task.SubTasks)
-		if completeTask != nil {
-			task.SubTasks = newTasks
-			return completeTask, tasks, n
+
+		result, err := c.completeTask(taskID, task.SubTasks)
+		if err == nil {
+			task.SubTasks = result.newTasks
+			result.newTasks = tasks
+			return result, err
 		}
 	}
-	return nil, tasks, 0
+	return nil, fmt.Errorf("There is no Task which have task id: %d\n", taskID)
 }
 
 // Execute complete task and if set repeat attribute, create new task
@@ -103,15 +123,15 @@ func (c *Complete) Execute(option string, s *State) (terminate bool) {
 		return false
 	}
 
-	task, newTasks, n := c.completeTask(id, s.Tasks)
-	s.Tasks = newTasks
-	s.MaxTaskID = c.MaxTaskID
-	if task == nil {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("There is no Task which have task id: %d\n", id)))
+	result, err := c.completeTask(id, s.Tasks)
+	if err != nil {
+		fmt.Fprintf(s.Config.Writer, err.Error())
 		return false
 	}
 
-	s.Config.Writer.Write([]byte(fmt.Sprintf("Complete %s and %d sub tasks\n", task.Name, n-1)))
+	s.Tasks = result.newTasks
+	s.MaxTaskID = c.MaxTaskID
+	fmt.Fprintf(s.Config.Writer, "Complete %s and %d sub tasks\n", result.completeTask.Name, result.completeNum-1)
 	return false
 }
 
