@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -19,21 +18,27 @@ type Postpone struct {
 // Postpone postpone task
 // It shuld be private
 func (c *Postpone) Postpone(task *task.Task, optionMap map[string]string) error {
+	// if task is locked, not change
+	_, ok := task.Attributes["lock"]
+	if ok {
+		return fmt.Errorf("Task :id %d is locked", task.ID)
+	}
+
 	// get start time
 	startString, ok := task.Attributes["start"]
 	if !ok {
-		return errors.New(fmt.Sprint("task :id ", task.ID, " haven't start attribute, so postpone not work"))
+		return fmt.Errorf("task :id %d haven't start attribute, so postpone not work", task.ID)
 	}
 
 	_, ok = util.ParseTime(startString)
 	if !ok {
-		return errors.New(fmt.Sprint(startString, " is invalid format, so postpone not work"))
+		return fmt.Errorf("%s is invalid format, so postpone not work", startString)
 	}
 
 	// :postpone 1 hour
 	postponeData := strings.Split(optionMap["postpone"], " ")
 	if len(postponeData) != 2 {
-		return errors.New(fmt.Sprint(optionMap["postpone"], " is invalid format"))
+		return fmt.Errorf("%s is invalid format", optionMap["postpone"])
 	}
 
 	postponeTime := util.AddDuration(time.Now(), postponeData[0], postponeData[1])
