@@ -81,4 +81,24 @@ func TestPostponeCommand(t *testing.T) {
 		t.Errorf("postpone time (%v) isn't 1 month ofter because %v minutes after", value, diff.Minutes())
 		t.FailNow()
 	}
+
+	buf.Reset()
+	s.Tasks = util.ReadTestTaskRelativePath("../")
+	tk = s.Tasks[0].SubTasks[1].SubTasks[0]
+
+	tk.Attributes["start"] = time.Unix(0, 0).Format(util.DateTimeFormat)
+	tk.Attributes["lock"] = ""
+
+	cmd.Execute(":id 5 :postpone 1 month", s)
+
+	_, ok = tk.Attributes["postpone"]
+	if ok {
+		t.Errorf("lock task mustn't change, but postpone attribute set")
+		t.FailNow()
+	}
+
+	if buf.String() != fmt.Sprintf("Task :id 5 is locked\n") {
+		t.Errorf("error message in invalid '%s'", buf.String())
+		t.FailNow()
+	}
 }
