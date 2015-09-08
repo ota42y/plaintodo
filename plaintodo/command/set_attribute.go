@@ -30,12 +30,19 @@ func (c *SetAttribute) Execute(option string, s *State) (terminate bool) {
 	delete(optionMap, "id")
 
 	_, task := task.GetTask(id, s.Tasks)
-	if task != nil {
-		c.setAttribute(task, optionMap)
-		s.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
-	} else {
-		s.Config.Writer.Write([]byte(fmt.Sprintf("there is no exist :id %d task\n", id)))
+	if task == nil {
+		fmt.Fprintf(s.Config.Writer, "there is no exist :id %d task\n", id)
+		return false
 	}
+
+	_, ok := task.Attributes["lock"]
+	if ok {
+		fmt.Fprintf(s.Config.Writer, "Task :id %d is locked\n", id)
+		return false
+	}
+
+	c.setAttribute(task, optionMap)
+	s.Config.Writer.Write([]byte(fmt.Sprintln("set attribute", task.String(true))))
 	return false
 }
 
