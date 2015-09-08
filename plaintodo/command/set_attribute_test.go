@@ -70,4 +70,22 @@ func TestSetAttributeCommand(t *testing.T) {
 		t.Errorf("Shuld output '%s', but '%s'", correctString, outputString)
 		t.FailNow()
 	}
+
+	buf.Reset()
+	s.Tasks = util.ReadTestTaskRelativePath("../")
+
+	task = s.Tasks[0].SubTasks[0].SubTasks[0]
+	task.Attributes["lock"] = ""
+	terminate = cmd.Execute(":id 3 :url "+url, s)
+
+	_, ok = task.Attributes["url"]
+	if ok {
+		t.Errorf("lock task mustn't change, but attribute set")
+		t.FailNow()
+	}
+
+	if buf.String() != "Task :id 3 is locked\n" {
+		t.Errorf("error message in invalid '%s'", buf.String())
+		t.FailNow()
+	}
 }
