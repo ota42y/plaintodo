@@ -129,6 +129,19 @@ func TestChangeDate(t *testing.T) {
 		So(buf.String(), ShouldEqual, "Done nice\nevernote url change 0 tasks\nchange 6 tasks date\n")
 	})
 
+	Convey("locked task", t, func() {
+		s.Tasks = util.ReadTestTasks()
+
+		testTask, _ := task.NewTask("test task for today :start now :lock", 1)
+		s.Tasks = append(s.Tasks, testTask)
+
+		buf.Reset()
+		terminate := cmd.Execute("", s)
+		So(terminate, ShouldBeFalse)
+		So(buf.String(), ShouldEqual, "Done nice\nevernote url change 0 tasks\nchange 0 tasks date\n")
+		So(testTask.Attributes["start"], ShouldEqual, "now")
+	})
+
 	Convey("no change tasks", t, func() {
 		s.Tasks = util.ReadTestTasks()
 
@@ -175,6 +188,20 @@ func TestNiceCommand(t *testing.T) {
 			So(terminate, ShouldBeFalse)
 			So(buf.String(), ShouldEqual, "Done nice\nevernote url change 1 tasks\nchange 0 tasks date\n")
 			So(testTask.Attributes["url"], ShouldEqual, correctURL)
+		})
+
+		Convey("there is lock task", func() {
+			slashURL := evernoteURL + "/"
+			testTask, _ := task.NewTask("task test :lock :url "+slashURL, 1)
+
+			s.Tasks = make([]*task.Task, 0)
+			s.Tasks = append(s.Tasks, testTask)
+
+			buf.Reset()
+			terminate := cmd.Execute("", s)
+			So(terminate, ShouldBeFalse)
+			So(buf.String(), ShouldEqual, "Done nice\nevernote url change 0 tasks\nchange 0 tasks date\n")
+			So(testTask.Attributes["url"], ShouldEqual, slashURL)
 		})
 
 		Convey("not change other task", func() {

@@ -36,8 +36,12 @@ func (c *Nice) fixDate(tasks []*task.Task) int {
 
 	count := 0
 	for _, task := range tasks {
-		if c.fixDateInKey(task, "start", today) || c.fixDateInKey(task, "postpone", today) {
-			count++
+		// if not locked do nice
+		_, ok := task.Attributes["lock"]
+		if !ok {
+			if c.fixDateInKey(task, "start", today) || c.fixDateInKey(task, "postpone", today) {
+				count++
+			}
 		}
 		count += c.fixDate(task.SubTasks)
 	}
@@ -47,11 +51,17 @@ func (c *Nice) fixDate(tasks []*task.Task) int {
 func (c *Nice) fixEvernoteURL(tasks []*task.Task) int {
 	count := 0
 	for _, task := range tasks {
-		match := evernoteRegexp.FindSubmatch([]byte(task.Attributes["url"]))
-		if len(match) == 4 {
-			task.Attributes["url"] = fmt.Sprintf("evernote:///view/%s/%s/%s/%s/", match[2], match[1], match[3], match[3])
-			count++
+
+		// if not locked do nice
+		_, ok := task.Attributes["lock"]
+		if !ok {
+			match := evernoteRegexp.FindSubmatch([]byte(task.Attributes["url"]))
+			if len(match) == 4 {
+				task.Attributes["url"] = fmt.Sprintf("evernote:///view/%s/%s/%s/%s/", match[2], match[1], match[3], match[3])
+				count++
+			}
 		}
+
 		count += c.fixEvernoteURL(task.SubTasks)
 	}
 	return count
