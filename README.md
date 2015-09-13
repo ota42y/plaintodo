@@ -1,7 +1,7 @@
 # PlainTodo
 
 PlainTodo is plain text based todo list system inspired by [Todo.txt](http://todotxt.com/)  
-Now newest version is v0.1.2
+Now newest version is v0.1.3
 
 ## Feature
 
@@ -54,6 +54,12 @@ home :subTaskFile ./tasks/home_tasks.txt
   task 2 in home_tasks.txt
   task 3 in home_tasks.txt
 ```
+
+### :lock
+  Lock task.
+  If this option set in a task, it's not change any command.
+  So we can't complete the task, change attribute, and other.
+  If you delete this option, you must edit task file by text editor.
 
 ## Usage
 
