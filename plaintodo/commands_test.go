@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"./command"
 	"./executor"
@@ -87,53 +86,6 @@ func TestLsAllCommand(t *testing.T) {
 
 	if length <= len(buf2.String()) {
 		t.Errorf("lsall output %d length, but it's shuld be more longer than ls command output length (%d)", length, len(buf2.String()))
-		t.FailNow()
-	}
-}
-
-func TestStartCommand(t *testing.T) {
-	cmd := NewStartCommand()
-
-	cmds := make(map[string]command.Command)
-	cmds["reload"] = command.NewReload()
-	cmds["start"] = cmd
-	config, _ := util.ReadTestConfig()
-	a := executor.NewExecutor(config, cmds)
-	a.Execute("reload")
-
-	now := time.Now()
-
-	task := a.S.Tasks[0].SubTasks[1].SubTasks[0]
-	if _, ok := task.Attributes["start"]; ok {
-		t.Errorf("task already set start attribute, test data is invalid %v", task)
-		t.FailNow()
-	}
-
-	terminate := a.Execute("start :id 5")
-	if terminate {
-		t.Errorf("StartCommand.Execute shud be return false")
-		t.FailNow()
-	}
-
-	value, ok := task.Attributes["start"]
-	if !ok {
-		t.Errorf("start attribute not set")
-		t.FailNow()
-	}
-
-	dateTime, ok := util.ParseTime(value)
-	diff := dateTime.Sub(now)
-	if diff.Minutes() < -2 || 2 < diff.Minutes() {
-		t.Errorf("set time (%v) isn't now because %v minutes after", value, diff.Seconds())
-		t.FailNow()
-	}
-
-	task.Attributes["start"] = time.Now().AddDate(1, 0, 0).Format(util.DateTimeFormat)
-	terminate = a.Execute("start :id 5")
-	dateTime, ok = util.ParseTime(value)
-	diff = dateTime.Sub(now)
-	if diff.Minutes() < -2 || 2 < diff.Minutes() {
-		t.Errorf("set new start time, but old time isn't overwrited")
 		t.FailNow()
 	}
 }

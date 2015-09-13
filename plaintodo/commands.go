@@ -6,7 +6,6 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"io"
 	"sort"
-	"time"
 
 	"./command"
 	"./ls"
@@ -43,20 +42,6 @@ func (t *LsAllCommand) Execute(option string, s *command.State) (terminate bool)
 func NewLsAllCommand(w io.Writer) *LsAllCommand {
 	return &LsAllCommand{
 		w: w,
-	}
-}
-
-type StartCommand struct {
-	*command.SetAttribute
-}
-
-func (c *StartCommand) Execute(option string, s *command.State) (terminate bool) {
-	return c.SetAttribute.Execute(option+" :start "+time.Now().Format(util.DateTimeFormat), s)
-}
-
-func NewStartCommand() *StartCommand {
-	return &StartCommand{
-		SetAttribute: command.NewSetAttribute(),
 	}
 }
 
