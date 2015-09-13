@@ -20,7 +20,7 @@ func main() {
 	cmds["task"] = command.NewAddTask()
 	cmds["subtask"] = command.NewAddSubTask()
 	cmds["set"] = command.NewSetAttribute()
-	cmds["start"] = NewStartCommand()
+	cmds["start"] = command.NewStart()
 	cmds["postpone"] = command.NewPostpone()
 	cmds["move"] = NewMoveCommand()
 	cmds["open"] = NewOpenCommand()
