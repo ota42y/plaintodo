@@ -1,3 +1,15 @@
+# v0.1.3
+- [#91](https://github.com/.Repo.owner/.Repo.repository/pull/91) start commmand support lock task
+- [#90](https://github.com/.Repo.owner/.Repo.repository/pull/90) nice command support lock task
+- [#89](https://github.com/.Repo.owner/.Repo.repository/pull/89) set attribute support lock task
+- [#88](https://github.com/.Repo.owner/.Repo.repository/pull/88) postpone support lock task
+- [#87](https://github.com/.Repo.owner/.Repo.repository/pull/87) complete command support lock task
+- [#86](https://github.com/.Repo.owner/.Repo.repository/pull/86) refactoring subtask command
+- [#85](https://github.com/.Repo.owner/.Repo.repository/pull/85) refactoring addTask
+- [#84](https://github.com/.Repo.owner/.Repo.repository/pull/84) refactoring exit command
+- [#83](https://github.com/.Repo.owner/.Repo.repository/pull/83) fix complete task id setting
+- [#82](https://github.com/.Repo.owner/.Repo.repository/pull/82) can convert 'now' to time.Now
+
 # v0.1.2
 - [#80](https://github.com/.Repo.owner/.Repo.repository/pull/80) task.Level is in the subTaskFile start from 0
 - [#79](https://github.com/.Repo.owner/.Repo.repository/pull/79) fix evernote url bug
