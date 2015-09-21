@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"./command"
@@ -28,10 +29,15 @@ func main() {
 	cmds["alias"] = NewAliasCommand()
 
 	c := config.ReadConfig("config.toml")
-	c.Writer = os.Stdout
 	if c != nil {
+		c.Writer = os.Stdout
 		l := NewLiner(c, cmds)
 		l.e.Execute("reload")
-		l.Start()
+
+		if len(os.Args) == 1 {
+			l.Start()
+		} else {
+			l.e.Execute(fmt.Sprintf("%s", os.Args[1]))
+		}
 	}
 }
