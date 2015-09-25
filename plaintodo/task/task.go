@@ -92,8 +92,13 @@ func (t *Task) String(showID bool) string {
 	return t.StringWithTaskLevel(showID, t.Level)
 }
 
-// StringWithTaskLevel return to task as string which use taskLevel instead of task.Level
-func (t *Task) StringWithTaskLevel(showID bool, taskLevel int) string {
+// StringWithTaskLevelAndOmit return task string
+func (t *Task) StringWithTaskLevelAndOmit(showID bool, taskLevel int, omitAttribute []string) string {
+	omitMap := make(map[string]bool)
+	for _, k := range omitAttribute {
+		omitMap[k] = true
+	}
+
 	spaces := strings.Repeat(" ", taskLevel*spaceNum)
 
 	taskString := make([]string, 1)
@@ -103,16 +108,19 @@ func (t *Task) StringWithTaskLevel(showID bool, taskLevel int) string {
 		taskString = append(taskString, fmt.Sprint(":id ", t.ID))
 	}
 
-	attributesArray := make([]string, len(t.Attributes))
-	i := 0
+	var attributesArray []string
 	for k := range t.Attributes {
-		attributesArray[i] = k
-		i++
+		attributesArray = append(attributesArray, k)
 	}
 	sort.Strings(attributesArray)
 
 	for _, key := range attributesArray {
 		value := t.Attributes[key]
+
+		_, ok := omitMap[key]
+		if ok {
+			value = "..." // omit
+		}
 
 		str := ":" + key
 		if value != "" {
@@ -123,6 +131,12 @@ func (t *Task) StringWithTaskLevel(showID bool, taskLevel int) string {
 	}
 
 	return spaces + strings.Join(taskString, " ")
+}
+
+// StringWithTaskLevel return to task as string which use taskLevel instead of task.Level
+func (t *Task) StringWithTaskLevel(showID bool, taskLevel int) string {
+	var omit []string
+	return t.StringWithTaskLevelAndOmit(showID, taskLevel, omit)
 }
 
 // RemoveSubTask remove subtask which have specific id

@@ -314,6 +314,17 @@ func TestNewTaskWithAttributes(t *testing.T) {
 		t.Errorf("task.String shuld return '%s' string '%s'", correctString, taskString)
 		t.FailNow()
 	}
+
+	var omitArray []string
+	omitArray = append(omitArray, "important")
+	omitArray = append(omitArray, "url")
+
+	taskString = task.StringWithTaskLevelAndOmit(true, task.Level, omitArray)
+	correctString = "    create a set list :id 1 :important :repeat every 1 day :start 2015-02-01 :url"
+	if taskString != correctString {
+		t.Errorf("task.String shuld return '%s' string '%s'", correctString, taskString)
+		t.FailNow()
+	}
 }
 
 func TestNewTaskError(t *testing.T) {

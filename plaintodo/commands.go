@@ -19,7 +19,13 @@ type LsCommand struct {
 }
 
 func (t *LsCommand) Execute(option string, s *command.State) (terminate bool) {
-	output.Output(t.w, ls.ExecuteQuery(option, s.Tasks), true, 0)
+	var omitStrings []string
+	tasks, isOmit := ls.ExecuteQuery(option, s.Tasks)
+	if isOmit {
+		omitStrings = s.Config.Command.Omits
+	}
+
+	output.Output(t.w, tasks, true, 0, omitStrings)
 	return false
 }
 
@@ -35,7 +41,8 @@ type LsAllCommand struct {
 
 func (t *LsAllCommand) Execute(option string, s *command.State) (terminate bool) {
 	showTasks := ls.Ls(s.Tasks, nil)
-	output.Output(t.w, showTasks, true, 0)
+	var omitStrings []string
+	output.Output(t.w, showTasks, true, 0, omitStrings)
 	return false
 }
 
