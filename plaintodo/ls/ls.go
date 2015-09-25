@@ -169,10 +169,10 @@ func GetQuery(queryString string) (query.Query, map[string]string) {
 }
 
 // ExecuteQuery execute query and return tasks
-func ExecuteQuery(queryString string, tasks []*task.Task) []*ShowTask {
+func ExecuteQuery(queryString string, tasks []*task.Task) ([]*ShowTask, bool) {
 	if queryString == "" {
 		// default query
-		queryString = " :overdue " + time.Now().Format(util.DateTimeFormat)
+		queryString = ":omit :overdue " + time.Now().Format(util.DateTimeFormat)
 	}
 
 	// GetCommand expected ' :key value :key value', but option give ':key value :key value'
@@ -185,11 +185,13 @@ func ExecuteQuery(queryString string, tasks []*task.Task) []*ShowTask {
 		ShowAllChildSubTasks(showTasks)
 	}
 
+	_, isOmit := queryMap["omit"]
+
 	// if not complete query, show only no completed query
 	_, isCompleteShow := queryMap["complete"]
 	if !isCompleteShow {
 		showTasks = DeleteAllCompletedTasks(showTasks)
 	}
 
-	return showTasks
+	return showTasks, isOmit
 }

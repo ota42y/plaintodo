@@ -18,7 +18,8 @@ func TestPrint(t *testing.T) {
 	outputTasks[0] = showTasks[0]
 
 	buf := &bytes.Buffer{}
-	Output(buf, outputTasks, true, 0)
+	var omitStrings []string
+	Output(buf, outputTasks, true, 0, omitStrings)
 
 	correctString := `go to SSA :id 1 :start 2015-02-01
   create a set list :id 2 :important :start 2015-01-31
@@ -53,7 +54,8 @@ func TestAllTask(t *testing.T) {
 
 	// show all task
 	buf := &bytes.Buffer{}
-	Output(buf, showTasks, true, 0)
+	var omitStrings []string
+	Output(buf, showTasks, true, 0, omitStrings)
 
 	correctString := `go to SSA :id 1 :start 2015-02-01
   create a set list :id 2 :important :start 2015-01-31
@@ -90,7 +92,8 @@ func TestAllTaskWithLevel(t *testing.T) {
 
 	// show all task
 	buf := &bytes.Buffer{}
-	Output(buf, showTasks, true, 1)
+	var omitStrings []string
+	Output(buf, showTasks, true, 1, omitStrings)
 
 	correctString := `  go to SSA :id 1 :start 2015-02-01
     create a set list :id 2 :important :start 2015-01-31
@@ -118,5 +121,28 @@ func TestAllTaskWithLevel(t *testing.T) {
 			t.Errorf("return shuld be '%s', but '%s'", str, results[index])
 			t.FailNow()
 		}
+	}
+}
+
+func TestOmit(t *testing.T) {
+	tasks := util.ReadTestTaskRelativePath("..")
+	showTasks := ls.Ls(tasks, nil)
+
+	correctString := "  my site :id 9 :important :repeat ... :start ... :url http://ota42y.com\n\n"
+
+	// show first task
+	outputTasks := make([]*ls.ShowTask, 1)
+	outputTasks[0] = showTasks[1].SubTasks[0]
+
+	var omitStrings []string
+	omitStrings = append(omitStrings, "start")
+	omitStrings = append(omitStrings, "repeat")
+
+	buf := &bytes.Buffer{}
+	Output(buf, outputTasks, true, 1, omitStrings)
+
+	if buf.String() != correctString {
+		t.Errorf("return '%s' strings but '%s'", correctString, buf.String())
+		t.FailNow()
 	}
 }

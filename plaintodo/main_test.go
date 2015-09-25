@@ -15,6 +15,11 @@ func TestReadConfig(t *testing.T) {
 		t.Errorf("config.Paths.Task shuld be %s, but %s", taskPath, config.Task.DefaultFilename)
 		t.FailNow()
 	}
+
+	if len(config.Command.Omits) == 0 {
+		t.Errorf("config.Command.Omits not loaded")
+		t.FailNow()
+	}
 }
 
 func TestReadConfigError(t *testing.T) {

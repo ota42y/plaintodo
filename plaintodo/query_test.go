@@ -33,9 +33,6 @@ func TestKeyValueQuery(t *testing.T) {
 			subTask := showTask.SubTasks[0]
 			So(subTask.Task.Name, ShouldEqual, tasks[0].SubTasks[0].Name)
 		})
-
-		Convey("sub task name valid", nil)
-
 	})
 
 	Convey("error", t, func() {

@@ -60,7 +60,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	showTasks = ls.ExecuteQuery(" :id 2", s.Tasks)
+	showTasks, _ = ls.ExecuteQuery(" :id 2", s.Tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
 		t.FailNow()
@@ -103,7 +103,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	showTasks = ls.ExecuteQuery(" :id 2 :no-sub-tasks", s.Tasks)
+	showTasks, _ = ls.ExecuteQuery(" :id 2 :no-sub-tasks", s.Tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
 		t.FailNow()
@@ -133,7 +133,7 @@ func TestGetQuery(t *testing.T) {
 	completeCommand := command.NewComplete()
 	completeCommand.Execute(":id 2", &s)
 
-	showTasks = ls.ExecuteQuery(" :id 1 :complete", s.Tasks)
+	showTasks, _ = ls.ExecuteQuery(" :id 1 :complete", s.Tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
 		t.FailNow()
@@ -155,7 +155,7 @@ func TestGetQuery(t *testing.T) {
 		t.FailNow()
 	}
 
-	showTasks = ls.ExecuteQuery(" :id 1", s.Tasks)
+	showTasks, _ = ls.ExecuteQuery(" :id 1", s.Tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
 		t.FailNow()
@@ -184,7 +184,7 @@ func TestGetQuery(t *testing.T) {
 
 	// When no option set, get all started and no completed tasks
 	s.Tasks[0].SubTasks[1].SubTasks[1].Attributes["start"] = time.Now().Format(util.DateFormat)
-	showTasks = ls.ExecuteQuery("", s.Tasks)
+	showTasks, _ = ls.ExecuteQuery("", s.Tasks)
 	if len(showTasks) != 2 {
 		t.Errorf("shuld return only one task, but %d tasks", len(showTasks))
 		t.FailNow()
@@ -214,7 +214,7 @@ func TestGetQuery(t *testing.T) {
 	s.Tasks = util.ReadTestTaskRelativePath(".")
 	delete(s.Tasks[1].SubTasks[0].Attributes, "repeat")
 	completeCommand.Execute(":id 8", &s)
-	showTasks = ls.ExecuteQuery("", s.Tasks)
+	showTasks, _ = ls.ExecuteQuery("", s.Tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("if top level task completed, not show task, but %d task showed", len(showTasks))
 		t.FailNow()
@@ -224,14 +224,14 @@ func TestGetQuery(t *testing.T) {
 	delete(s.Tasks[0].Attributes, "start")
 	completeCommand.Execute(":id 2", &s)
 	completeCommand.Execute(":id 4", &s)
-	showTasks = ls.ExecuteQuery("", s.Tasks)
+	showTasks, _ = ls.ExecuteQuery("", s.Tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("if specific task is completed, don't show all parent")
 		t.FailNow()
 	}
 
 	s.Tasks = util.ReadTestTaskRelativePath(".")
-	showTasks = ls.ExecuteQuery(" :overdue 2015-02-02", s.Tasks)
+	showTasks, _ = ls.ExecuteQuery(" :overdue 2015-02-02", s.Tasks)
 	if len(showTasks) != 2 {
 		t.Errorf("When start option set, return 2 tasks, but %d", len(showTasks))
 		t.FailNow()
@@ -243,15 +243,27 @@ func TestGetQuery(t *testing.T) {
 	op["postpone"] = "1 day"
 	postpone.Postpone(taskData, op)
 
-	showTasks = ls.ExecuteQuery(" :overdue 2015-02-02", s.Tasks)
+	showTasks, _ = ls.ExecuteQuery(" :overdue 2015-02-02", s.Tasks)
 	if len(showTasks) != 1 {
 		t.Errorf("when postpone task, task isn't overdue but return %v", showTasks[1].Task)
 		t.FailNow()
 	}
 
-	showTasks = ls.ExecuteQuery(fmt.Sprintf(" :overdue %s", time.Now().AddDate(0, 0, 2).Format(util.DateFormat)), s.Tasks)
+	showTasks, _ = ls.ExecuteQuery(fmt.Sprintf(" :overdue %s", time.Now().AddDate(0, 0, 2).Format(util.DateFormat)), s.Tasks)
 	if len(showTasks) != 2 {
 		t.Errorf("when task ovordue in postpone time but return %d", len(showTasks))
+		t.FailNow()
+	}
+
+	s.Config.Command.Omits = append(s.Config.Command.Omits, "start")
+	showTasks, isOmit := ls.ExecuteQuery(fmt.Sprintf(":omit :overdue %s", time.Now().AddDate(0, 0, 2).Format(util.DateFormat)), s.Tasks)
+	if len(showTasks) != 2 {
+		t.Errorf("when task ovordue in postpone time but return %d", len(showTasks))
+		t.FailNow()
+	}
+
+	if !isOmit {
+		t.Errorf("omit option not works")
 		t.FailNow()
 	}
 }

@@ -26,7 +26,8 @@ func (s *Save) writeFile(filePath string, tasks []*ls.ShowTask) (terminate bool,
 	}
 	defer fo.Close()
 
-	output.Output(fo, tasks, false, 0)
+	var omitStrings []string
+	output.Output(fo, tasks, false, 0, omitStrings)
 	return true, nil
 }
 

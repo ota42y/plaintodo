@@ -30,6 +30,7 @@ type Alias struct {
 // CommandConfig is Alias command config in config file
 type CommandConfig struct {
 	Aliases []Alias
+	Omits   []string
 }
 
 // TaskConfig is task setting file
