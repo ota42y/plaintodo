@@ -17,6 +17,8 @@ type Nice struct {
 }
 
 func (c *Nice) fixDateInKey(task *task.Task, key string, today time.Time) bool {
+	tomorrow := today.AddDate(0, 0, 1)
+
 	var isReplaced = false
 	if strings.Contains(task.Attributes[key], "now") {
 		task.Attributes[key] = strings.Replace(task.Attributes[key], "now", today.Format(util.DateTimeFormat), -1)
@@ -25,6 +27,11 @@ func (c *Nice) fixDateInKey(task *task.Task, key string, today time.Time) bool {
 
 	if strings.Contains(task.Attributes[key], "today") {
 		task.Attributes[key] = strings.Replace(task.Attributes[key], "today", today.Format(util.DateFormat), -1)
+		isReplaced = true
+	}
+
+	if strings.Contains(task.Attributes[key], "tomorrow") {
+		task.Attributes[key] = strings.Replace(task.Attributes[key], "tomorrow", tomorrow.Format(util.DateFormat), -1)
 		isReplaced = true
 	}
 
