@@ -24,6 +24,7 @@ func TestReplaceDate(t *testing.T) {
 	Convey("correct", t, func() {
 		todayDateStr := today.Format(util.DateFormat)
 		todayTimeStr := today.Format(util.DateTimeFormat)
+		tomorrowDateStr := today.AddDate(0, 0, 1).Format(util.DateFormat)
 
 		Convey("start", func() {
 			key := "start"
@@ -47,6 +48,20 @@ func TestReplaceDate(t *testing.T) {
 				taskString := fmt.Sprintf("test task :%s %s", key, value)
 				testTask := execFixDateInKey(cmd, key, taskString, today)
 				So(testTask.Attributes[key], ShouldEqual, todayDateStr+" 12:00")
+			})
+
+			Convey("tomorrow", func() {
+				value := "tomorrow"
+				taskString := fmt.Sprintf("test task :%s %s", key, value)
+				testTask := execFixDateInKey(cmd, key, taskString, today)
+				So(testTask.Attributes[key], ShouldEqual, tomorrowDateStr)
+			})
+
+			Convey("tomorrow 12:00", func() {
+				value := "tomorrow 12:00"
+				taskString := fmt.Sprintf("test task :%s %s", key, value)
+				testTask := execFixDateInKey(cmd, key, taskString, today)
+				So(testTask.Attributes[key], ShouldEqual, tomorrowDateStr+" 12:00")
 			})
 		})
 
@@ -75,6 +90,22 @@ func TestReplaceDate(t *testing.T) {
 				taskString := fmt.Sprintf("test task :%s %s :start %s", key, value, startData)
 				testTask := execFixDateInKey(cmd, key, taskString, today)
 				So(testTask.Attributes[key], ShouldEqual, todayDateStr+" 12:00")
+				So(testTask.Attributes["start"], ShouldEqual, startData)
+			})
+
+			Convey("tomorrow", func() {
+				value := "tomorrow"
+				taskString := fmt.Sprintf("test task :%s %s :start %s", key, value, startData)
+				testTask := execFixDateInKey(cmd, key, taskString, today)
+				So(testTask.Attributes[key], ShouldEqual, tomorrowDateStr)
+				So(testTask.Attributes["start"], ShouldEqual, startData)
+			})
+
+			Convey("tomorrow 12:00", func() {
+				value := "tomorrow 12:00"
+				taskString := fmt.Sprintf("test task :%s %s :start %s", key, value, startData)
+				testTask := execFixDateInKey(cmd, key, taskString, today)
+				So(testTask.Attributes[key], ShouldEqual, tomorrowDateStr+" 12:00")
 				So(testTask.Attributes["start"], ShouldEqual, startData)
 			})
 		})
