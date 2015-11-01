@@ -1,7 +1,7 @@
 # PlainTodo
 
 PlainTodo is plain text based todo list system inspired by [Todo.txt](http://todotxt.com/)  
-Now newest version is v0.1.3
+Now newest version is v0.1.4
 
 ## Feature
 

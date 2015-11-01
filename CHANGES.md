@@ -1,3 +1,8 @@
+# v0.1.4
+- [#95](https://github.com/.Repo.owner/.Repo.repository/pull/95) tomorrow support
+- [#94](https://github.com/.Repo.owner/.Repo.repository/pull/94) add omit option
+- [#93](https://github.com/.Repo.owner/.Repo.repository/pull/93) add command line interface
+
 # v0.1.3
 - [#91](https://github.com/.Repo.owner/.Repo.repository/pull/91) start commmand support lock task
 - [#90](https://github.com/.Repo.owner/.Repo.repository/pull/90) nice command support lock task
