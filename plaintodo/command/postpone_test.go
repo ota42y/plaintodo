@@ -8,6 +8,51 @@ import (
 	"../util"
 )
 
+func TestPostponeToday(t *testing.T) {
+	cmd := NewPostpone()
+
+	config, _ := util.ReadTestConfigRelativePath("../")
+	tasks := util.ReadTestTaskRelativePath("../")
+
+	s := &State{
+		Tasks:  tasks,
+		Config: config,
+	}
+
+	tk := s.Tasks[0].SubTasks[1].SubTasks[0]
+	if _, ok := tk.Attributes["postpone"]; ok {
+		t.Errorf("task already set postpone attribute, test data is invalid %v", tk)
+		t.FailNow()
+	}
+
+	tk.Attributes["start"] = time.Unix(0, 0).Format(util.DateTimeFormat)
+
+	cmd.Execute(":id 5 :postpone today 20:00", s)
+
+	value, ok := tk.Attributes["postpone"]
+	if !ok {
+		t.Errorf("postpone attribute not set %v", tk)
+		t.FailNow()
+	}
+
+	dateTime, ok := util.ParseTime(value)
+	if !ok {
+		t.Errorf("postpone attribute value is invalid formt %s", value)
+		t.FailNow()
+	}
+
+	setTime, err := time.Parse(util.DateTimeFormat+"-0700", time.Now().Format(util.DateFormat)+" 20:00+0900")
+	if err != nil {
+		t.Errorf(err.Error())
+		t.FailNow()
+	}
+
+	if dateTime != setTime {
+		t.Errorf("postpone time (%v) isn't today %v", dateTime, setTime)
+		t.FailNow()
+	}
+}
+
 func TestPostponeCommand(t *testing.T) {
 	cmd := NewPostpone()
 
@@ -98,6 +143,25 @@ func TestPostponeCommand(t *testing.T) {
 	}
 
 	if buf.String() != fmt.Sprintf("Task :id 5 is locked\n") {
+		t.Errorf("error message in invalid '%s'", buf.String())
+		t.FailNow()
+	}
+
+	buf.Reset()
+	s.Tasks = util.ReadTestTaskRelativePath("../")
+	tk = s.Tasks[0].SubTasks[1].SubTasks[0]
+
+	tk.Attributes["start"] = time.Unix(0, 0).Format(util.DateTimeFormat)
+
+	cmd.Execute(":id 5 :postpone invalid month", s)
+
+	_, ok = tk.Attributes["postpone"]
+	if ok {
+		t.Errorf("if invalid data, task mustn't change, but postpone attribute set")
+		t.FailNow()
+	}
+
+	if buf.String() != fmt.Sprintf("'invalid month' is invalid format\n") {
 		t.Errorf("error message in invalid '%s'", buf.String())
 		t.FailNow()
 	}

@@ -339,6 +339,10 @@ go to SSA :id 1 :start 2015-02-01
   create a set list :id 2 :important :start 2015-01-31
     add music to player :id 3 :start 2015-01-30
 
+> postpone :id 9 :postpone today 20:00
+postpone hit
+set attribute   my site :id 9 :important :postpone 2015-02-01 20:00 :repeat every 1 day :start 2015-02-01 :url http://ota42y.com
+
 ```
 
 ### move
