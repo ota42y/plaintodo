@@ -35,14 +35,26 @@ func (c *Postpone) Postpone(task *task.Task, optionMap map[string]string) error 
 		return fmt.Errorf("%s is invalid format, so postpone not work", startString)
 	}
 
+	postponeString := optionMap["postpone"]
+
 	// :postpone 1 hour
-	postponeData := strings.Split(optionMap["postpone"], " ")
+	postponeData := strings.Split(postponeString, " ")
 	if len(postponeData) != 2 {
 		return fmt.Errorf("%s is invalid format", optionMap["postpone"])
 	}
 
 	postponeTime := util.AddDuration(time.Now(), postponeData[0], postponeData[1])
-	optionMap["postpone"] = postponeTime.Format(util.DateTimeFormat)
+	if postponeTime != time.Unix(0, 0) {
+		optionMap["postpone"] = postponeTime.Format(util.DateTimeFormat)
+	} else {
+		replaceString, isReplaced := fixStringDate(postponeString, time.Now())
+		if !isReplaced {
+			// invalid format
+			return fmt.Errorf("'%s' is invalid format", optionMap["postpone"])
+		}
+		// today 20:00
+		optionMap["postpone"] = replaceString
+	}
 
 	c.setAttribute(task, optionMap)
 	return nil

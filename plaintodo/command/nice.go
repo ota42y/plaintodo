@@ -16,25 +16,29 @@ var evernoteRegexp, _ = regexp.Compile("^https://www.evernote.com/shard/(.+)/nl/
 type Nice struct {
 }
 
-func (c *Nice) fixDateInKey(task *task.Task, key string, today time.Time) bool {
+func fixStringDate(str string, today time.Time) (string, bool) {
 	tomorrow := today.AddDate(0, 0, 1)
 
-	var isReplaced = false
-	if strings.Contains(task.Attributes[key], "now") {
-		task.Attributes[key] = strings.Replace(task.Attributes[key], "now", today.Format(util.DateTimeFormat), -1)
-		isReplaced = true
+	if strings.Contains(str, "now") {
+		return strings.Replace(str, "now", today.Format(util.DateTimeFormat), -1), true
 	}
 
-	if strings.Contains(task.Attributes[key], "today") {
-		task.Attributes[key] = strings.Replace(task.Attributes[key], "today", today.Format(util.DateFormat), -1)
-		isReplaced = true
+	if strings.Contains(str, "today") {
+		return strings.Replace(str, "today", today.Format(util.DateFormat), -1), true
 	}
 
-	if strings.Contains(task.Attributes[key], "tomorrow") {
-		task.Attributes[key] = strings.Replace(task.Attributes[key], "tomorrow", tomorrow.Format(util.DateFormat), -1)
-		isReplaced = true
+	if strings.Contains(str, "tomorrow") {
+		return strings.Replace(str, "tomorrow", tomorrow.Format(util.DateFormat), -1), true
 	}
 
+	return str, false
+}
+
+func (c *Nice) fixDateInKey(task *task.Task, key string, today time.Time) bool {
+	replaceString, isReplaced := fixStringDate(task.Attributes[key], today)
+	if isReplaced {
+		task.Attributes[key] = replaceString
+	}
 	return isReplaced
 }
 
