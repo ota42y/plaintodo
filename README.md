@@ -115,12 +115,10 @@ rss :id 8
   my site :id 9 :start 2015-02-01 :important :repeat every 1 day :url http://ota42y.com
   
 write reply mail :id 10 :start 2015-02-01
-```
+`
 
-### subtask
-Create sub task.
-
-```
+If you set task id, the new task will be subtask.
+`
 > ls
 ls hit
 go to SSA :id 1 :start 2015-02-01
