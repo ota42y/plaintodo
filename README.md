@@ -1,7 +1,9 @@
+[![Circle CI](https://circleci.com/gh/ota42y/plaintodo.svg?style=svg)](https://circleci.com/gh/ota42y/plaintodo)
+
 # PlainTodo
 
 PlainTodo is plain text based todo list system inspired by [Todo.txt](http://todotxt.com/)  
-Now newest version is v0.1.4
+Now newest version is v0.1.5
 
 ## Feature
 
