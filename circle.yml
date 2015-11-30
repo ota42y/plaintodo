@@ -7,6 +7,7 @@ deployment:
     commands:
       - go get github.com/mitchellh/gox
       - go get github.com/tcnksm/ghr
+      - go get -u github.com/ota42y/plaintodo
       - gox --osarch "windows/386 windows/amd64" --output "../dist/{{.Dir}}_{{.OS}}_{{.Arch}}" ./plaintodo
       - gox --osarch "linux/386 linux/amd64" --output "../dist/{{.Dir}}_{{.OS}}_{{.Arch}}" ./plaintodo
       - gox --osarch "darwin/386 darwin/amd64" --output "../dist/{{.Dir}}_{{.OS}}_{{.Arch}}" ./plaintodo
